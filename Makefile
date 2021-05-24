@@ -38,10 +38,11 @@ clean-pyc: ## Remove python artifacts.
 	find . -name '.mypy_cache' -exec rm -rf {} +
 
 clean-tests: ## Remove pytest and coverage artifacts
+	rm -f coverage.xml
+	rm -rf .tox
+	rm -rf .coverage
+	rm -rf coverage_html_report
 	find . -name '.pytest_cache' -exec rm -rf {} +
-	find . -name '.coverage' -exec rm -f {} +
-	find . -name 'coverage.xml' -exec rm -f {} +
-	find . -name 'coverage_html_report' -exec rm -rf {} +
 
 clean-install: ## Remove build artifacts.
 	find . -name '*.egg-info' -exec rm -rf {} +
