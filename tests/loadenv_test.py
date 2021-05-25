@@ -5,6 +5,7 @@ from typing import Generator
 from typing import List
 
 import pytest
+
 from secretbox.loadenv import LoadEnv
 
 
