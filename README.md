@@ -3,7 +3,7 @@
 A library that offers a simple method of loading and accessing environmental variables and `.env` file values. Stores values to state when load methods are called or, if desired, on object creation.
 
 ### Requirements
-- Python 3.8
+- Python >= 3.6 <= 3.9
 
 ### Local Installation
 

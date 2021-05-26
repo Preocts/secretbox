@@ -7,7 +7,6 @@ Git Repo: https://github.com/Preocts/secretbox
 """
 import os
 from typing import Dict
-from typing import Optional
 
 
 class LoadEnv:
@@ -22,9 +21,9 @@ class LoadEnv:
         if auto_load:
             self.load()
 
-    def get(self, key: str) -> Optional[str]:
-        """Get a value by key, can return None if not found"""
-        return self.loaded_values.get(key)
+    def get(self, key: str) -> str:
+        """Get a value by key, will return empty string if not found"""
+        return self.loaded_values.get(key, "")
 
     def load(self) -> None:
         """Loads environment vars, then .env (or provided) file"""
