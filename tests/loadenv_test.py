@@ -5,7 +5,6 @@ from typing import Generator
 from typing import List
 
 import pytest
-
 from secretbox.loadenv import LoadEnv
 
 
@@ -42,7 +41,7 @@ def test_load_everything(mock_env: str) -> None:
     """Assert order of operations and parsing"""
     try:
         os.environ["SECRETBOX_TEST_PROJECT_ENVIRONMENT"] = "testing"
-        os.environ["bywhatchancewouldthisexist"] = "egg"
+        os.environ["BYWHATCHANCEWOULDTHISSEXIST"] = "egg"
 
         secretbox = LoadEnv(mock_env)
         secretbox.load()
@@ -50,19 +49,19 @@ def test_load_everything(mock_env: str) -> None:
         # This should be overwritten to match the fixture .env value
         assert secretbox.get("SECRETBOX_TEST_PROJECT_ENVIRONMENT") == "sandbox"
 
-        assert secretbox.get("bywhatchancewouldthisexist") == "egg"
+        assert secretbox.get("BYWHATCHANCEWOULDTHISSEXIST") == "egg"
         assert secretbox.get("SUPER_SECRET") == "12345"
         assert secretbox.get("VALID") == "="
 
     finally:
         # Don't contaminate other tests
         del os.environ["SECRETBOX_TEST_PROJECT_ENVIRONMENT"]
-        del os.environ["bywhatchancewouldthisexist"]
+        del os.environ["BYWHATCHANCEWOULDTHISSEXIST"]
 
 
 def test_load_missing_file() -> None:
     """Confirm clean run if file is missing"""
-    secretbox = LoadEnv("bywhatchancewouldthisexist.derp")
+    secretbox = LoadEnv("BYWHATCHANCEWOULDTHISSEXIST.DERP")
     result = secretbox.load_env_file()
     assert not result
 
@@ -76,17 +75,17 @@ def test_autoload_tempfile(mock_env: str) -> None:
 def test_missing_key_is_none() -> None:
     """Missing key? Check behind the milk"""
     secretbox = LoadEnv()
-    assert secretbox.get("bywhatchancewouldthisexist") is None
+    assert secretbox.get("BYWHATCHANCEWOULDTHISSEXIST") == ""
 
 
 def test_load_local_environment() -> None:
     """Use an injected environ to test load"""
     secretbox = LoadEnv()
     try:
-        os.environ["bywhatchancewouldthisexist"] = "egg"
+        os.environ["BYWHATCHANCEWOULDTHISSEXIST"] = "egg"
         secretbox.load_env_vars()
 
-        assert secretbox.get("bywhatchancewouldthisexist") == "egg"
+        assert secretbox.get("BYWHATCHANCEWOULDTHISSEXIST") == "egg"
 
     finally:
-        del os.environ["bywhatchancewouldthisexist"]
+        del os.environ["BYWHATCHANCEWOULDTHISSEXIST"]
