@@ -1,3 +1,5 @@
+"""Unit tests for aws secrect manager interactions"""
+import json
 import os
 from typing import Dict
 from typing import Generator
@@ -6,6 +8,7 @@ import pytest
 from boto3.session import Session
 from moto.secretsmanager import mock_secretsmanager
 from mypy_boto3_secretsmanager.client import SecretsManagerClient
+from secretbox.loadenv import LoadEnv
 
 TEST_KEY_NAME = "TEST_KEY"
 TEST_VALUE = "abcdefg"
@@ -45,9 +48,9 @@ def fixture_remove_aws_creds(
 @pytest.fixture(scope="function", name="secretsmanager")
 def fixture_secretsmanager() -> Generator[SecretsManagerClient, None, None]:
     """Populate mock secretsmanager with TEST_SECRET_KEY in us-east-1"""
-    secret_values = f'{"{TEST_KEY_NAME}": "{TEST_VALUE}"}'
+    secret_values = json.dumps({TEST_KEY_NAME: TEST_VALUE})
 
-    with mock_secretsmanager:
+    with mock_secretsmanager():
         session = Session()
         client = session.client(
             service_name="secretsmanager",
@@ -57,4 +60,51 @@ def fixture_secretsmanager() -> Generator[SecretsManagerClient, None, None]:
 
         yield client
 
-        client.delete_secret(SecretId=TEST_KEY_NAME)
+
+@pytest.mark.usefixtures("remove_aws_creds")
+def test_load_aws_no_credentials() -> None:
+    """Cause a NoCredentialsError to be handled"""
+    secretbox = LoadEnv(
+        aws_sstore_name=TEST_STORE,
+        aws_region=TEST_REGION,
+    )
+    assert not secretbox.loaded_values
+    secretbox.load_aws_store()
+    assert not secretbox.loaded_values
+
+
+@pytest.mark.usefixtures("mask_aws_creds")
+def test_load_aws_invalid_region() -> None:
+    """Cause an InvalidRegionError to be handled"""
+    secrets = LoadEnv(
+        aws_sstore_name=TEST_STORE,
+        aws_region="",
+        auto_load=True,
+    )
+    assert secrets.get(TEST_KEY_NAME) == ""
+
+
+@pytest.mark.usefixtures("mask_aws_creds", "secretsmanager")
+def test_load_aws_secrets() -> None:
+    """Load a secret from mocked AWS secret server"""
+    secrets = LoadEnv(
+        aws_sstore_name=TEST_STORE,
+        aws_region=TEST_REGION,
+    )
+
+    assert not secrets.get(TEST_KEY_NAME)
+    secrets.load_aws_store()
+    assert secrets.get(TEST_KEY_NAME) == TEST_VALUE
+
+
+@pytest.mark.usefixtures("mask_aws_creds", "secretsmanager")
+def test_load_aws_secrets_client_error() -> None:
+    """Load a secret that doesn't exist to handle ClientError"""
+    secrets = LoadEnv(
+        aws_sstore_name="some/secrect/store/that/is/not/there",
+        aws_region=TEST_REGION,
+    )
+
+    assert not secrets.get(TEST_KEY_NAME)
+    secrets.load_aws_store()
+    assert not secrets.get(TEST_KEY_NAME)

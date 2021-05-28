@@ -5,19 +5,38 @@ Author  : Preocts <preocts@preocts.com>
 Discord : Preocts#8196
 Git Repo: https://github.com/Preocts/secretbox
 """
+import json
+import logging
 import os
 from typing import Dict
+from typing import Optional
+
+import boto3
+from botocore.exceptions import ClientError
+from botocore.exceptions import InvalidRegionError
+from botocore.exceptions import NoCredentialsError
+from botocore.exceptions import NoRegionError
+from mypy_boto3_secretsmanager.client import SecretsManagerClient
 
 
 class LoadEnv:
     """Loads local environment vars and .env file to an accessible object"""
 
-    __slots__ = ["filename", "loaded_values"]
+    logger = logging.getLogger(__name__)
+    aws_client: Optional[SecretsManagerClient] = None
 
-    def __init__(self, filename: str = ".env", auto_load: bool = False) -> None:
+    def __init__(
+        self,
+        filename: str = ".env",
+        aws_sstore_name: Optional[str] = None,
+        aws_region: Optional[str] = None,
+        auto_load: bool = False,
+    ) -> None:
         """Provide full path and name to .env if not located in working directory"""
         self.filename: str = filename
         self.loaded_values: Dict[str, str] = {}
+        self.region = aws_region
+        self.sstore = aws_sstore_name
         if auto_load:
             self.load()
 
@@ -29,6 +48,7 @@ class LoadEnv:
         """Loads environment vars, then .env (or provided) file"""
         self.load_env_vars()
         self.load_env_file()
+        self.load_aws_store()
         self.push_to_environment()
 
     def load_env_vars(self) -> None:
@@ -57,3 +77,40 @@ class LoadEnv:
                 continue
             key, value = line.split("=", 1)
             self.loaded_values[key.strip()] = value.strip()
+
+    def connect_aws_client(self) -> None:
+        """Make connection"""
+        if self.aws_client is not None or self.region is None:
+            return
+
+        session = boto3.session.Session()
+
+        try:
+            client = session.client(
+                service_name="secretsmanager",
+                region_name=self.region,
+            )
+            self.aws_client = client
+        except (ValueError, InvalidRegionError, NoRegionError) as err:
+            self.logger.error("Error creating AWS Secrets client: %s", err)
+
+    def load_aws_store(self) -> None:
+        """Load all secrets from AWS secret store"""
+
+        self.connect_aws_client()
+        if self.aws_client is None or self.sstore is None:
+            self.logger.warning("Cannot load AWS secrets, no valid client.")
+            return
+
+        secrets = {}
+
+        try:
+            response = self.aws_client.get_secret_value(SecretId=self.sstore)
+        except NoCredentialsError as err:
+            self.logger.error("Error routing message! %s", err)
+        except ClientError as err:
+            code = err.response["Error"]["Code"]
+            self.logger.error("ClientError: %s, (%s)", err, code)
+        else:
+            secrets = json.loads(response.get("SecretString", "{}"))
+        self.loaded_values.update(secrets)
