@@ -9,9 +9,9 @@ import json
 import logging
 import os
 from typing import Dict
+from typing import NamedTuple
 from typing import Optional
 
-# Optional dependency to supprt AWS Secrets Server
 try:
     import boto3
     from botocore.exceptions import ClientError
@@ -20,7 +20,14 @@ try:
     from botocore.exceptions import NoRegionError
     from mypy_boto3_secretsmanager.client import SecretsManagerClient
 except ImportError:
-    boto3 = None
+    boto3 = None  # type: ignore
+
+
+class LoadedValue(NamedTuple):
+    """Empty dataclass for tracking loaded values"""
+
+    source: str
+    value: str
 
 
 class LoadEnv:
@@ -38,15 +45,15 @@ class LoadEnv:
     ) -> None:
         """Provide full path and name to .env if not located in working directory"""
         self.filename: str = filename
-        self.loaded_values: Dict[str, str] = {}
-        self.region = aws_region
-        self.sstore = aws_sstore_name
+        self.loaded_values: Dict[str, LoadedValue] = {}
+        self.aws_region = aws_region
+        self.aws_sstore = aws_sstore_name
         if auto_load:
             self.load()
 
     def get(self, key: str) -> str:
         """Get a value by key, will return empty string if not found"""
-        return self.loaded_values.get(key, "")
+        return self.loaded_values[key].value if key in self.loaded_values else ""
 
     def load(self) -> None:
         """Loads environment vars, then .env (or provided) file"""
@@ -60,7 +67,7 @@ class LoadEnv:
     def load_env_vars(self) -> None:
         """Loads all visible environmental variables"""
         for key, value in os.environ.items():
-            self.loaded_values[key] = value
+            self.loaded_values[key] = LoadedValue("environ", value)
 
     def load_env_file(self) -> bool:
         """Loads local .env or from path if provided"""
@@ -73,8 +80,8 @@ class LoadEnv:
 
     def push_to_environment(self) -> None:
         """Pushes loaded values to local environment vars, will overwrite existing"""
-        for key, value in self.loaded_values.items():
-            os.environ[key] = value
+        for key, obj in self.loaded_values.items():
+            os.environ[key] = obj.value
 
     def __parse_env_file(self, input_file: str) -> None:
         """Parses env file into key-pair values"""
@@ -82,11 +89,11 @@ class LoadEnv:
             if not line or line.strip().startswith("#") or len(line.split("=", 1)) != 2:
                 continue
             key, value = line.split("=", 1)
-            self.loaded_values[key.strip()] = value.strip()
+            self.loaded_values[key.strip()] = LoadedValue("file", value.strip())
 
     def __connect_aws_client(self) -> None:
         """Make connection"""
-        if self.aws_client is not None or self.region is None:
+        if self.aws_client is not None or self.aws_region is None:
             return
 
         if boto3 is not None:
@@ -99,7 +106,7 @@ class LoadEnv:
         try:
             client = session.client(
                 service_name="secretsmanager",
-                region_name=self.region,
+                region_name=self.aws_region,
             )
             self.aws_client = client
         except (ValueError, InvalidRegionError, NoRegionError) as err:
@@ -108,14 +115,12 @@ class LoadEnv:
     def load_aws_store(self) -> None:
         """Load all secrets from AWS secret store"""
         self.__connect_aws_client()
-        if self.aws_client is None or self.sstore is None:
+        if self.aws_client is None or self.aws_sstore is None:
             self.logger.warning("Cannot load AWS secrets, no valid client.")
             return
 
-        secrets = {}
-
         try:
-            response = self.aws_client.get_secret_value(SecretId=self.sstore)
+            response = self.aws_client.get_secret_value(SecretId=self.aws_sstore)
         except NoCredentialsError as err:
             self.logger.error("Error routing message! %s", err)
         except ClientError as err:
@@ -123,4 +128,5 @@ class LoadEnv:
             self.logger.error("ClientError: %s, (%s)", err, code)
         else:
             secrets = json.loads(response.get("SecretString", "{}"))
-        self.loaded_values.update(secrets)
+            for key, value in secrets.items():
+                self.loaded_values[key] = LoadedValue("aws", value)
