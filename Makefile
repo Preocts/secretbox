@@ -1,4 +1,4 @@
-.PHONY: init dev-install update clean-pyc clean-tests run-tests
+.PHONY: init dev-install update clean-pyc clean-tests
 
 init:
 	pip install --upgrade pip setuptools wheel pip-tools
@@ -25,6 +25,3 @@ clean-tests: ## Removes tox, coverage, and pytest artifacts
 	rm -rf coverage_html_report
 	rm -rf .coverage
 	find . -name '.pytest_cache' -exec rm -rf {} +
-
-run-tests: ## Run tox on default python install
-	tox -e py
