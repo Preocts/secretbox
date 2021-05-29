@@ -1,6 +1,7 @@
 """Global fixtures"""
 import json
 import os
+import tempfile
 from typing import Generator
 from unittest.mock import patch
 
@@ -22,10 +23,31 @@ AWS_ENV_KEYS = [
     "AWS_SESSION_TOKEN",
 ]
 
+ENV_FILE_CONTENTS = [
+    "SECRETBOX_TEST_PROJECT_ENVIRONMENT=sandbox",
+    "#What type of .env supports comments?",
+    "",
+    "BROKEN KEY",
+    "VALID==",
+    "SUPER_SECRET  =          12345",
+]
+
+ENV_FILE_EXPECTED = {
+    "SECRETBOX_TEST_PROJECT_ENVIRONMENT": "sandbox",
+    "VALID": "=",
+    "SUPER_SECRET": "12345",
+}
+
+##############################################################################
+# Common fixtures
+##############################################################################
+
 
 @pytest.fixture(scope="function", name="secretbox")
 def fixture_secretbox() -> Generator[loadenv.LoadEnv, None, None]:
     """Default instance of LoadEnv"""
+    inst = loadenv.LoadEnv()
+    assert not inst.loaded_values
     yield loadenv.LoadEnv()
 
 
@@ -33,6 +55,28 @@ def fixture_secretbox() -> Generator[loadenv.LoadEnv, None, None]:
 def fixture_secretbox_aws() -> Generator[loadenv.LoadEnv, None, None]:
     """Default instance of LoadEnv"""
     yield loadenv.LoadEnv(aws_region=TEST_REGION, aws_sstore_name=TEST_STORE)
+
+
+##############################################################################
+# Mocking .env file loading
+##############################################################################
+
+
+@pytest.fixture(scope="function", name="mock_env_file")
+def fixture_mock_env_file() -> Generator[str, None, None]:
+    """Builds and returns filename of a mock .env file"""
+    try:
+        file_desc, path = tempfile.mkstemp()
+        with os.fdopen(file_desc, "w", encoding="utf-8") as temp_file:
+            temp_file.write("\n".join(ENV_FILE_CONTENTS))
+        yield path
+    finally:
+        os.remove(path)
+
+
+##############################################################################
+# AWS Fixtures
+##############################################################################
 
 
 @pytest.fixture(scope="function", name="mask_aws_creds")

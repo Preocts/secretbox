@@ -1,5 +1,6 @@
 """Unit tests for aws secrect manager interactions"""
 import importlib
+import os
 import sys
 from unittest.mock import patch
 
@@ -55,16 +56,18 @@ def test_boto3_not_installed_load_aws(secretbox_aws: LoadEnv) -> None:
     """Stop and raise if manual load_aws_store() is called without boto3"""
     with patch.object(loadenv, "boto3", None):
         with pytest.raises(NotImplementedError):
-            secretbox_aws.load_aws_store()
+            assert not secretbox_aws.load_aws_store()
 
 
 def test_boto3_not_installed_auto_load(secretbox_aws: LoadEnv) -> None:
     """Silently skip loading AWS secrets manager if no boto3"""
-    with patch.object(loadenv, "boto3", None):
+    # fmt: off
+    with patch.object(loadenv, "boto3", None), \
+            patch.dict(os.environ, {"BOTO3_SAMPLE": "Good"}):
+        # fmt: on
         assert secretbox_aws.loaded_values == {}
-        # TODO: This is dangerous as we are assuming something will load
         secretbox_aws.load()
-        assert secretbox_aws.loaded_values
+        assert secretbox_aws.get("BOTO3_SAMPLE") == "Good"
 
 
 def test_boto3_missing_import_catch() -> None:

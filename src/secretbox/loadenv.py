@@ -1,5 +1,5 @@
 """
-Loads local environment vars and .env file to an accessible object
+Loads various environment variables/secrets for use
 
 Author  : Preocts <preocts@preocts.com>
 Discord : Preocts#8196
@@ -20,18 +20,18 @@ try:
     from botocore.exceptions import NoRegionError
     from mypy_boto3_secretsmanager.client import SecretsManagerClient
 except ImportError:
-    boto3 = None  # type: ignore
+    boto3 = None
 
 
 class LoadedValue(NamedTuple):
-    """Empty dataclass for tracking loaded values"""
+    """Dataclass for tracking loaded value source"""
 
     source: str
     value: str
 
 
 class LoadEnv:
-    """Loads local environment vars and .env file to an accessible object"""
+    """Loads various environment variables/secrets for use"""
 
     logger = logging.getLogger(__name__)
     aws_client: Optional[SecretsManagerClient] = None
@@ -43,7 +43,7 @@ class LoadEnv:
         aws_region: Optional[str] = None,
         auto_load: bool = False,
     ) -> None:
-        """Provide full path and name to .env if not located in working directory"""
+        """Creates an unloaded instance of class"""
         self.filename: str = filename
         self.loaded_values: Dict[str, LoadedValue] = {}
         self.aws_region = aws_region
@@ -56,8 +56,7 @@ class LoadEnv:
         return self.loaded_values[key].value if key in self.loaded_values else ""
 
     def load(self) -> None:
-        """Loads environment vars, then .env (or provided) file"""
-        # TODO: What order do we want to load these?
+        """Runs all available loaders"""
         self.load_env_vars()
         self.load_env_file()
         if boto3 is not None:
@@ -77,6 +76,27 @@ class LoadEnv:
         except FileNotFoundError:
             return False
         return True
+
+    def load_aws_store(self) -> bool:
+        """Load all secrets from AWS secret store"""
+        secrets: Dict[str, str] = {}
+        self.__connect_aws_client()
+        if self.aws_client is None or self.aws_sstore is None:
+            self.logger.warning("Cannot load AWS secrets, no valid client.")
+            return False
+
+        try:
+            response = self.aws_client.get_secret_value(SecretId=self.aws_sstore)
+        except NoCredentialsError as err:
+            self.logger.error("Error routing message! %s", err)
+        except ClientError as err:
+            code = err.response["Error"]["Code"]
+            self.logger.error("ClientError: %s, (%s)", err, code)
+        else:
+            secrets = json.loads(response.get("SecretString", "{}"))
+            for key, value in secrets.items():
+                self.loaded_values[key] = LoadedValue("aws", value)
+        return bool(secrets)
 
     def push_to_environment(self) -> None:
         """Pushes loaded values to local environment vars, will overwrite existing"""
@@ -111,22 +131,3 @@ class LoadEnv:
             self.aws_client = client
         except (ValueError, InvalidRegionError, NoRegionError) as err:
             self.logger.error("Error creating AWS Secrets client: %s", err)
-
-    def load_aws_store(self) -> None:
-        """Load all secrets from AWS secret store"""
-        self.__connect_aws_client()
-        if self.aws_client is None or self.aws_sstore is None:
-            self.logger.warning("Cannot load AWS secrets, no valid client.")
-            return
-
-        try:
-            response = self.aws_client.get_secret_value(SecretId=self.aws_sstore)
-        except NoCredentialsError as err:
-            self.logger.error("Error routing message! %s", err)
-        except ClientError as err:
-            code = err.response["Error"]["Code"]
-            self.logger.error("ClientError: %s, (%s)", err, code)
-        else:
-            secrets = json.loads(response.get("SecretString", "{}"))
-            for key, value in secrets.items():
-                self.loaded_values[key] = LoadedValue("aws", value)
