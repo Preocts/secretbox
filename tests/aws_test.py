@@ -3,12 +3,13 @@ import json
 import os
 from typing import Dict
 from typing import Generator
+from unittest.mock import patch
 
 import pytest
 from boto3.session import Session
 from moto.secretsmanager import mock_secretsmanager
 from mypy_boto3_secretsmanager.client import SecretsManagerClient
-from secretbox.loadenv import LoadEnv
+from secretbox import loadenv
 
 TEST_KEY_NAME = "TEST_KEY"
 TEST_VALUE = "abcdefg"
@@ -64,7 +65,7 @@ def fixture_secretsmanager() -> Generator[SecretsManagerClient, None, None]:
 @pytest.mark.usefixtures("remove_aws_creds")
 def test_load_aws_no_credentials() -> None:
     """Cause a NoCredentialsError to be handled"""
-    secretbox = LoadEnv(
+    secretbox = loadenv.LoadEnv(
         aws_sstore_name=TEST_STORE,
         aws_region=TEST_REGION,
     )
@@ -76,7 +77,7 @@ def test_load_aws_no_credentials() -> None:
 @pytest.mark.usefixtures("mask_aws_creds")
 def test_load_aws_invalid_region() -> None:
     """Cause an InvalidRegionError to be handled"""
-    secrets = LoadEnv(
+    secrets = loadenv.LoadEnv(
         aws_sstore_name=TEST_STORE,
         aws_region="",
         auto_load=True,
@@ -87,7 +88,7 @@ def test_load_aws_invalid_region() -> None:
 @pytest.mark.usefixtures("mask_aws_creds", "secretsmanager")
 def test_load_aws_secrets() -> None:
     """Load a secret from mocked AWS secret server"""
-    secrets = LoadEnv(
+    secrets = loadenv.LoadEnv(
         aws_sstore_name=TEST_STORE,
         aws_region=TEST_REGION,
     )
@@ -100,7 +101,7 @@ def test_load_aws_secrets() -> None:
 @pytest.mark.usefixtures("mask_aws_creds", "secretsmanager")
 def test_load_aws_secrets_client_error() -> None:
     """Load a secret that doesn't exist to handle ClientError"""
-    secrets = LoadEnv(
+    secrets = loadenv.LoadEnv(
         aws_sstore_name="some/secrect/store/that/is/not/there",
         aws_region=TEST_REGION,
     )
@@ -108,3 +109,20 @@ def test_load_aws_secrets_client_error() -> None:
     assert not secrets.get(TEST_KEY_NAME)
     secrets.load_aws_store()
     assert not secrets.get(TEST_KEY_NAME)
+
+
+def test_boto3_not_installed_load_aws() -> None:
+    """Stop and raise if manual load_aws_store() is called without boto3"""
+    secrets = loadenv.LoadEnv(aws_sstore_name=TEST_STORE, aws_region=TEST_REGION)
+    with patch.object(loadenv, "boto3", None):
+        with pytest.raises(NotImplementedError):
+            secrets.load_aws_store()
+
+
+def test_boto3_not_installed_auto_load() -> None:
+    secrets = loadenv.LoadEnv(aws_sstore_name=TEST_STORE, aws_region=TEST_REGION)
+    with patch.object(loadenv, "boto3", None):
+        assert secrets.loaded_values == {}
+        # TODO: This is dangerous as we are assuming something will load
+        secrets.load()
+        assert secrets.loaded_values

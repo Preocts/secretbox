@@ -11,12 +11,16 @@ import os
 from typing import Dict
 from typing import Optional
 
-import boto3
-from botocore.exceptions import ClientError
-from botocore.exceptions import InvalidRegionError
-from botocore.exceptions import NoCredentialsError
-from botocore.exceptions import NoRegionError
-from mypy_boto3_secretsmanager.client import SecretsManagerClient
+# Optional dependency to supprt AWS Secrets Server
+try:
+    import boto3
+    from botocore.exceptions import ClientError
+    from botocore.exceptions import InvalidRegionError
+    from botocore.exceptions import NoCredentialsError
+    from botocore.exceptions import NoRegionError
+    from mypy_boto3_secretsmanager.client import SecretsManagerClient
+except ImportError:
+    boto3 = None
 
 
 class LoadEnv:
@@ -46,9 +50,11 @@ class LoadEnv:
 
     def load(self) -> None:
         """Loads environment vars, then .env (or provided) file"""
+        # TODO: What order do we want to load these?
         self.load_env_vars()
         self.load_env_file()
-        self.load_aws_store()
+        if boto3 is not None:
+            self.load_aws_store()
         self.push_to_environment()
 
     def load_env_vars(self) -> None:
@@ -78,12 +84,17 @@ class LoadEnv:
             key, value = line.split("=", 1)
             self.loaded_values[key.strip()] = value.strip()
 
-    def connect_aws_client(self) -> None:
+    def __connect_aws_client(self) -> None:
         """Make connection"""
         if self.aws_client is not None or self.region is None:
             return
 
-        session = boto3.session.Session()
+        if boto3 is not None:
+            session = boto3.session.Session()
+        else:
+            raise NotImplementedError(
+                "Need to install 'boto3' to use 'load_aws_store()'"
+            )
 
         try:
             client = session.client(
@@ -96,8 +107,7 @@ class LoadEnv:
 
     def load_aws_store(self) -> None:
         """Load all secrets from AWS secret store"""
-
-        self.connect_aws_client()
+        self.__connect_aws_client()
         if self.aws_client is None or self.sstore is None:
             self.logger.warning("Cannot load AWS secrets, no valid client.")
             return
