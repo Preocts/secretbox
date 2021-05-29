@@ -1,91 +1,52 @@
 """Unit tests against loadenv.py"""
 import os
-import tempfile
-from typing import Generator
-from typing import List
+from unittest.mock import patch
 
-import pytest
 from secretbox.loadenv import LoadEnv
 
-
-@pytest.fixture(scope="function", name="mock_env")
-def fixture_mock_env() -> Generator[str, None, None]:
-    """Builds and returns filename of a mock .env file"""
-    env_contents: List[str] = [
-        "SECRETBOX_TEST_PROJECT_ENVIRONMENT=sandbox",
-        "#What type of .env supports comments?",
-        "",
-        "BROKEN KEY",
-        "VALID==",
-        "SUPER_SECRET  =          12345",
-    ]
-    try:
-        file_desc, path = tempfile.mkstemp()
-        with os.fdopen(file_desc, "w", encoding="utf-8") as temp_file:
-            temp_file.write("\n".join(env_contents))
-        yield path
-    finally:
-        os.remove(path)
+from tests.conftest import ENV_FILE_EXPECTED
 
 
-def test_tempfile_exists(mock_env: str) -> None:
-    """Sanity check"""
-    assert os.path.isfile(mock_env)
+def test_load_env_file(mock_env_file: str, secretbox: LoadEnv) -> None:
+    """Load and confirm expected values"""
+    secretbox.filename = mock_env_file
+    secretbox.load()
+    for key, value in ENV_FILE_EXPECTED.items():
+        assert secretbox.get(key) == value, f"Expected: {key}, {value}"
 
-    file_contents = open(mock_env, "r").read()
 
-    assert file_contents
-
-
-def test_load_everything(mock_env: str) -> None:
-    """Assert order of operations and parsing"""
-    try:
-        os.environ["SECRETBOX_TEST_PROJECT_ENVIRONMENT"] = "testing"
-        os.environ["BYWHATCHANCEWOULDTHISSEXIST"] = "egg"
-
-        secretbox = LoadEnv(mock_env)
+def test_load_env_vars(secretbox: LoadEnv) -> None:
+    """Load and confirm values from environ"""
+    with patch.dict(os.environ, ENV_FILE_EXPECTED):
         secretbox.load()
-
-        # This should be overwritten to match the fixture .env value
-        assert secretbox.get("SECRETBOX_TEST_PROJECT_ENVIRONMENT") == "sandbox"
-
-        assert secretbox.get("BYWHATCHANCEWOULDTHISSEXIST") == "egg"
-        assert secretbox.get("SUPER_SECRET") == "12345"
-        assert secretbox.get("VALID") == "="
-
-    finally:
-        # Don't contaminate other tests
-        del os.environ["SECRETBOX_TEST_PROJECT_ENVIRONMENT"]
-        del os.environ["BYWHATCHANCEWOULDTHISSEXIST"]
+        for key, value in ENV_FILE_EXPECTED.items():
+            assert secretbox.get(key) == value, f"Expected: {key}, {value}"
 
 
-def test_load_missing_file() -> None:
+def test_load_order_file_over_environ(secretbox: LoadEnv, mock_env_file: str) -> None:
+    """Loaded file should override existing environ values"""
+    secretbox.filename = mock_env_file
+    altered_expected = {key: f"{value} ALT" for key, value in ENV_FILE_EXPECTED.items()}
+    with patch.dict(os.environ, altered_expected):
+        secretbox.load()
+        for key, value in ENV_FILE_EXPECTED.items():
+            assert secretbox.get(key) == value, f"Expected: {key}, {value}"
+
+
+def test_load_missing_file(secretbox: LoadEnv) -> None:
     """Confirm clean run if file is missing"""
-    secretbox = LoadEnv("BYWHATCHANCEWOULDTHISSEXIST.DERP")
+    secretbox.filename = "BYWHATCHANCEWOULDTHISSEXIST.DERP"
     result = secretbox.load_env_file()
     assert not result
 
 
-def test_autoload_tempfile(mock_env: str) -> None:
+def test_autoload_tempfile(mock_env_file: str) -> None:
     """One less line of code needed"""
-    secretbox = LoadEnv(mock_env, auto_load=True)
-    assert secretbox.get("SUPER_SECRET") == "12345"
+    secretbox = LoadEnv(filename=mock_env_file, auto_load=True)
+    for key, value in ENV_FILE_EXPECTED.items():
+        assert secretbox.get(key) == value
 
 
-def test_missing_key_is_none() -> None:
+def test_missing_key_is_empty(secretbox: LoadEnv) -> None:
     """Missing key? Check behind the milk"""
-    secretbox = LoadEnv()
     assert secretbox.get("BYWHATCHANCEWOULDTHISSEXIST") == ""
-
-
-def test_load_local_environment() -> None:
-    """Use an injected environ to test load"""
-    secretbox = LoadEnv()
-    try:
-        os.environ["BYWHATCHANCEWOULDTHISSEXIST"] = "egg"
-        secretbox.load_env_vars()
-
-        assert secretbox.get("BYWHATCHANCEWOULDTHISSEXIST") == "egg"
-
-    finally:
-        del os.environ["BYWHATCHANCEWOULDTHISSEXIST"]
