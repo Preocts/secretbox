@@ -1,6 +1,8 @@
 """Unit tests for aws secrect manager interactions"""
+import importlib
 import json
 import os
+import sys
 from typing import Dict
 from typing import Generator
 from unittest.mock import patch
@@ -74,41 +76,32 @@ def test_load_aws_no_credentials() -> None:
     assert not secretbox.loaded_values
 
 
-@pytest.mark.usefixtures("mask_aws_creds")
-def test_load_aws_invalid_region() -> None:
-    """Cause an InvalidRegionError to be handled"""
-    secrets = loadenv.LoadEnv(
-        aws_sstore_name=TEST_STORE,
-        aws_region="",
-        auto_load=True,
-    )
-    assert secrets.get(TEST_KEY_NAME) == ""
-
-
+@pytest.mark.parametrize(
+    ("store", "region", "expected"),
+    (
+        (TEST_STORE, TEST_REGION, TEST_VALUE),
+        (TEST_STORE, None, ""),
+        (None, TEST_REGION, ""),
+        (None, None, ""),
+        ("store/not/found", TEST_REGION, ""),
+        (TEST_STORE, "", ""),
+    ),
+)
 @pytest.mark.usefixtures("mask_aws_creds", "secretsmanager")
-def test_load_aws_secrets() -> None:
+def test_load_aws_secrets(store: str, region: str, expected: str) -> None:
     """Load a secret from mocked AWS secret server"""
+    # Dirty restore as testing target has side-effects in os.environ
+    if TEST_KEY_NAME in os.environ:
+        os.environ.pop(TEST_KEY_NAME)
+
     secrets = loadenv.LoadEnv(
-        aws_sstore_name=TEST_STORE,
-        aws_region=TEST_REGION,
+        aws_sstore_name=store,
+        aws_region=region,
     )
 
     assert not secrets.get(TEST_KEY_NAME)
-    secrets.load_aws_store()
-    assert secrets.get(TEST_KEY_NAME) == TEST_VALUE
-
-
-@pytest.mark.usefixtures("mask_aws_creds", "secretsmanager")
-def test_load_aws_secrets_client_error() -> None:
-    """Load a secret that doesn't exist to handle ClientError"""
-    secrets = loadenv.LoadEnv(
-        aws_sstore_name="some/secrect/store/that/is/not/there",
-        aws_region=TEST_REGION,
-    )
-
-    assert not secrets.get(TEST_KEY_NAME)
-    secrets.load_aws_store()
-    assert not secrets.get(TEST_KEY_NAME)
+    secrets.load()
+    assert secrets.get(TEST_KEY_NAME) == expected
 
 
 def test_boto3_not_installed_load_aws() -> None:
@@ -120,9 +113,17 @@ def test_boto3_not_installed_load_aws() -> None:
 
 
 def test_boto3_not_installed_auto_load() -> None:
+    """Silently skip loading AWS secrets manager if no boto3"""
     secrets = loadenv.LoadEnv(aws_sstore_name=TEST_STORE, aws_region=TEST_REGION)
     with patch.object(loadenv, "boto3", None):
         assert secrets.loaded_values == {}
         # TODO: This is dangerous as we are assuming something will load
         secrets.load()
         assert secrets.loaded_values
+
+
+def test_boto3_missing_import_catch() -> None:
+    """Reload loadenv without boto3"""
+    with patch.dict(sys.modules, {"boto3": None}):
+        importlib.reload(loadenv)
+        assert loadenv.boto3 is None
