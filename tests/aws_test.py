@@ -75,4 +75,5 @@ def test_boto3_missing_import_catch() -> None:
     with patch.dict(sys.modules, {"boto3": None}):
         importlib.reload(loadenv)
         assert loadenv.boto3 is None
+        _ = loadenv.LoadEnv()
     importlib.reload(loadenv)
