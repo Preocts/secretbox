@@ -21,6 +21,7 @@ try:
     from mypy_boto3_secretsmanager.client import SecretsManagerClient
 except ImportError:
     boto3 = None
+    SecretsManagerClient = None
 
 
 class LoadedValue(NamedTuple):
