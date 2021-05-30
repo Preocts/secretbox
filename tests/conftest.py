@@ -30,12 +30,20 @@ ENV_FILE_CONTENTS = [
     "BROKEN KEY",
     "VALID==",
     "SUPER_SECRET  =          12345",
+    "PASSWORD = correct horse battery staple",
+    'USER_NAME="not_admin"',
+    "MESSAGE = '    Totally not an \"admin\" account logging in'",
+    "SINGLE_QUOTES = 'test'",
 ]
 
 ENV_FILE_EXPECTED = {
     "SECRETBOX_TEST_PROJECT_ENVIRONMENT": "sandbox",
     "VALID": "=",
     "SUPER_SECRET": "12345",
+    "PASSWORD": "correct horse battery staple",
+    "USER_NAME": "not_admin",
+    "MESSAGE": '    Totally not an "admin" account logging in',
+    "SINGLE_QUOTES": "test",
 }
 
 ##############################################################################

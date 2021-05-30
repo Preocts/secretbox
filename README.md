@@ -3,7 +3,6 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/Preocts/python-template/main.svg)](https://results.pre-commit.ci/latest/github/Preocts/python-template/main)
-[![works badge](https://cdn.jsdelivr.net/gh/nikku/works-on-my-machine@v0.2.0/badge.svg)](https://github.com/nikku/works-on-my-machine)
 
 A library that offers a simple method of loading and accessing environmental variables, `.env` file values, and other sources of secrets. The class stores values to state when load methods are called.
 
@@ -91,12 +90,43 @@ if __name__ == "__main__":
 
 ## `.env` file format
 
-Current format for the `.env` file supports strings only. Each seperate line is considered a new possible key/value set. Each set is delimted by the first `=` found with leading/trailing whitespace removed.
+Current format for the `.env` file supports strings only and is parsed in the following order:
+- Each seperate line is considered a new possible key/value set
+- Each set is delimted by the first `=` found
+- Leading and trailing whitespace are removed
+- Matched leading/trailing single quotes or double quotes will be stripped from values (not keys).
 
-```env
+I'm open to suggestions on standards to follow here.
+
+This `.env` example:
+```conf
 # Comments are ignored
+
 KEY=value
+
+Invalid lines without the equal sign delimiter will also be ignored
+```
+
+Will be parsed as:
+```python
+{"KEY": "value"}
+```
+
+This `.env` example:
+```conf
 PASSWORD = correct horse battery staple
+USER_NAME="not_admin"
+
+MESSAGE = '    Totally not an "admin" account logging in'
+```
+
+Will be parsed as:
+```python
+{
+    "PASSWORD": "correct horse battery staple",
+    "USER_NAME": "not_admin",
+    "MESSAGE": '    Toally not an "admin" account logging in',
+}
 ```
 
 ---
