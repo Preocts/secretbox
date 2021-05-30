@@ -77,7 +77,14 @@ if __name__ == "__main__":
 
 ## Install
 
-**TODO**
+```bash
+$ pip install secretbox
+```
+
+*Optional AWS Secret Manager support*
+```bash
+$ pip install secretbox[aws]
+```
 
 ---
 
