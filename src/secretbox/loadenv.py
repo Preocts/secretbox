@@ -34,7 +34,6 @@ class LoadEnv:
     """Loads various environment variables/secrets for use"""
 
     logger = logging.getLogger(__name__)
-    aws_client: Optional[SecretsManagerClient] = None
 
     def __init__(
         self,
@@ -80,13 +79,13 @@ class LoadEnv:
     def load_aws_store(self) -> bool:
         """Load all secrets from AWS secret store"""
         secrets: Dict[str, str] = {}
-        self.__connect_aws_client()
-        if self.aws_client is None or self.aws_sstore is None:
+        aws_client = self.__connect_aws_client()
+        if aws_client is None or self.aws_sstore is None:
             self.logger.warning("Cannot load AWS secrets, no valid client.")
             return False
 
         try:
-            response = self.aws_client.get_secret_value(SecretId=self.aws_sstore)
+            response = aws_client.get_secret_value(SecretId=self.aws_sstore)
         except NoCredentialsError as err:
             self.logger.error("Error routing message! %s", err)
         except ClientError as err:
@@ -111,16 +110,17 @@ class LoadEnv:
             key, value = line.split("=", 1)
             self.loaded_values[key.strip()] = LoadedValue("file", value.strip())
 
-    def __connect_aws_client(self) -> None:
+    def __connect_aws_client(self) -> Optional[SecretsManagerClient]:
         """Make connection"""
-        if self.aws_client is not None or self.aws_region is None:
-            return
+        client: Optional[SecretsManagerClient] = None
+        if self.aws_region is None:
+            return client
 
         if boto3 is not None:
             session = boto3.session.Session()
         else:
             raise NotImplementedError(
-                "Need to install 'boto3' to use 'load_aws_store()'"
+                "Need to 'pip install secretbox[aws] to use 'load_aws_store()'"
             )
 
         try:
@@ -128,6 +128,8 @@ class LoadEnv:
                 service_name="secretsmanager",
                 region_name=self.aws_region,
             )
-            self.aws_client = client
+
         except (ValueError, InvalidRegionError, NoRegionError) as err:
             self.logger.error("Error creating AWS Secrets client: %s", err)
+
+        return client
