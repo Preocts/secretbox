@@ -3,6 +3,7 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/Preocts/python-template/main.svg)](https://results.pre-commit.ci/latest/github/Preocts/python-template/main)
+[![works badge](https://cdn.jsdelivr.net/gh/nikku/works-on-my-machine@v0.2.0/badge.svg)](https://github.com/nikku/works-on-my-machine)
 
 A library that offers a simple method of loading and accessing environmental variables, `.env` file values, and other sources of secrets. The class stores values to state when load methods are called.
 
@@ -67,7 +68,7 @@ if __name__ == "__main__":
 - When provided, an attempt to load values from named AWS secrets manager will be made. Requires `aws_region` to be provided. Requires `boto3` and `boto3-stubs[secretsmanager]` to be installed.
 
 **aws_region**
-- When provided, an attempt to load values from the given AWS secrets manager found in this region will be made. Requires `aws_sstore_name` to be provided. Requires `boto3` and `boto3-stubs[secretsmanager] to be installed.
+- When provided, an attempt to load values from the given AWS secrets manager found in this region will be made. Requires `aws_sstore_name` to be provided. Requires `boto3` and `boto3-stubs[secretsmanager]` to be installed.
 
 ## LoadEnv methods:
 
@@ -85,6 +86,18 @@ if __name__ == "__main__":
 
 **.load_aws_store()**
 - Loads secrets from AWS secret manager. Requires `aws_sstore_name` and `aws_region` to have been provided. Will raise `NotImplementedError` if library requirements are missing.
+
+---
+
+## `.env` file format
+
+Current format for the `.env` file supports strings only. Each seperate line is considered a new possible key/value set. Each set is delimted by the first `=` found with leading/trailing whitespace removed.
+
+```env
+# Comments are ignored
+KEY=value
+PASSWORD = correct horse battery staple
+```
 
 ---
 
