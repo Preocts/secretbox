@@ -17,6 +17,19 @@ Loaded values are also injected into the local environ. This is to assist with a
 
 ---
 
+## Install
+
+```bash
+$ pip install secretbox
+```
+
+*Optional AWS Secret Manager support*
+```bash
+$ pip install secretbox[aws]
+```
+
+---
+
 ## Example use
 
 ```python
@@ -72,19 +85,6 @@ if __name__ == "__main__":
 
 **.load_aws_store()**
 - Loads secrets from AWS secret manager. Requires `aws_sstore_name` and `aws_region` to have been provided. Will raise `NotImplementedError` if library requirements are missing.
-
----
-
-## Install
-
-```bash
-$ pip install secretbox
-```
-
-*Optional AWS Secret Manager support*
-```bash
-$ pip install secretbox[aws]
-```
 
 ---
 
