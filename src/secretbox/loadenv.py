@@ -20,8 +20,9 @@ try:
     from botocore.exceptions import NoRegionError
     from mypy_boto3_secretsmanager.client import SecretsManagerClient
 except ImportError:
-    boto3 = None
-    SecretsManagerClient = None
+    # These are only ignored to placate the VS code demons
+    boto3 = None  # type: ignore
+    SecretsManagerClient = None  # type: ignore
 
 
 class LoadedValue(NamedTuple):
@@ -108,8 +109,20 @@ class LoadEnv:
         for line in input_file.split("\n"):
             if not line or line.strip().startswith("#") or len(line.split("=", 1)) != 2:
                 continue
-            key, value = line.split("=", 1)
-            self.loaded_values[key.strip()] = LoadedValue("file", value.strip())
+            key, value_dirty = line.split("=", 1)
+
+            value = self.__remove_lt_dbl_quotes(value_dirty.strip())
+            value = self.__remove_lt_sgl_quotes(value)
+
+            self.loaded_values[key.strip()] = LoadedValue("file", value)
+
+    def __remove_lt_dbl_quotes(self, _in: str) -> str:
+        """Removes matched leading and trailing double quotes"""
+        return _in.strip('"') if _in.startswith('"') and _in.endswith('"') else _in
+
+    def __remove_lt_sgl_quotes(self, _in: str) -> str:
+        """Removes matched leading and trailing double quotes"""
+        return _in.strip("'") if _in.startswith("'") and _in.endswith("'") else _in
 
     def __connect_aws_client(self) -> Optional[SecretsManagerClient]:
         """Make connection"""
