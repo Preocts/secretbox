@@ -20,9 +20,8 @@ try:
     from botocore.exceptions import NoRegionError
     from mypy_boto3_secretsmanager.client import SecretsManagerClient
 except ImportError:
-    # These are only ignored to placate the VS code demons
-    boto3 = None  # type: ignore
-    SecretsManagerClient = None  # type: ignore
+    boto3 = None
+    SecretsManagerClient = None
 
 
 class LoadedValue(NamedTuple):
