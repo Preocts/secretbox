@@ -42,8 +42,30 @@ class LoadEnv:
         aws_sstore_name: Optional[str] = None,
         aws_region: Optional[str] = None,
         auto_load: bool = False,
+        no_overwrites: bool = False,
     ) -> None:
-        """Creates an unloaded instance of class"""
+        """
+        Creates an unloaded instance of class
+
+        Order of loading is environment -> .env file -> aws secrets
+
+        Args:
+            filename : You can specify a `.env` formatted file and location,
+                overriding the default behavior to load the `.env` from the
+                working directory
+            aws_sstore_name : When provided, an attempt to load values from
+                named AWS secrets manager will be made. Requires `aws_region`
+                to be provided. Requires `boto3` and `boto3-stubs[secretsmanager]`
+                to be installed
+            aws_region : When provided, an attempt to load values from the given
+                AWS secrets manager found in this region will be made. Requires
+                `aws_sstore_name` to be provided. Requires `boto3` and
+                `boto3-stubs[secretsmanager]` to be installed
+            auto_load : If true, the `load()` method will be auto-executed
+            no_overwrites : If true, no pre-existings values will be replaced as
+                secrets are loaded from different sources
+
+        """
         self.filename: str = filename
         self.loaded_values: Dict[str, LoadedValue] = {}
         self.aws_region = aws_region
@@ -56,7 +78,13 @@ class LoadEnv:
         return self.loaded_values[key].value if key in self.loaded_values else ""
 
     def load(self) -> None:
-        """Runs all available loaders"""
+        """
+        Runs all available loaders
+
+        Order of loading is environment -> .env file -> aws secrets
+
+        To prevent value overwrites, use no_overwrites=True on initialization
+        """
         self.load_env_vars()
         self.load_env_file()
         if boto3 is not None:
