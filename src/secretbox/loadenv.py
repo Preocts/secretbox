@@ -9,7 +9,6 @@ import json
 import logging
 import os
 from typing import Dict
-from typing import NamedTuple
 from typing import Optional
 
 try:
@@ -24,13 +23,6 @@ except ImportError:
     SecretsManagerClient = None
 
 
-class LoadedValue(NamedTuple):
-    """Dataclass for tracking loaded value source"""
-
-    source: str
-    value: str
-
-
 class LoadEnv:
     """Loads various environment variables/secrets for use"""
 
@@ -43,9 +35,28 @@ class LoadEnv:
         aws_region: Optional[str] = None,
         auto_load: bool = False,
     ) -> None:
-        """Creates an unloaded instance of class"""
+        """
+        Creates an unloaded instance of class
+
+        Order of loading is environment -> .env file -> aws secrets
+
+        Args:
+            filename : You can specify a `.env` formatted file and location,
+                overriding the default behavior to load the `.env` from the
+                working directory
+            aws_sstore_name : When provided, an attempt to load values from
+                named AWS secrets manager will be made. Requires `aws_region`
+                to be provided. Requires `boto3` and `boto3-stubs[secretsmanager]`
+                to be installed
+            aws_region : When provided, an attempt to load values from the given
+                AWS secrets manager found in this region will be made. Requires
+                `aws_sstore_name` to be provided. Requires `boto3` and
+                `boto3-stubs[secretsmanager]` to be installed
+            auto_load : If true, the `load()` method will be auto-executed
+
+        """
         self.filename: str = filename
-        self.loaded_values: Dict[str, LoadedValue] = {}
+        self.loaded_values: Dict[str, str] = {}
         self.aws_region = aws_region
         self.aws_sstore = aws_sstore_name
         if auto_load:
@@ -53,10 +64,14 @@ class LoadEnv:
 
     def get(self, key: str) -> str:
         """Get a value by key, will return empty string if not found"""
-        return self.loaded_values[key].value if key in self.loaded_values else ""
+        return self.loaded_values[key] if key in self.loaded_values else ""
 
     def load(self) -> None:
-        """Runs all available loaders"""
+        """
+        Runs all available loaders
+
+        Order of loading: local environment -> .env file -> aws secrets
+        """
         self.load_env_vars()
         self.load_env_file()
         if boto3 is not None:
@@ -66,7 +81,7 @@ class LoadEnv:
     def load_env_vars(self) -> None:
         """Loads all visible environmental variables"""
         for key, value in os.environ.items():
-            self.loaded_values[key] = LoadedValue("environ", value)
+            self.loaded_values[key] = value
 
     def load_env_file(self) -> bool:
         """Loads local .env or from path if provided"""
@@ -95,13 +110,13 @@ class LoadEnv:
         else:
             secrets = json.loads(response.get("SecretString", "{}"))
             for key, value in secrets.items():
-                self.loaded_values[key] = LoadedValue("aws", value)
+                self.loaded_values[key] = value
         return bool(secrets)
 
     def push_to_environment(self) -> None:
         """Pushes loaded values to local environment vars, will overwrite existing"""
-        for key, obj in self.loaded_values.items():
-            os.environ[key] = obj.value
+        for key, value in self.loaded_values.items():
+            os.environ[key] = value
 
     def __parse_env_file(self, input_file: str) -> None:
         """Parses env file into key-pair values"""
@@ -113,7 +128,7 @@ class LoadEnv:
             value = self.__remove_lt_dbl_quotes(value_dirty.strip())
             value = self.__remove_lt_sgl_quotes(value)
 
-            self.loaded_values[key.strip()] = LoadedValue("file", value)
+            self.loaded_values[key.strip()] = value
 
     def __remove_lt_dbl_quotes(self, _in: str) -> str:
         """Removes matched leading and trailing double quotes"""
