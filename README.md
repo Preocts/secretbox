@@ -34,9 +34,11 @@ $ pip install secretbox[aws]
 ## Example use
 
 ```python
-from secretbox.loadenv import LoadEnv
+import sys
 
-secrets = LoadEnv()
+from secretbox import SecretBox
+
+secrets = SecretBox()
 
 
 def main() -> int:
@@ -50,15 +52,15 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    exit(main())
+    sys.exit(main())
 ```
 
 **Default Behavior:** (shown above)
-- On initialization the `LoadEnv()` class does nothing. By calling `.load()` we cause the class to load all the currently available environ variables. It also looks for and loads, if found, a `.env` file in the working directory. From there we can access those values with `.get("KEY_NAME")`.
+- On initialization the `SecretBox()` class does nothing. By calling `.load()` we cause the class to load all the currently available environ variables. It also looks for and loads, if found, a `.env` file in the working directory. From there we can access those values with `.get("KEY_NAME")`.
 
-## LoadEnv arguments:
+## SecretBox arguments:
 
-`LoadEnv(filename: str = ".env", aws_sstore_name: Optional[str] = None, aws_region: Optional[str] = None, auto_load: bool = False)`
+`SecretBox(filename: str = ".env", aws_sstore_name: Optional[str] = None, aws_region: Optional[str] = None, auto_load: bool = False)`
 
 **filename**
 - You can specify a `.env` formatted file and location, overriding the default behavior to load the `.env` from the working directory
@@ -80,7 +82,7 @@ Secret values are loaded, and over-written if pre-existing, in the following ord
 2. `.env` file
 3. AWS secret store [optional]
 
-## LoadEnv methods:
+## SecretBox methods:
 
 **.get("[Key Name]")**
 - Returns the string value of the loaded value by key name. If the key does not exist, an empty string will be returned `""`. Note: This method pulls from the class instance's state copy of loaded value.
@@ -166,6 +168,7 @@ Install editable library and development requirements:
 ```bash
 (venv) $ pip install -r requirements-dev.txt
 (venv) $ pip install --editable .[aws,tests]
+(venv) $ pre-commit install
 ```
 
 Run tests
