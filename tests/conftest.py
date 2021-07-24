@@ -9,7 +9,7 @@ import pytest
 from boto3.session import Session
 from moto.secretsmanager import mock_secretsmanager
 from mypy_boto3_secretsmanager.client import SecretsManagerClient
-from secretbox import loadenv
+from secretbox import secretbox
 
 TEST_KEY_NAME = "TEST_KEY"
 TEST_VALUE = "abcdefg"
@@ -52,17 +52,17 @@ ENV_FILE_EXPECTED = {
 
 
 @pytest.fixture(scope="function", name="secretbox")
-def fixture_secretbox() -> Generator[loadenv.LoadEnv, None, None]:
+def fixture_secretbox() -> Generator[secretbox.SecretBox, None, None]:
     """Default instance of LoadEnv"""
-    inst = loadenv.LoadEnv()
+    inst = secretbox.SecretBox()
     assert not inst.loaded_values
-    yield loadenv.LoadEnv()
+    yield secretbox.SecretBox()
 
 
 @pytest.fixture(scope="function", name="secretbox_aws")
-def fixture_secretbox_aws() -> Generator[loadenv.LoadEnv, None, None]:
+def fixture_secretbox_aws() -> Generator[secretbox.SecretBox, None, None]:
     """Default instance of LoadEnv"""
-    yield loadenv.LoadEnv(aws_region=TEST_REGION, aws_sstore_name=TEST_STORE)
+    yield secretbox.SecretBox(aws_region=TEST_REGION, aws_sstore_name=TEST_STORE)
 
 
 ##############################################################################

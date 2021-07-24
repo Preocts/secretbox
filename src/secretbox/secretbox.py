@@ -23,7 +23,7 @@ except ImportError:
     SecretsManagerClient = None
 
 
-class LoadEnv:
+class SecretBox:
     """Loads various environment variables/secrets for use"""
 
     logger = logging.getLogger(__name__)

@@ -5,8 +5,8 @@ import sys
 from unittest.mock import patch
 
 import pytest
-from secretbox import loadenv
-from secretbox.loadenv import LoadEnv
+from secretbox import SecretBox
+from secretbox import secretbox
 
 from tests.conftest import TEST_KEY_NAME
 from tests.conftest import TEST_REGION
@@ -15,7 +15,7 @@ from tests.conftest import TEST_VALUE
 
 
 @pytest.mark.usefixtures("remove_aws_creds")
-def test_load_aws_no_credentials(secretbox: LoadEnv) -> None:
+def test_load_aws_no_credentials(secretbox: SecretBox) -> None:
     """Cause a NoCredentialsError to be handled"""
     secretbox.aws_sstore = TEST_STORE
     secretbox.aws_region = TEST_REGION
@@ -38,7 +38,7 @@ def test_load_aws_no_credentials(secretbox: LoadEnv) -> None:
 )
 @pytest.mark.usefixtures("mask_aws_creds", "secretsmanager")
 def test_load_aws_secrets(
-    secretbox: LoadEnv,
+    secretbox: SecretBox,
     store: str,
     region: str,
     expected: str,
@@ -52,28 +52,28 @@ def test_load_aws_secrets(
     assert secretbox.get(TEST_KEY_NAME) == expected
 
 
-def test_boto3_not_installed_load_aws(secretbox_aws: LoadEnv) -> None:
+def test_boto3_not_installed_load_aws(secretbox_aws: SecretBox) -> None:
     """Stop and raise if manual load_aws_store() is called without boto3"""
-    with patch.object(loadenv, "boto3", None):
+    with patch.object(secretbox, "boto3", None):
         with pytest.raises(NotImplementedError):
             assert not secretbox_aws.load_aws_store()
 
 
-def test_boto3_not_installed_auto_load(secretbox_aws: LoadEnv) -> None:
+# fmt: off
+def test_boto3_not_installed_auto_load(secretbox_aws: SecretBox) -> None:
     """Silently skip loading AWS secrets manager if no boto3"""
-    # fmt: off
-    with patch.object(loadenv, "boto3", None), \
+    with patch.object(secretbox, "boto3", None), \
             patch.dict(os.environ, {"BOTO3_SAMPLE": "Good"}):
-        # fmt: on
         assert secretbox_aws.loaded_values == {}
         secretbox_aws.load()
         assert secretbox_aws.get("BOTO3_SAMPLE") == "Good"
+# fmt: on
 
 
 def test_boto3_missing_import_catch() -> None:
     """Reload loadenv without boto3"""
     with patch.dict(sys.modules, {"boto3": None}):
-        importlib.reload(loadenv)
-        assert loadenv.boto3 is None
-        _ = loadenv.LoadEnv()
-    importlib.reload(loadenv)
+        importlib.reload(secretbox)
+        assert secretbox.boto3 is None
+        _ = secretbox.SecretBox()
+    importlib.reload(secretbox)
