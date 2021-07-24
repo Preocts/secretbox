@@ -7,6 +7,7 @@ dev-install:  # install development requirements
 	pip install -r requirements-dev.txt
 	pip install --editable .[aws,tests]
 	pre-commit install
+	pre-commit autoupdate
 
 update: clean-pyc clean-tests init update-deps dev-install
 
