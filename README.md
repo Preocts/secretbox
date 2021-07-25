@@ -84,8 +84,9 @@ Secret values are loaded, and over-written if pre-existing, in the following ord
 
 ## SecretBox methods:
 
-**.get("[Key Name]")**
-- Returns the string value of the loaded value by key name. If the key does not exist, an empty string will be returned `""`. Note: This method pulls from the class instance's state copy of loaded value.
+**.get(["Key Name"], ("default"))**
+- Returns the string value of the loaded value by key name. If the key does not exist, an empty string will be returned `""` or the provided optional default value.
+- Note: This method pulls from the instance's state and does not reflect changes to the environment before/after loading.
 
 **.load()**
 - Runs all importer methods. If optional dependencies are not installed, e.g. boto3, the importer is skipped.

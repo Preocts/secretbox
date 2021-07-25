@@ -62,9 +62,9 @@ class SecretBox:
         if auto_load:
             self.load()
 
-    def get(self, key: str) -> str:
-        """Get a value by key, will return empty string if not found"""
-        return self.loaded_values[key] if key in self.loaded_values else ""
+    def get(self, key: str, default: str = "") -> str:
+        """Get a value by key, will return default if not found"""
+        return self.loaded_values[key] if key in self.loaded_values else default
 
     def load(self) -> None:
         """

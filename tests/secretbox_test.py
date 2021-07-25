@@ -50,3 +50,8 @@ def test_autoload_tempfile(mock_env_file: str) -> None:
 def test_missing_key_is_empty(secretbox: SecretBox) -> None:
     """Missing key? Check behind the milk"""
     assert secretbox.get("BYWHATCHANCEWOULDTHISSEXIST") == ""
+
+
+def test_default_missing_key(secretbox: SecretBox) -> None:
+    """Missing key? Return the provided default instead"""
+    assert secretbox.get("BYWHATCHANCEWOULDTHISSEXIST", "Hello") == "Hello"
