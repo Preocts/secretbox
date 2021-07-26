@@ -1,4 +1,4 @@
-.PHONY: init dev-install update clean-pyc clean-tests build-dist
+.PHONY: init dev-install update clean-pyc clean-tests build-dist install
 
 init:
 	pip install --upgrade pip setuptools wheel pip-tools
@@ -8,6 +8,9 @@ dev-install:  # install development requirements
 	pip install --editable .[aws,tests]
 	pre-commit install
 	pre-commit autoupdate
+
+
+install: clean-pyc clean-tests init dev-install
 
 update: clean-pyc clean-tests init update-deps dev-install
 

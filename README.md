@@ -149,8 +149,6 @@ Will be parsed as:
 
 It is **highly** recommended to use a `venv` for installation. Leveraging a `venv` will ensure the installed dependency files will not impact other python projects.
 
-The instruction below make use of a bash shell and a Makefile.  All commands should be able to be run individually of your shell does not support `make`
-
 Clone this repo and enter root directory of repo:
 ```bash
 $ git clone https://github.com/Preocts/secretbox
@@ -159,27 +157,48 @@ $ cd secretbox
 
 Create and activate `venv`:
 ```bash
-$ python3 -m venv venv
-$ . venv/bin/activate
+# Linux/MacOS
+python3 -m venv venv
+. venv/bin/activate
+
+# Windows
+python -m venv venv
+venv\Scripts\activate.bat
+# or
+py -m venv venv
+venv\Scripts\activate.bat
 ```
 
 Your command prompt should now have a `(venv)` prefix on it.
 
 Install editable library and development requirements:
 ```bash
-(venv) $ pip install -r requirements-dev.txt
-(venv) $ pip install --editable .[aws,tests]
-(venv) $ pre-commit install
+# Linux/MacOS
+pip install -r requirements-dev.txt
+pip install --editable .[aws,tests]
+
+# Windows
+python -m pip install -r requirements-dev.txt
+python -m pip install --editable .[aws,test]
+# or
+py -m pip install -r requirements-dev.txt
+py -m pip install --editable .[aws,test]
+```
+
+Install pre-commit hooks to local repo:
+```bash
+pre-commit install
+pre-commit autoupdate
 ```
 
 Run tests
 ```bash
-(venv) $ tox
+tox
 ```
 
 To exit the `venv`:
 ```bash
-(venv) $ deactivate
+deactivate
 ```
 
 ---
@@ -188,6 +207,7 @@ To exit the `venv`:
 
 This repo has a Makefile with some quality of life scripts if your system supports `make`.
 
+- `install` : Clean all artifacts, update pip, install requirements with no updates
 - `update` : Clean all artifacts, update pip, update requirements, install everything
 - `clean-pyc` : Deletes python/mypy artifacts
 - `clean-tests` : Deletes tox, coverage, and pytest artifacts
