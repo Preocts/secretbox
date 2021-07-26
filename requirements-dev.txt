@@ -44,7 +44,7 @@ packaging==21.0
     #   tox
 pathspec==0.9.0
     # via black
-platformdirs==2.0.2
+platformdirs==2.1.0
     # via virtualenv
 pluggy==0.13.1
     # via
