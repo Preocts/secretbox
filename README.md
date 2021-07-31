@@ -38,13 +38,11 @@ import sys
 
 from secretbox import SecretBox
 
-secrets = SecretBox()
+secrets = SecretBox(auto_load=True)
 
 
 def main() -> int:
     """Main function"""
-    secrets.load()
-
     my_sevice_password = secrets.get("SERVICE_PW")
     # More code
 
@@ -67,9 +65,11 @@ if __name__ == "__main__":
 
 **aws_sstore_name**
 - When provided, an attempt to load values from named AWS secrets manager will be made. Requires `aws_region` to be provided. Requires `boto3` and `boto3-stubs[secretsmanager]` to be installed
+- **Note**:  Can be provided with the `AWS_SSTORE_NAME` environment variable.
 
-**aws_region**
+**aws_region_name**
 - When provided, an attempt to load values from the given AWS secrets manager found in this region will be made. Requires `aws_sstore_name` to be provided. Requires `boto3` and `boto3-stubs[secretsmanager]` to be installed
+- **Note**:  Can be provided with the `AWS_REGION_NAME` environment variable.
 
 **auto_load**
 - If true, the `load()` method will be auto-exectued on initialization
