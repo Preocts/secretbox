@@ -31,7 +31,7 @@ $ pip install secretbox[aws]
 
 ---
 
-## Example use
+## Example use with auto_load
 
 ```python
 import sys
@@ -53,7 +53,7 @@ if __name__ == "__main__":
     sys.exit(main())
 ```
 
-**Default Behavior:** (shown above)
+**Default Behavior:**
 - On initialization the `SecretBox()` class does nothing. By calling `.load()` we cause the class to load all the currently available environ variables. It also looks for and loads, if found, a `.env` file in the working directory. From there we can access those values with `.get("KEY_NAME")`.
 
 ## SecretBox arguments:
