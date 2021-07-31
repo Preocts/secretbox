@@ -76,7 +76,7 @@ class SecretBox:
         """
         self.load_env_vars()
         self.load_env_file()
-        if boto3 is not None:
+        if boto3 is not None and (self.aws_region and self.aws_sstore):
             self.load_aws_store()
         self.push_to_environment()
 
