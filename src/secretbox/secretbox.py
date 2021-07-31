@@ -32,7 +32,7 @@ class SecretBox:
         self,
         filename: str = ".env",
         aws_sstore_name: Optional[str] = None,
-        aws_region: Optional[str] = None,
+        aws_region_name: Optional[str] = None,
         auto_load: bool = False,
     ) -> None:
         """
@@ -45,20 +45,22 @@ class SecretBox:
                 overriding the default behavior to load the `.env` from the
                 working directory
             aws_sstore_name : When provided, an attempt to load values from
-                named AWS secrets manager will be made. Requires `aws_region`
-                to be provided. Requires `boto3` and `boto3-stubs[secretsmanager]`
-                to be installed
-            aws_region : When provided, an attempt to load values from the given
-                AWS secrets manager found in this region will be made. Requires
-                `aws_sstore_name` to be provided. Requires `boto3` and
-                `boto3-stubs[secretsmanager]` to be installed
+                named AWS secrets manager will be made. Can be provided with
+                the `AWS_SSTORE_NAME` environment variable.
+                Requires `boto3` and `boto3-stubs[secretsmanager]` to be installed.
+            aws_region_name : When provided, an attempt to load values from the given
+                AWS secrets manager found in this region will be made. Can be provided
+                with the `AWS_REGION_NAME` environment variable.
+                Requires `boto3` and `boto3-stubs[secretsmanager]` to be installed
             auto_load : If true, the `load()` method will be auto-executed
 
         """
+        env_region = os.getenv("AWS_REGION_NAME")
+        env_sstore = os.getenv("AWS_SSTORE_NAME")
         self.filename: str = filename
         self.loaded_values: Dict[str, str] = {}
-        self.aws_region = aws_region
-        self.aws_sstore = aws_sstore_name
+        self.aws_region = env_region if aws_region_name is None else aws_region_name
+        self.aws_sstore = env_sstore if aws_sstore_name is None else aws_sstore_name
         if auto_load:
             self.load()
 
