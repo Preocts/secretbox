@@ -77,3 +77,14 @@ def test_boto3_missing_import_catch() -> None:
         assert secretbox.boto3 is None
         _ = secretbox.SecretBox()
     importlib.reload(secretbox)
+
+
+def test_load_aws_from_env() -> None:
+    """Special case where AWS values are in environ already"""
+    sstore = "aws-store"
+    region = "us-east-1"
+    with patch.dict(os.environ, {"AWS_SSTORE_NAME": sstore, "AWS_REGION_NAME": region}):
+        secrets = SecretBox()
+
+        assert secrets.aws_sstore == sstore
+        assert secrets.aws_region == region
