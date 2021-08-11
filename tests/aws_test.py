@@ -49,6 +49,9 @@ def test_load_aws_secrets(
 
     assert not secretbox.get(TEST_KEY_NAME)
     secretbox.load()
+    secretbox.load_env_vars()
+    secretbox.load_env_file()
+    secretbox.load_aws_store()
     assert secretbox.get(TEST_KEY_NAME) == expected
 
 
