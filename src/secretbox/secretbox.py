@@ -132,13 +132,13 @@ class SecretBox:
 
             self.loaded_values[key.strip()] = value
 
-    def __remove_lt_dbl_quotes(self, _in: str) -> str:
+    def __remove_lt_dbl_quotes(self, in_: str) -> str:
         """Removes matched leading and trailing double quotes"""
-        return _in.strip('"') if _in.startswith('"') and _in.endswith('"') else _in
+        return in_.strip('"') if in_.startswith('"') and in_.endswith('"') else in_
 
-    def __remove_lt_sgl_quotes(self, _in: str) -> str:
+    def __remove_lt_sgl_quotes(self, in_: str) -> str:
         """Removes matched leading and trailing double quotes"""
-        return _in.strip("'") if _in.startswith("'") and _in.endswith("'") else _in
+        return in_.strip("'") if in_.startswith("'") and in_.endswith("'") else in_
 
     def __connect_aws_client(self) -> Optional[SecretsManagerClient]:
         """Make connection"""
