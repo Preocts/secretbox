@@ -1,7 +1,7 @@
 """
 Loads various environment variables/secrets for use
 
-Author  : Preocts <preocts@preocts.com>
+Author  : Preocts
 Discord : Preocts#8196
 Git Repo: https://github.com/Preocts/secretbox
 """
@@ -34,6 +34,7 @@ class SecretBox:
         aws_sstore_name: Optional[str] = None,
         aws_region_name: Optional[str] = None,
         auto_load: bool = False,
+        debug_flag: bool = False,
     ) -> None:
         """
         Creates an unloaded instance of class
@@ -53,8 +54,12 @@ class SecretBox:
                 with the `AWS_REGION_NAME` environment variable.
                 Requires `boto3` and `boto3-stubs[secretsmanager]` to be installed
             auto_load : If true, the `load()` method will be auto-executed
+            load_debug : When true, internal logger level is set to DEBUG
 
         """
+        self.logger.setLevel(level="DEBUG" if debug_flag else "ERROR")
+        self.logger.debug("Debug flag passed.")
+
         env_region = os.getenv("AWS_REGION_NAME")
         env_sstore = os.getenv("AWS_SSTORE_NAME")
         self.filename: str = filename
@@ -82,11 +87,13 @@ class SecretBox:
 
     def load_env_vars(self) -> None:
         """Loads all visible environmental variables"""
+        self.logger.debug("Reading %s environ variables", len(os.environ))
         for key, value in os.environ.items():
             self.loaded_values[key] = value
 
     def load_env_file(self) -> bool:
         """Loads local .env or from path if provided"""
+        self.logger.debug("Reading vars from '%s'", self.filename)
         try:
             with open(self.filename, "r", encoding="utf-8") as input_file:
                 self.__parse_env_file(input_file.read())
@@ -99,17 +106,21 @@ class SecretBox:
         secrets: Dict[str, str] = {}
         aws_client = self.__connect_aws_client()
         if aws_client is None or self.aws_sstore is None:
-            self.logger.warning("Cannot load AWS secrets, no valid client.")
+            self.logger.debug("Cannot load AWS secrets, no valid client.")
             return False
 
         try:
             response = aws_client.get_secret_value(SecretId=self.aws_sstore)
+
         except NoCredentialsError as err:
             self.logger.error("Error routing message! %s", err)
+
         except ClientError as err:
             code = err.response["Error"]["Code"]
             self.logger.error("ClientError: %s, (%s)", err, code)
+
         else:
+            self.logger.debug("Found %s values from AWS.", len(secrets))
             secrets = json.loads(response.get("SecretString", "{}"))
             for key, value in secrets.items():
                 self.loaded_values[key] = value
@@ -118,6 +129,7 @@ class SecretBox:
     def push_to_environment(self) -> None:
         """Pushes loaded values to local environment vars, will overwrite existing"""
         for key, value in self.loaded_values.items():
+            self.logger.debug("Push, %s : ***%s", key, value[-(len(value) // 4) :])
             os.environ[key] = value
 
     def __parse_env_file(self, input_file: str) -> None:

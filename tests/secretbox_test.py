@@ -1,5 +1,6 @@
 """Unit tests against secretbox.py"""
 import os
+from typing import Any
 from unittest.mock import patch
 
 from secretbox import SecretBox
@@ -55,3 +56,14 @@ def test_missing_key_is_empty(secretbox: SecretBox) -> None:
 def test_default_missing_key(secretbox: SecretBox) -> None:
     """Missing key? Return the provided default instead"""
     assert secretbox.get("BYWHATCHANCEWOULDTHISSEXIST", "Hello") == "Hello"
+
+
+def test_load_debug_flag(caplog: Any) -> None:
+    """Ensure logging is silentish"""
+    _ = SecretBox()
+
+    assert "Debug flag passed." not in caplog.text
+
+    _ = SecretBox(debug_flag=True)
+
+    assert "Debug flag passed." in caplog.text
