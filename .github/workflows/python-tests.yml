@@ -31,14 +31,3 @@ jobs:
 
       - name: Run tox
         run: tox -e py
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v2
-        with:
-          directory: "."
-          env_vars: OS,PYTHON
-          fail_ci_if_error: false
-          files: ./coverage.xml
-          flags: unittests
-          name: codecov-umbrella
-          verbose: true
