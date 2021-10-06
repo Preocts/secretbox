@@ -16,13 +16,13 @@ click==8.0.1
     # via black
 distlib==0.3.3
     # via virtualenv
-filelock==3.0.12
+filelock==3.3.0
     # via
     #   tox
     #   virtualenv
 flake8==3.9.2
     # via -r requirements-dev.in
-identify==2.2.15
+identify==2.3.0
     # via pre-commit
 iniconfig==1.1.1
     # via pytest
@@ -66,7 +66,7 @@ pytest==6.2.5
     # via -r requirements-dev.in
 pyyaml==5.4.1
     # via pre-commit
-regex==2021.9.24
+regex==2021.9.30
     # via black
 six==1.16.0
     # via
