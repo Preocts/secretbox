@@ -11,7 +11,7 @@ A library that offers a simple method of loading and accessing environmental var
 Loaded values are also injected into the local environ. This is to assist with adjacent libraries that reference `os.environ` values by default. Required values can be kept in a `.env` file instead of managing a script to load them into the environment.
 
 ### Requirements
-- Python >= 3.6 <= 3.9
+- Python >=3.6,<3.10
 
 ### Optional Dependencies
 - boto3
@@ -35,8 +35,6 @@ $ pip install secretbox[aws]
 ## Example use with auto_load
 
 ```python
-import sys
-
 from secretbox import SecretBox
 
 secrets = SecretBox(auto_load=True)
@@ -51,7 +49,7 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(main())
 ```
 
 **Default Behavior:**
