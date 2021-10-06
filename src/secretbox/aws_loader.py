@@ -33,19 +33,18 @@ class AWSLoader(Loader):
         self.aws_sstore: Optional[str] = None
         self.aws_region: Optional[str] = None
 
-    def load_values(self, **kwargs: Optional[str]) -> bool:
-        """Load all secrets from AWS secret store"""
-        if boto3 is not None and (self.aws_region and self.aws_sstore):
-            return self.internal_load_values(**kwargs)
-        return False
-
     def get_values(self) -> Dict[str, str]:
         return self.loaded_values
 
     def reset_values(self) -> None:
         self.loaded_values = {}
 
-    def internal_load_values(self, **kwargs: Optional[str]) -> bool:
+    def load_values(self, **kwargs: Optional[str]) -> bool:
+        """Load all secrets from AWS secret store"""
+        if boto3 is None:
+            return False
+
+        self.reset_values()
         self.aws_sstore = kwargs.get("aws_sstore")
         self.aws_region = kwargs.get("aws_region")
 
@@ -78,12 +77,7 @@ class AWSLoader(Loader):
         if self.aws_region is None:
             return client
 
-        if boto3 is not None:
-            session = boto3.session.Session()
-        else:
-            raise NotImplementedError(
-                "Need to 'pip install secretbox[aws] to use 'load_aws_store()'"
-            )
+        session = boto3.session.Session()
 
         try:
             client = session.client(

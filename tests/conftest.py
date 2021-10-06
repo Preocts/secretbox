@@ -59,12 +59,6 @@ def fixture_secretbox() -> Generator[secretbox.SecretBox, None, None]:
     yield secretbox.SecretBox()
 
 
-@pytest.fixture(scope="function", name="secretbox_aws")
-def fixture_secretbox_aws() -> Generator[secretbox.SecretBox, None, None]:
-    """Default instance of LoadEnv"""
-    yield secretbox.SecretBox(aws_region_name=TEST_REGION, aws_sstore_name=TEST_STORE)
-
-
 ##############################################################################
 # Mocking .env file loading
 ##############################################################################
