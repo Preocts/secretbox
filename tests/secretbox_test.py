@@ -37,8 +37,7 @@ def test_load_order_file_over_environ(secretbox: SecretBox, mock_env_file: str) 
 def test_load_missing_file(secretbox: SecretBox) -> None:
     """Confirm clean run if file is missing"""
     secretbox.filename = "BYWHATCHANCEWOULDTHISSEXIST.DERP"
-    result = secretbox.load_env_file()
-    assert not result
+    secretbox.load_env_file()
 
 
 def test_autoload_tempfile(mock_env_file: str) -> None:
