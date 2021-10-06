@@ -68,14 +68,8 @@ class SecretBox:
         return self.loaded_values[key] if key in self.loaded_values else default
 
     def load(self) -> None:
-        """
-        Runs all available loaders
-
-        Order of loading:
-            1. local environment
-            1. .env file
-            1. aws secrets
-        """
+        """Runs all available loaders"""
+        # TODO (preocts): Determine available loaders at runtime
         self.load_env_vars()
         self.load_env_file()
         self.load_aws_store()
