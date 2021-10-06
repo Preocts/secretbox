@@ -1,8 +1,7 @@
 """
 Loads various environment variables/secrets for use
 
-Author  : Preocts
-Discord : Preocts#8196
+Author  : Preocts <Preocts#8196>
 Git Repo: https://github.com/Preocts/secretbox
 """
 import json
@@ -22,11 +21,16 @@ except ImportError:
     boto3 = None
     SecretsManagerClient = None
 
+from secretbox.envfile_loader import EnvFileLoader
+from secretbox.environ_loader import EnvironLoader
+
 
 class SecretBox:
     """Loads various environment variables/secrets for use"""
 
     logger = logging.getLogger(__name__)
+    environ = EnvironLoader()
+    envfile = EnvFileLoader()
 
     def __init__(
         self,
@@ -77,7 +81,10 @@ class SecretBox:
         """
         Runs all available loaders
 
-        Order of loading: local environment -> .env file -> aws secrets
+        Order of loading:
+            1. local environment
+            1. .env file
+            1. aws secrets
         """
         self.load_env_vars()
         self.load_env_file()
@@ -86,20 +93,14 @@ class SecretBox:
         self.push_to_environment()
 
     def load_env_vars(self) -> None:
-        """Loads all visible environmental variables"""
-        self.logger.debug("Reading %s environ variables", len(os.environ))
-        for key, value in os.environ.items():
-            self.loaded_values[key] = value
+        """Load environ values"""
+        self.environ.load_values()
+        self.loaded_values.update(self.environ.get_values())
 
-    def load_env_file(self) -> bool:
-        """Loads local .env or from path if provided"""
-        self.logger.debug("Reading vars from '%s'", self.filename)
-        try:
-            with open(self.filename, "r", encoding="utf-8") as input_file:
-                self.__parse_env_file(input_file.read())
-        except FileNotFoundError:
-            return False
-        return True
+    def load_env_file(self) -> None:
+        """Load env file values"""
+        self.envfile.load_values(filename=self.filename)
+        self.loaded_values.update(self.envfile.get_values())
 
     def load_aws_store(self) -> bool:
         """Load all secrets from AWS secret store"""
@@ -131,26 +132,6 @@ class SecretBox:
         for key, value in self.loaded_values.items():
             self.logger.debug("Push, %s : ***%s", key, value[-(len(value) // 4) :])
             os.environ[key] = value
-
-    def __parse_env_file(self, input_file: str) -> None:
-        """Parses env file into key-pair values"""
-        for line in input_file.split("\n"):
-            if not line or line.strip().startswith("#") or len(line.split("=", 1)) != 2:
-                continue
-            key, value_dirty = line.split("=", 1)
-
-            value = self.__remove_lt_dbl_quotes(value_dirty.strip())
-            value = self.__remove_lt_sgl_quotes(value)
-
-            self.loaded_values[key.strip()] = value
-
-    def __remove_lt_dbl_quotes(self, in_: str) -> str:
-        """Removes matched leading and trailing double quotes"""
-        return in_.strip('"') if in_.startswith('"') and in_.endswith('"') else in_
-
-    def __remove_lt_sgl_quotes(self, in_: str) -> str:
-        """Removes matched leading and trailing double quotes"""
-        return in_.strip("'") if in_.startswith("'") and in_.endswith("'") else in_
 
     def __connect_aws_client(self) -> Optional[SecretsManagerClient]:
         """Make connection"""
