@@ -1,1 +1,3 @@
-from .secretbox import SecretBox  # noqa
+from .secretbox import SecretBox
+
+__all__ = ["SecretBox"]
