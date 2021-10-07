@@ -9,7 +9,9 @@ import pytest
 from boto3.session import Session
 from moto.secretsmanager import mock_secretsmanager
 from mypy_boto3_secretsmanager.client import SecretsManagerClient
-from secretbox import secretbox
+from secretbox.envfile_loader import EnvFileLoader
+from secretbox.environ_loader import EnvironLoader
+from secretbox.secretbox import SecretBox
 
 TEST_KEY_NAME = "TEST_KEY"
 TEST_VALUE = "abcdefg"
@@ -47,16 +49,32 @@ ENV_FILE_EXPECTED = {
 }
 
 ##############################################################################
-# Common fixtures
+# Base fixtures
 ##############################################################################
 
 
+@pytest.fixture(scope="function", name="envfile_loader")
+def fixtures_envfile_loader() -> Generator[EnvFileLoader, None, None]:
+    """Create us a fixture"""
+    loader = EnvFileLoader()
+    assert not loader.loaded_values
+    yield loader
+
+
+@pytest.fixture(scope="function", name="environ_loader")
+def fixture_environ_loader() -> Generator[EnvironLoader, None, None]:
+    """A fixture because this is what we do"""
+    loader = EnvironLoader()
+    assert not loader.loaded_values
+    yield loader
+
+
 @pytest.fixture(scope="function", name="secretbox")
-def fixture_secretbox() -> Generator[secretbox.SecretBox, None, None]:
+def fixture_secretbox() -> Generator[SecretBox, None, None]:
     """Default instance of LoadEnv"""
-    inst = secretbox.SecretBox()
-    assert not inst.loaded_values
-    yield secretbox.SecretBox()
+    secrets = SecretBox()
+    assert not secrets.loaded_values
+    yield secrets
 
 
 ##############################################################################

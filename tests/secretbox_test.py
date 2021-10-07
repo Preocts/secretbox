@@ -8,22 +8,6 @@ from secretbox import SecretBox
 from tests.conftest import ENV_FILE_EXPECTED
 
 
-def test_load_env_file(mock_env_file: str, secretbox: SecretBox) -> None:
-    """Load and confirm expected values"""
-    secretbox.filename = mock_env_file
-    secretbox.load()
-    for key, value in ENV_FILE_EXPECTED.items():
-        assert secretbox.get(key) == value, f"Expected: {key}, {value}"
-
-
-def test_load_env_vars(secretbox: SecretBox) -> None:
-    """Load and confirm values from environ"""
-    with patch.dict(os.environ, ENV_FILE_EXPECTED):
-        secretbox.load()
-        for key, value in ENV_FILE_EXPECTED.items():
-            assert secretbox.get(key) == value, f"Expected: {key}, {value}"
-
-
 def test_load_order_file_over_environ(secretbox: SecretBox, mock_env_file: str) -> None:
     """Loaded file should override existing environ values"""
     secretbox.filename = mock_env_file
@@ -32,12 +16,6 @@ def test_load_order_file_over_environ(secretbox: SecretBox, mock_env_file: str) 
         secretbox.load()
         for key, value in ENV_FILE_EXPECTED.items():
             assert secretbox.get(key) == value, f"Expected: {key}, {value}"
-
-
-def test_load_missing_file(secretbox: SecretBox) -> None:
-    """Confirm clean run if file is missing"""
-    secretbox.filename = "BYWHATCHANCEWOULDTHISSEXIST.DERP"
-    secretbox.load_env_file()
 
 
 def test_autoload_tempfile(mock_env_file: str) -> None:

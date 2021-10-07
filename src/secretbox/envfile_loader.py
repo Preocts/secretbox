@@ -26,7 +26,12 @@ class EnvFileLoader(Loader):
     logger = logging.getLogger(__name__)
 
     def load_values(self, **kwargs: str) -> bool:
-        """Loads local .env from cwd or path, if provided"""
+        """
+        Loads local .env from cwd or path, if provided
+
+        Keywords:
+            filename : [str] Alternate filename to load over `.env`
+        """
         filename = kwargs.get("filename", "")
         self.reset_values()
         self.logger.debug("Reading vars from '%s'", filename)
