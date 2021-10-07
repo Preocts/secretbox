@@ -42,6 +42,7 @@ class AWSLoader(Loader):
     def load_values(self, **kwargs: Optional[str]) -> bool:
         """Load all secrets from AWS secret store"""
         if boto3 is None:
+            self.logger.debug("Skipping AWS loader, boto3 is not available.")
             return False
 
         self.reset_values()
@@ -74,18 +75,18 @@ class AWSLoader(Loader):
     def connect_aws_client(self) -> Optional[SecretsManagerClient]:
         """Make connection"""
         client: Optional[SecretsManagerClient] = None
-        if self.aws_region is None:
-            return client
-
         session = boto3.session.Session()
 
-        try:
-            client = session.client(
-                service_name="secretsmanager",
-                region_name=self.aws_region,
-            )
+        if self.aws_region is None:
+            self.logger.debug("No valid AWS region, cannot create client.")
 
-        except (ValueError, InvalidRegionError, NoRegionError) as err:
-            self.logger.error("Error creating AWS Secrets client: %s", err)
+        else:
+            try:
+                client = session.client(
+                    service_name="secretsmanager",
+                    region_name=self.aws_region,
+                )
+            except (ValueError, InvalidRegionError, NoRegionError) as err:
+                self.logger.error("Error creating AWS Secrets client: %s", err)
 
         return client
