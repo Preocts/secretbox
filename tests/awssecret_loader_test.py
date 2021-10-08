@@ -1,12 +1,11 @@
 """Unit tests for aws secrect manager interactions"""
 import importlib
 import sys
-from typing import Generator
 from unittest.mock import patch
 
 import pytest
-from secretbox import aws_loader  # This is what we test on!
-from secretbox.aws_loader import AWSLoader  # For typing only
+from secretbox import awssecret_loader as awssecret_loader_module
+from secretbox.awssecret_loader import AWSSecretLoader
 
 from tests.conftest import TEST_KEY_NAME
 from tests.conftest import TEST_REGION
@@ -14,18 +13,12 @@ from tests.conftest import TEST_STORE
 from tests.conftest import TEST_VALUE
 
 
-@pytest.fixture(scope="function", name="loader")
-def fixtures_loader() -> Generator[AWSLoader, None, None]:
-    """Create a fixture to test with"""
-    yield aws_loader.AWSLoader()
-
-
 @pytest.mark.usefixtures("remove_aws_creds")
-def test_load_aws_no_credentials(loader: AWSLoader) -> None:
+def test_load_aws_no_credentials(awssecret_loader: AWSSecretLoader) -> None:
     """Cause a NoCredentialsError to be handled"""
-    assert not loader.loaded_values
-    loader.load_values(aws_sstore=TEST_STORE, aws_region=TEST_REGION)
-    assert not loader.loaded_values
+    assert not awssecret_loader.loaded_values
+    awssecret_loader.load_values(aws_sstore=TEST_STORE, aws_region=TEST_REGION)
+    assert not awssecret_loader.loaded_values
 
 
 @pytest.mark.parametrize(
@@ -41,18 +34,18 @@ def test_load_aws_no_credentials(loader: AWSLoader) -> None:
 )
 @pytest.mark.usefixtures("mask_aws_creds", "secretsmanager")
 def test_load_aws_secrets(
-    loader: AWSLoader,
+    awssecret_loader: AWSSecretLoader,
     store: str,
     region: str,
     expected: str,
 ) -> None:
     """Load a secret from mocked AWS secret server"""
-    assert not loader.loaded_values.get(TEST_KEY_NAME)
-    loader.load_values(aws_sstore=store, aws_region=region)
-    assert loader.loaded_values.get(TEST_KEY_NAME) == expected
+    assert not awssecret_loader.loaded_values.get(TEST_KEY_NAME)
+    awssecret_loader.load_values(aws_sstore=store, aws_region=region)
+    assert awssecret_loader.loaded_values.get(TEST_KEY_NAME) == expected
 
 
-# def test_boto3_not_installed_load_aws(loader: AWSLoader) -> None:
+# def test_boto3_not_installed_load_aws(awssecret_loader: AWSSecretLoader) -> None:
 #     """Stop and raise if manual load_aws_store() is called without boto3"""
 #     with patch.object(aws_loader, "boto3", None):
 #         with pytest.raises(NotImplementedError):
@@ -60,18 +53,18 @@ def test_load_aws_secrets(
 
 
 @pytest.mark.usefixtures("mask_aws_creds", "secretsmanager")
-def test_boto3_not_installed_auto_load(loader: AWSLoader) -> None:
+def test_boto3_not_installed_auto_load(awssecret_loader: AWSSecretLoader) -> None:
     """Silently skip loading AWS secrets manager if no boto3"""
-    with patch.object(aws_loader, "boto3", None):
-        assert not loader.loaded_values
-        loader.load_values(aws_sstore=TEST_STORE, aws_region=TEST_REGION)
-        assert not loader.loaded_values
+    with patch.object(awssecret_loader_module, "boto3", None):
+        assert not awssecret_loader.loaded_values
+        awssecret_loader.load_values(aws_sstore=TEST_STORE, aws_region=TEST_REGION)
+        assert not awssecret_loader.loaded_values
 
 
 def test_boto3_missing_import_catch() -> None:
     """Reload loadenv without boto3"""
     with patch.dict(sys.modules, {"boto3": None}):
-        importlib.reload(aws_loader)
-        assert aws_loader.boto3 is None
+        importlib.reload(awssecret_loader_module)
+        assert awssecret_loader_module.boto3 is None
     # Reload after test to avoid polution
-    importlib.reload(aws_loader)
+    importlib.reload(awssecret_loader_module)

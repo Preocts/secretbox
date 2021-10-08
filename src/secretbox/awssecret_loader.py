@@ -23,7 +23,7 @@ except ImportError:
 from secretbox.loader import Loader
 
 
-class AWSLoader(Loader):
+class AWSSecretLoader(Loader):
     """Load secrets from an AWS secret manager"""
 
     logger = logging.getLogger(__name__)
