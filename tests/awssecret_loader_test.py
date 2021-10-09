@@ -41,15 +41,8 @@ def test_load_aws_secrets(
 ) -> None:
     """Load a secret from mocked AWS secret server"""
     assert not awssecret_loader.loaded_values.get(TEST_KEY_NAME)
-    awssecret_loader.load_values(aws_sstore=store, aws_region=region)
+    awssecret_loader.load_values(aws_sstore_name=store, aws_region_name=region)
     assert awssecret_loader.loaded_values.get(TEST_KEY_NAME) == expected
-
-
-# def test_boto3_not_installed_load_aws(awssecret_loader: AWSSecretLoader) -> None:
-#     """Stop and raise if manual load_aws_store() is called without boto3"""
-#     with patch.object(aws_loader, "boto3", None):
-#         with pytest.raises(NotImplementedError):
-#             assert not secretbox_aws.load_aws_store()
 
 
 @pytest.mark.usefixtures("mask_aws_creds", "secretsmanager")
