@@ -9,7 +9,6 @@ import os
 from typing import Any
 from typing import Dict
 from typing import List
-from typing import Literal
 from typing import Type
 
 from secretbox.awssecret_loader import AWSSecretLoader
@@ -60,7 +59,7 @@ class SecretBox:
 
     def load_from(
         self,
-        loaders: List[Literal["environ", "envfile", "awssecrets"]],
+        loaders: List[str],
         **kwargs: Any,
     ) -> None:
         """
