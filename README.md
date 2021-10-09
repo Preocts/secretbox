@@ -10,8 +10,38 @@ A library that offers a simple method of loading and accessing environmental var
 
 Loaded values are also injected into the local environ. This is to assist with adjacent libraries that reference `os.environ` values by default. Required values can be kept in a `.env` file instead of managing a script to load them into the environment.
 
+## Pending v2 release (Oct 15, 2021):
+
+Version 2 is on its way. This version will introduce API changes. The tradeoff of small code changes to adjust for these changes is a new level of flexibility for future secret sources.
+
+**If you've only used `.get()` and created an instance of SecretBox with `SecretBox(autoload=true)` then you should not notice a change!**
+
+Planned method changes includes:
+1. Remove - `load()`
+1. Remove - `load_env_vars()`
+1. Remove - `load_env_file()`
+1. Remove - `load_aws_store()`
+
+Planned class fingerprint changes include:
+1. Remove - parameter `filename: str`
+1. Remove - parameter `aws_sstore_name: Optional[str]`
+1. Remove - parameter `aws_region_name: Optional[str]`
+1. Add - `**kwargs: Any`
+
+Planned changes to loader behavior:
+1. **AWS Users**: `autoload=True` will *no longer* include AWS secret manager.
+    - Fix: include the following call to load AWS secret manager
+        ```py
+        secrets = SecretBox(auto_load=True)
+        secrets.load_from(["awssecrets"], aws_sstore_name="", aws_region_name="")
+        ```
+
+
+
+---
+
 ### Requirements
-- Python >=3.6,<3.10
+- Python >=3.6
 
 ### Optional Dependencies
 - boto3
@@ -59,19 +89,23 @@ if __name__ == "__main__":
 
 `SecretBox(filename: str = ".env", aws_sstore_name: Optional[str] = None, aws_region: Optional[str] = None, auto_load: bool = False)`
 
-**filename**
+**filename** (depreciated pending v2 release)
 - You can specify a `.env` formatted file and location, overriding the default behavior to load the `.env` from the working directory
 
-**aws_sstore_name**
+**aws_sstore_name** (depreciated pending v2 release)
 - When provided, an attempt to load values from named AWS secrets manager will be made. Requires `aws_region` to be provided. Requires `boto3` and `boto3-stubs[secretsmanager]` to be installed
 - **Note**:  Can be provided with the `AWS_SSTORE_NAME` environment variable.
 
-**aws_region_name**
+**aws_region_name** (depreciated pending v2 release)
 - When provided, an attempt to load values from the given AWS secrets manager found in this region will be made. Requires `aws_sstore_name` to be provided. Requires `boto3` and `boto3-stubs[secretsmanager]` to be installed
 - **Note**:  Can be provided with the `AWS_REGION_NAME` environment variable.
 
 **auto_load**
-- If true, the `load()` method will be auto-exectued on initialization
+- v1 behavior (pending change): Loads environment variables, .env file, and AWS (if provided)
+- v2 behavior: Loads environment variables and .env file
+
+**load_debug**
+- When true, internal logger level is set to DEBUG. Secret values are truncated, however do not leave this on for production deployments.
 
 ## Load Order
 
@@ -83,20 +117,30 @@ Secret values are loaded, and over-written if pre-existing, in the following ord
 
 ## SecretBox methods:
 
-**.get(["Key Name"], ("default"))**
+**.get(key: str, default: str = "") -> str**
 - Returns the string value of the loaded value by key name. If the key does not exist, an empty string will be returned `""` or the provided optional default value.
 - Note: This method pulls from the instance's state and does not reflect changes to the environment before/after loading.
 
-**.load()**
+**.load_from(loaders: list[str], \*\*kwargs: Any) -> None**
+- Runs load_values from each of the listed loadered in the order they appear
+- Loader options:
+  - **environ**
+    - Loads the current environmental variables into secretbox.
+  - **envfile**
+    - Loads .env file. Optional `filename` kwarg can override the default load of the current working directory `.env` file.
+  - **awssecret**
+    - Loads secrets from an AWS secret manager. Requires `aws_sstore_name` and `aws_region_name` keywords to be provided or for those values to be in the environment variables under `AWS_SSTORE_NAME` and `AWS_REGION_NAME`. `aws_sstore` is the name of the store, not the arn.
+
+**.load()** (depreciated pending v2 release)
 - Runs all importer methods. If optional dependencies are not installed, e.g. boto3, the importer is skipped.
 
-**.load_env_vars()**
+**.load_env_vars()** (depreciated pending v2 release)
 - Loads all existing `os.environ` values into state.
 
-**.load_env_file()**
+**.load_env_file()** (depreciated pending v2 release)
 - Loads `.env` file or any file provided with the `filename` argument on initialization.
 
-**.load_aws_store()**
+**.load_aws_store()** (depreciated pending v2 release)
 - Loads secrets from AWS secret manager. Requires `aws_sstore_name` and `aws_region` to have been provided. Will raise `NotImplementedError` if library requirements are missing.
 
 ---
