@@ -33,21 +33,14 @@ class AWSSecretLoader(Loader):
         self.aws_sstore: Optional[str] = None
         self.aws_region: Optional[str] = None
 
-    def get_values(self) -> Dict[str, str]:
-        return self.loaded_values
-
-    def reset_values(self) -> None:
-        self.loaded_values = {}
-
     def load_values(self, **kwargs: Optional[str]) -> bool:
         """Load all secrets from AWS secret store"""
         if boto3 is None:
             self.logger.debug("Skipping AWS loader, boto3 is not available.")
             return False
 
-        self.reset_values()
-        self.aws_sstore = kwargs.get("aws_sstore")
-        self.aws_region = kwargs.get("aws_region")
+        self.aws_sstore = kwargs.get("aws_sstore_name")
+        self.aws_region = kwargs.get("aws_region_name")
 
         secrets: Dict[str, str] = {}
         aws_client = self.connect_aws_client()
