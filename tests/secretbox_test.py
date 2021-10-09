@@ -8,6 +8,13 @@ from secretbox import SecretBox
 from tests.conftest import ENV_FILE_EXPECTED
 
 
+def test_load_from_with_unknown(secretbox: SecretBox, mock_env_file: str) -> None:
+    """Load secrets, throw an unknown loader in to ensure clean fall-through"""
+    assert not secretbox.loaded_values
+    secretbox.load_from(["envfile", "unknown"], filename=mock_env_file)
+    assert secretbox.loaded_values
+
+
 def test_load_order_file_over_environ(secretbox: SecretBox, mock_env_file: str) -> None:
     """Loaded file should override existing environ values"""
     secretbox.filename = mock_env_file
