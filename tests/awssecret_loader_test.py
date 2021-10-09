@@ -17,7 +17,10 @@ from tests.conftest import TEST_VALUE
 def test_load_aws_no_credentials(awssecret_loader: AWSSecretLoader) -> None:
     """Cause a NoCredentialsError to be handled"""
     assert not awssecret_loader.loaded_values
-    awssecret_loader.load_values(aws_sstore=TEST_STORE, aws_region=TEST_REGION)
+    awssecret_loader.load_values(
+        aws_sstore_name=TEST_STORE,
+        aws_region_name=TEST_REGION,
+    )
     assert not awssecret_loader.loaded_values
 
 
