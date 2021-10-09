@@ -81,28 +81,12 @@ def main() -> int:
 if __name__ == "__main__":
     raise SystemExit(main())
 ```
-```python
-from secretbox import SecretBox
-
-secrets = SecretBox(auto_load=True)
-
-
-def main() -> int:
-    """Main function"""
-    my_sevice_password = secrets.get("SERVICE_PW")
-    # More code
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())
-```
 
 ## Example use with `load_from()`
 
 This loads our system environ, our AWS secret store, and then a specific `.env` file if it exists (replacing any values from the prior to loads)
 
-Notice we can declare our parameters when creating the `SecretBox` instance or when calling `load_from()`. All keywords will be sent to the loaders with preference to the `load_from()` values.
+Notice we can declare our parameters when creating the `SecretBox` instance and when calling `load_from()`. All keywords will be sent to the loaders with preference to the `load_from()` values.
 
 ```python
 from secretbox import SecretBox
