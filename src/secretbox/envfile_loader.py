@@ -15,7 +15,6 @@ Author  : Preocts <Preocts#8196>
 Git Repo: https://github.com/Preocts/secretbox
 """
 import logging
-from typing import Dict
 
 from secretbox.loader import Loader
 
@@ -33,7 +32,6 @@ class EnvFileLoader(Loader):
             filename : [str] Alternate filename to load over `.env`
         """
         filename = kwargs.get("filename", "")
-        self.reset_values()
         self.logger.debug("Reading vars from '%s'", filename)
         try:
             with open(filename, "r", encoding="utf-8") as input_file:
@@ -41,14 +39,6 @@ class EnvFileLoader(Loader):
         except FileNotFoundError:
             return False
         return True
-
-    def get_values(self) -> Dict[str, str]:
-        """Return loaded values"""
-        return self.loaded_values
-
-    def reset_values(self) -> None:
-        """Hard reset"""
-        self.loaded_values = {}
 
     def parse_env_file(self, input_file: str) -> None:
         """Parses env file into key-pair values"""
