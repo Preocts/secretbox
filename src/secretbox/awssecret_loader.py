@@ -6,6 +6,8 @@ Git Repo: https://github.com/Preocts/secretbox
 """
 import json
 import logging
+import os
+from typing import Any
 from typing import Dict
 from typing import Optional
 
@@ -33,17 +35,34 @@ class AWSSecretLoader(Loader):
         self.aws_sstore: Optional[str] = None
         self.aws_region: Optional[str] = None
 
-    def load_values(self, **kwargs: Optional[str]) -> bool:
-        """Load all secrets from AWS secret store"""
+    def populate_region_store_names(self, **kwargs: Any) -> None:
+        """Populates store/region name"""
+        kw_sstore = kwargs.get("aws_sstore_name")
+        kw_region = kwargs.get("aws_region_name")
+        os_sstore = os.getenv("AWS_SSTORE_NAME")
+        os_region = os.getenv("AWS_REGION_NAME")
+
+        # Use the keyword over the os, default to None
+        self.aws_sstore = kw_sstore if kw_sstore is not None else os_sstore
+        self.aws_region = kw_region if kw_region is not None else os_region
+
+    def load_values(self, **kwargs: Any) -> bool:
+        """
+        Load all secrets from AWS secret store
+        Requires `aws_sstore_name` and `aws_region_name` keywords to be
+        provided or for those values to be in the environment variables
+        under `AWS_SSTORE_NAME` and `AWS_REGION_NAME`.
+
+        `aws_sstore_name` is the name of the store, not the arn.
+        """
         if boto3 is None:
             self.logger.debug("Skipping AWS loader, boto3 is not available.")
             return False
 
-        self.aws_sstore = kwargs.get("aws_sstore_name")
-        self.aws_region = kwargs.get("aws_region_name")
-
+        self.populate_region_store_names(**kwargs)
         secrets: Dict[str, str] = {}
         aws_client = self.connect_aws_client()
+
         if aws_client is None or self.aws_sstore is None:
             self.logger.debug("Cannot load AWS secrets, no valid client.")
             return False
