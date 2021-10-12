@@ -31,7 +31,7 @@ class EnvFileLoader(Loader):
         Keywords:
             filename : [str] Alternate filename to load over `.env`
         """
-        filename = kwargs.get("filename", "")
+        filename = kwargs.get("filename", ".env")
         self.logger.debug("Reading vars from '%s'", filename)
         try:
             with open(filename, "r", encoding="utf-8") as input_file:

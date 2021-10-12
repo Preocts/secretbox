@@ -12,7 +12,7 @@ black==21.9b0
     # via -r requirements-dev.in
 cfgv==3.3.1
     # via pre-commit
-click==8.0.1
+click==8.0.2
     # via black
 distlib==0.3.3
     # via virtualenv
@@ -66,7 +66,7 @@ pytest==6.2.5
     # via -r requirements-dev.in
 pyyaml==5.4.1
     # via pre-commit
-regex==2021.9.30
+regex==2021.10.8
     # via black
 six==1.16.0
     # via
