@@ -10,33 +10,6 @@ A library that offers a simple method of loading and accessing environmental var
 
 Loaded values are also injected into the local environ. This is to assist with adjacent libraries that reference `os.environ` values by default. Required values can be kept in a `.env` file instead of managing a script to load them into the environment.
 
-# `main` is now v2 pending official release. (Oct 15, 2021)
-## [See the diff here](https://github.com/Preocts/secretbox/compare/v1.6.1...main)
-
-Version 2 is on its way. This version will introduce API changes. The trade-off of small code changes to adjust for these changes is a new level of flexibility for future secret sources.
-
-**If you've only used `.get()` and created an instance of SecretBox with `SecretBox(autoload=true)` then you should not notice a change!**
-
-Method changes includes:
-1. Remove - `load()`
-1. Remove - `load_env_vars()`
-1. Remove - `load_env_file()`
-1. Remove - `load_aws_store()`
-
-Class fingerprint changes include:
-1. Remove - parameter `filename: str`
-1. Remove - parameter `aws_sstore_name: Optional[str]`
-1. Remove - parameter `aws_region_name: Optional[str]`
-1. Add - `**kwargs: Any`
-
-Changes to behavior:
-1. **AWS Users**: `autoload=True` will *no longer* include AWS secret manager.
-    - Fix: include the following call to load AWS secret manager
-        ```py
-        secrets = SecretBox(auto_load=True)
-        secrets.load_from(["awssecrets"], aws_sstore_name="mock", aws_region_name="us-east-2")
-        ```
-
 ---
 
 ### Requirements
@@ -61,7 +34,7 @@ $ pip install secretbox[aws]
 
 ---
 
-## Example use with auto_load
+## Example use with `auto_load=True`
 
 This loads the system environ and the `.env` from the current working directory into the class state for quick reference.
 
@@ -122,6 +95,9 @@ if __name__ == "__main__":
 **load_debug**
 - When true, internal logger level is set to DEBUG. Secret values are truncated, however it is not recommended to leave this on for production deployments.
 
+**kwargs**
+- All keyword arguments will be passed to loaders when called. These can also be given to the `load_from()` method as detailed below.
+
 ## SecretBox API:
 
 **.get(key: str, default: str = "") -> str**
@@ -137,6 +113,8 @@ if __name__ == "__main__":
     - Loads .env file. Optional `filename` kwarg can override the default load of the current working directory `.env` file.
   - **awssecret**
     - Loads secrets from an AWS secret manager. Requires `aws_sstore_name` and `aws_region_name` keywords to be provided or for those values to be in the environment variables under `AWS_SSTORE_NAME` and `AWS_REGION_NAME`. `aws_sstore_name` is the name of the store, not the arn.
+- **kwargs**
+  - All keyword arguments are passed into the loaders when they are called. Each loader details which extra keyword arguments it uses or requires above.
 
 ---
 
