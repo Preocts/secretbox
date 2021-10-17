@@ -45,10 +45,13 @@ class EnvFileLoader(Loader):
         for line in input_file.split("\n"):
             if not line or line.strip().startswith("#") or len(line.split("=", 1)) != 2:
                 continue
-            key, value_dirty = line.split("=", 1)
+            key, value = line.split("=", 1)
 
-            value = self.remove_lt_dbl_quotes(value_dirty.strip())
-            value = self.remove_lt_sgl_quotes(value)
+            value = value.strip()
+            if value.startswith('"'):
+                value = self.remove_lt_dbl_quotes(value)
+            elif value.startswith("'"):
+                value = self.remove_lt_sgl_quotes(value)
 
             self.loaded_values[key.strip()] = value
 

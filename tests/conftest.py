@@ -37,6 +37,7 @@ ENV_FILE_CONTENTS = [
     'USER_NAME="not_admin"',
     "MESSAGE = '    Totally not an \"admin\" account logging in'",
     "SINGLE_QUOTES = 'test'",
+    "NESTED_QUOTES = \"'Double your quotes, double your fun'\"",
 ]
 
 ENV_FILE_EXPECTED = {
@@ -47,6 +48,7 @@ ENV_FILE_EXPECTED = {
     "USER_NAME": "not_admin",
     "MESSAGE": '    Totally not an "admin" account logging in',
     "SINGLE_QUOTES": "test",
+    "NESTED_QUOTES": "'Double your quotes, double your fun'",
 }
 
 ##############################################################################
