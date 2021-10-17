@@ -1,4 +1,5 @@
 from abc import ABC
+from typing import Any
 from typing import Dict
 
 
@@ -9,6 +10,6 @@ class Loader(ABC):
         super().__init__()
         self.loaded_values: Dict[str, str] = {}
 
-    def load_values(self, **kwargs: str) -> bool:
+    def load_values(self, **kwargs: Any) -> bool:
         """Override with loading optionation, store within self.loaded_values"""
         raise NotImplementedError()  # pragma: no cover
