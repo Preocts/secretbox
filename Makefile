@@ -1,4 +1,4 @@
-.PHONY: init dev-install update clean-pyc clean-tests build-dist install
+.PHONY: init dev-install update clean-pyc clean-tests build-dist install clean-build clean-all
 
 init:
 	pip install --upgrade pip setuptools wheel pip-tools
@@ -31,6 +31,12 @@ clean-tests: ## Removes tox, coverage, and pytest artifacts
 	rm -rf coverage_html_report
 	rm -rf .coverage
 	find . -name '.pytest_cache' -exec rm -rf {} +
+
+clean-build: ## Remove build artifacts
+	rm -rf dist
+	rm -rf build
+
+clean-all: clean-pyc clean-tests clean-build
 
 build-dist: ## Builds source distribution and wheel distribution files
 	rm -rf ./dist
