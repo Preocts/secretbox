@@ -55,7 +55,21 @@ class SecretBox:
 
     def get(self, key: str, default: str = "") -> str:
         """Get a value by key, will return default if not found"""
-        return self.loaded_values[key] if key in self.loaded_values else default
+        return self.loaded_values.get(key, default)
+
+    def get_int(self, key: str, default: int) -> int:
+        """Convert value by key to int. Default is a required parameter for get_int()"""
+        value = self.get(key, default=str(default))
+        return int(value) if value.isnumeric() else default
+
+    def get_list(
+        self,
+        key: str,
+        delimiter: str = ",",
+        default: List[str] = [],
+    ) -> List[str]:
+        """Convert value by key to list seperated by delimiter. Can return empty list"""
+        return self.get(key).split(delimiter) if self.get(key) else default
 
     def load_from(
         self,

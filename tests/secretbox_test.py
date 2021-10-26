@@ -59,14 +59,37 @@ def test_autoload_tempfile(mock_env_file: str) -> None:
         assert secretbox.get(key) == value
 
 
-def test_missing_key_is_empty(secretbox: SecretBox) -> None:
+def test_get_missing_key_is_empty(secretbox: SecretBox) -> None:
     """Missing key? Check behind the milk"""
     assert secretbox.get("BYWHATCHANCEWOULDTHISSEXIST") == ""
 
 
-def test_default_missing_key(secretbox: SecretBox) -> None:
+def test_get_default_missing_key(secretbox: SecretBox) -> None:
     """Missing key? Return the provided default instead"""
     assert secretbox.get("BYWHATCHANCEWOULDTHISSEXIST", "Hello") == "Hello"
+
+
+def test_get_as_valid_int(secretbox: SecretBox) -> None:
+    """Helper to return ints"""
+    with patch.dict(os.environ, {"TEST_INT": "42"}):
+        secretbox.load_from(["environ"])
+        assert secretbox.get_int("TEST_INT", 0) == 42
+
+
+def test_get_as_invalid_int(secretbox: SecretBox) -> None:
+    """Helper to return ints should raise on assumption that value is an int"""
+    with patch.dict(os.environ, {"TEST_INT": "Forty-two"}):
+        secretbox.load_from(["environ"])
+        assert secretbox.get_int("TEST_INT", -1) == -1
+
+
+def test_get_as_list(secretbox: SecretBox) -> None:
+    """Helper to return a list based on given delimiter"""
+    with patch.dict(os.environ, {"TEST_STR": "rooBlank", "TEST_LIST": "1 | 2|3"}):
+        secretbox.load_from(["environ"])
+        assert secretbox.get_list("TEST_STR", "|") == ["rooBlank"]
+        assert secretbox.get_list("TEST_LIST") == ["1 | 2|3"]
+        assert secretbox.get_list("TEST_LIST", "|") == ["1 ", " 2", "3"]
 
 
 def test_load_debug_flag(caplog: Any) -> None:
