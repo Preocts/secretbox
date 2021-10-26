@@ -100,9 +100,16 @@ if __name__ == "__main__":
 
 ## SecretBox API:
 
+**NOTE:** All .get methods pull from the instance state of the class and do not reflect changes to the enviornment post-load.
+
 **.get(key: str, default: str = "") -> str**
 - Returns the string value of the loaded value by key name. If the key does not exist, an empty string will be returned `""` or the provided optional default value.
-- Note: This method pulls from the instance's state and does not reflect changes to the environment before/after loading.
+
+**.get_int(key: str, default: int) -> int**
+- Returns the int value of the loaded value by key name. `default` is required for this method due to the nature of the datatype. `default` is returned if the value is not found **or** if the value cannot be converted to an integer.
+
+**.get_list(key: str, delimiter: str = ",", default: List[str] = []) -> List[str]:**
+- Returns a list of the loaded value by key name, seperated at defined delimiter. No check is made if delimiter exists in value. `default` is returned if value is not found.
 
 **.load_from(loaders: list[str], \*\*kwargs: Any) -> None**
 - Runs load_values from each of the listed loadered in the order they appear
@@ -225,6 +232,8 @@ This repo has a Makefile with some quality of life scripts if your system suppor
 
 - `install` : Clean all artifacts, update pip, install requirements with no updates
 - `update` : Clean all artifacts, update pip, update requirements, install everything
+- `build-dist` : Build source distribution and wheel distribution
 - `clean-pyc` : Deletes python/mypy artifacts
 - `clean-tests` : Deletes tox, coverage, and pytest artifacts
-- `build-dist` : Build source distribution and wheel distribution
+- `clean-build` : Deletes build artifacts
+- `clean-all` : Runs all clean scripts
