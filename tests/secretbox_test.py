@@ -3,6 +3,7 @@ import os
 from typing import Any
 from unittest.mock import patch
 
+import pytest
 from secretbox import SecretBox
 
 from tests.conftest import ENV_FILE_EXPECTED
@@ -61,7 +62,8 @@ def test_autoload_tempfile(mock_env_file: str) -> None:
 
 def test_get_missing_key_is_empty(secretbox: SecretBox) -> None:
     """Missing key? Check behind the milk"""
-    assert secretbox.get("BYWHATCHANCEWOULDTHISSEXIST") == ""
+    with pytest.raises(KeyError):
+        secretbox.get("BYWHATCHANCEWOULDTHISSEXIST")
 
 
 def test_get_default_missing_key(secretbox: SecretBox) -> None:
@@ -74,13 +76,20 @@ def test_get_as_valid_int(secretbox: SecretBox) -> None:
     with patch.dict(os.environ, {"TEST_INT": "42"}):
         secretbox.load_from(["environ"])
         assert secretbox.get_int("TEST_INT", 0) == 42
+        assert secretbox.get_int("TEST_INT") == 42
 
 
 def test_get_as_invalid_int(secretbox: SecretBox) -> None:
     """Helper to return ints should raise on assumption that value is an int"""
     with patch.dict(os.environ, {"TEST_INT": "Forty-two"}):
         secretbox.load_from(["environ"])
-        assert secretbox.get_int("TEST_INT", -1) == -1
+        with pytest.raises(ValueError):
+            secretbox.get_int("TEST_INT", -1)
+
+
+def test_get_default_int(secretbox: SecretBox) -> None:
+    """Return the default if provided instead of raising"""
+    assert secretbox.get_int("NOTTHERE", 10) == 10
 
 
 def test_get_as_list(secretbox: SecretBox) -> None:
@@ -92,12 +101,15 @@ def test_get_as_list(secretbox: SecretBox) -> None:
         assert secretbox.get_list("TEST_LIST", "|") == ["1 ", " 2", "3"]
 
 
+def test_get_as_list_default(secretbox: SecretBox) -> None:
+    """Return the default if provided instead of raising"""
+    assert secretbox.get_list("NOTTHERE", ",", ["1", "2", "3"]) == ["1", "2", "3"]
+
+
 def test_load_debug_flag(caplog: Any) -> None:
     """Ensure logging is silentish"""
     _ = SecretBox()
-
     assert "Debug flag passed." not in caplog.text
 
     _ = SecretBox(debug_flag=True)
-
     assert "Debug flag passed." in caplog.text
