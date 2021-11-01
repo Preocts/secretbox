@@ -9,6 +9,7 @@ import os
 from typing import Any
 from typing import Dict
 from typing import List
+from typing import Optional
 from typing import Type
 
 from secretbox.awssecret_loader import AWSSecretLoader
@@ -66,9 +67,11 @@ class SecretBox:
         self,
         key: str,
         delimiter: str = ",",
-        default: List[str] = [],
+        default: Optional[List[str]] = None,
     ) -> List[str]:
         """Convert value by key to list seperated by delimiter. Can return empty list"""
+        if default is None:
+            default = []
         return self.get(key).split(delimiter) if self.get(key) else default
 
     def load_from(
