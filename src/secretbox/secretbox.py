@@ -31,6 +31,7 @@ class SecretBox:
 
     def __init__(
         self,
+        *,
         auto_load: bool = False,
         debug_flag: bool = False,
         **kwargs: Any,
@@ -38,11 +39,11 @@ class SecretBox:
         """
         Initialize SecretBox
 
-        Args:
+        Keyword Args:
             auto_load : If true, environment vars and `.env` will be loaded
             load_debug : When true, internal logger level is set to DEBUG
 
-        Keywords:
+        Additional Keywords:
             These will be passed to all loaders when called
         """
         self.logger.setLevel(level="DEBUG" if debug_flag else "ERROR")
@@ -54,14 +55,20 @@ class SecretBox:
         if auto_load:
             self.load_from(["environ", "envfile"])
 
-    def get(self, key: str, default: str = "") -> str:
-        """Get a value by key, will return default if not found"""
-        return self.loaded_values.get(key, default)
+    def get(self, key: str, default: Optional[str] = None) -> str:
+        """Get a value by key, return default if not found or raise if no default"""
+        if default is None:
+            return self.loaded_values[key]
+        else:
+            return self.loaded_values.get(key, default)
 
-    def get_int(self, key: str, default: int) -> int:
-        """Convert value by key to int. Default is a required parameter for get_int()"""
-        value = self.get(key, default=str(default))
-        return int(value) if value.isnumeric() else default
+    def get_int(self, key: str, default: Optional[int] = None) -> int:
+        """Convert value by key to int."""
+        if default is None:
+            return int(self.get(key))
+        else:
+            value = self.get(key, "")
+            return int(value) if value else default
 
     def get_list(
         self,
@@ -69,10 +76,14 @@ class SecretBox:
         delimiter: str = ",",
         default: Optional[List[str]] = None,
     ) -> List[str]:
-        """Convert value by key to list seperated by delimiter. Can return empty list"""
+        """Convert value by key to list seperated by delimiter."""
         if default is None:
             default = []
-        return self.get(key).split(delimiter) if self.get(key) else default
+        if not default:
+            return self.get(key).split(delimiter)  # @@@
+        else:
+            value = self.get(key, "")
+            return value.split(delimiter) if value else default
 
     def load_from(
         self,
@@ -118,6 +129,4 @@ class SecretBox:
 
     def _join_kwarg_defaults(self, new_kwargs: Dict[str, str]) -> Dict[str, str]:
         """Update default kwargs with specific while not mutating either"""
-        base = self.kwarg_defaults.copy()
-        base.update(new_kwargs)
-        return base
+        return {**self.kwarg_defaults, **new_kwargs}

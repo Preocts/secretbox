@@ -87,7 +87,7 @@ if __name__ == "__main__":
 
 ## SecretBox arguments:
 
-`SecretBox(auto_load: bool = False, load_debug: bool = False, **kwargs: Any)`
+`SecretBox(*, auto_load: bool = False, load_debug: bool = False, **kwargs: Any)`
 
 **auto_load**
 - Loads environment variables and then the .env file from current working directory if found.
@@ -102,14 +102,14 @@ if __name__ == "__main__":
 
 **NOTE:** All .get methods pull from the instance state of the class and do not reflect changes to the enviornment post-load.
 
-**.get(key: str, default: str = "") -> str**
-- Returns the string value of the loaded value by key name. If the key does not exist, an empty string will be returned `""` or the provided optional default value.
+**.get(key: str, default: str | None = None) -> str**
+- Returns the string value of the loaded value by key name. If the key does not exists then `KeyError` will be raised unless a default is given, then that is returned.
 
-**.get_int(key: str, default: int) -> int**
-- Returns the int value of the loaded value by key name. `default` is required for this method due to the nature of the datatype. `default` is returned if the value is not found **or** if the value cannot be converted to an integer.
+**.get_int(key: str, default: int | None = None) -> int**
+- Returns the int value of the loaded value by key name. Raise `ValueError` if the found key cannot convert to `int`. Raise `KeyError` if the key is not found and no default is given.
 
-**.get_list(key: str, delimiter: str = ",", default: List[str] = []) -> List[str]:**
-- Returns a list of the loaded value by key name, seperated at defined delimiter. No check is made if delimiter exists in value. `default` is returned if value is not found.
+**.get_list(key: str, delimiter: str = ",", default: list[str] | None = None) -> List[str]:**
+- Returns a list of the loaded value by key name, seperated at defined delimiter. No check is made if delimiter exists in value. `default` is returned if key is not found otherwise a `KeyError` is raised.
 
 **.load_from(loaders: list[str], \*\*kwargs: Any) -> None**
 - Runs load_values from each of the listed loadered in the order they appear
