@@ -36,8 +36,9 @@ ENV_FILE_CONTENTS = [
     "PASSWORD = correct horse battery staple",
     'USER_NAME="not_admin"',
     "MESSAGE = '    Totally not an \"admin\" account logging in'",
-    "SINGLE_QUOTES = 'test'",
+    "  SINGLE_QUOTES = 'test'",
     "NESTED_QUOTES = \"'Double your quotes, double your fun'\"",
+    'eXport SHELL_COMPATIBLE = "well, that happened"',
 ]
 
 ENV_FILE_EXPECTED = {
@@ -49,6 +50,7 @@ ENV_FILE_EXPECTED = {
     "MESSAGE": '    Totally not an "admin" account logging in',
     "SINGLE_QUOTES": "test",
     "NESTED_QUOTES": "'Double your quotes, double your fun'",
+    "SHELL_COMPATIBLE": "well, that happened",
 }
 
 ##############################################################################

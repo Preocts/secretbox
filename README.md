@@ -130,10 +130,11 @@ if __name__ == "__main__":
 Current format for the `.env` file supports strings only and is parsed in the following order:
 - Each seperate line is considered a new possible key/value set
 - Each set is delimted by the first `=` found
+- Leading `export` keyword is removed from key, case agnostic
 - Leading and trailing whitespace are removed
 - Matched leading/trailing single quotes or double quotes will be stripped from values (not keys).
 
-I'm open to suggestions on standards to follow here.
+I'm open to suggestions on standards to follow here. This is compiled from "crowd standard" and what is useful at the time.
 
 This `.env` example:
 ```conf
@@ -151,7 +152,7 @@ Will be parsed as:
 
 This `.env` example:
 ```conf
-PASSWORD = correct horse battery staple
+export PASSWORD = correct horse battery staple
 USER_NAME="not_admin"
 
 MESSAGE = '    Totally not an "admin" account logging in'
