@@ -15,12 +15,17 @@ Author  : Preocts <Preocts#8196>
 Git Repo: https://github.com/Preocts/secretbox
 """
 import logging
+import re
 
 from secretbox.loader import Loader
 
 
 class EnvFileLoader(Loader):
     """Load local .env file"""
+
+    LT_DBL_QUOTES = r'^".*"$'
+    LT_SGL_QUOTES = r"^'.*'$"
+    EXPORT_PREFIX = r"^export\s"
 
     logger = logging.getLogger(__name__)
 
@@ -47,18 +52,24 @@ class EnvFileLoader(Loader):
                 continue
             key, value = line.split("=", 1)
 
+            key = self.strip_export(key).strip()
             value = value.strip()
+
             if value.startswith('"'):
                 value = self.remove_lt_dbl_quotes(value)
             elif value.startswith("'"):
                 value = self.remove_lt_sgl_quotes(value)
 
-            self.loaded_values[key.strip()] = value
+            self.loaded_values[key] = value
 
     def remove_lt_dbl_quotes(self, in_: str) -> str:
         """Removes matched leading and trailing double quotes"""
-        return in_.strip('"') if in_.startswith('"') and in_.endswith('"') else in_
+        return in_.strip('"') if re.match(self.LT_DBL_QUOTES, in_) else in_
 
     def remove_lt_sgl_quotes(self, in_: str) -> str:
         """Removes matched leading and trailing double quotes"""
-        return in_.strip("'") if in_.startswith("'") and in_.endswith("'") else in_
+        return in_.strip("'") if re.match(self.LT_SGL_QUOTES, in_) else in_
+
+    def strip_export(self, in_: str) -> str:
+        """Removes leading 'export ' prefix, case agnostic"""
+        return re.sub(self.EXPORT_PREFIX, "", in_, flags=re.IGNORECASE)
