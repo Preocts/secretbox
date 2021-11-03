@@ -80,8 +80,7 @@ class AWSSecretLoader(Loader):
         else:
             self.logger.debug("Found %s values from AWS.", len(secrets))
             secrets = json.loads(response.get("SecretString", "{}"))
-            for key, value in secrets.items():
-                self.loaded_values[key] = value
+            self.loaded_values.update(secrets)
         return bool(secrets)
 
     def connect_aws_client(self) -> Optional[SecretsManagerClient]:

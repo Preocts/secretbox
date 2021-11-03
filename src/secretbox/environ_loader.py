@@ -18,6 +18,5 @@ class EnvironLoader(Loader):
     def load_values(self, **kwargs: str) -> bool:
         """Loads all visible environmental variables"""
         self.logger.debug("Reading %s environ variables", len(os.environ))
-        for key, value in os.environ.items():
-            self.loaded_values[key] = value
+        self.loaded_values.update(os.environ)
         return True
