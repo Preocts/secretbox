@@ -80,7 +80,7 @@ class SecretBox:
         if default is None:
             default = []
         if not default:
-            return self.get(key).split(delimiter)  # @@@
+            return self.get(key).split(delimiter)
         else:
             value = self.get(key, "")
             return value.split(delimiter) if value else default
@@ -91,7 +91,7 @@ class SecretBox:
         **kwargs: Any,
     ) -> None:
         """
-        Runs load_values from each of the listed loadered in the order they appear
+        Runs load_values from each of the listed loader in the order they appear
 
         Loader options:
             environ:
@@ -109,7 +109,7 @@ class SecretBox:
             self.logger.debug("Loading from interface: `%s`", loader_name)
             interface = LOADERS.get(loader_name)
             if interface is None:
-                self.logger.warning("Loader `%s` unknown, skipping", loader_name)
+                self.logger.error("Loader `%s` unknown, skipping", loader_name)
                 continue
             loader = interface()
             loader.load_values(**self._join_kwarg_defaults(kwargs))
