@@ -25,7 +25,7 @@ class EnvFileLoader(Loader):
 
     LT_DBL_QUOTES = r'^".*"$'
     LT_SGL_QUOTES = r"^'.*'$"
-    EXPORT_PREFIX = r"^export\s"
+    EXPORT_PREFIX = r"^\s*?export\s"
 
     logger = logging.getLogger(__name__)
 

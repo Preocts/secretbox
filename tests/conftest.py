@@ -37,8 +37,8 @@ ENV_FILE_CONTENTS = [
     'USER_NAME="not_admin"',
     "MESSAGE = '    Totally not an \"admin\" account logging in'",
     "  SINGLE_QUOTES = 'test'",
-    "NESTED_QUOTES = \"'Double your quotes, double your fun'\"",
-    'eXport SHELL_COMPATIBLE = "well, that happened"',
+    "export NESTED_QUOTES = \"'Double your quotes, double your fun'\"",
+    '   eXport SHELL_COMPATIBLE = "well, that happened"',
 ]
 
 ENV_FILE_EXPECTED = {
