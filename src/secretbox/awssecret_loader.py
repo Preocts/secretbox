@@ -24,6 +24,8 @@ except ImportError:
 
 from secretbox.loader import Loader
 
+FILTER_SECRETS = True
+
 
 class AWSSecretLoader(Loader):
     """Load secrets from an AWS secret manager"""
@@ -68,6 +70,7 @@ class AWSSecretLoader(Loader):
             return False
 
         try:
+            logging.getLogger("botocore.parsers").addFilter(self.secrets_filter)
             response = aws_client.get_secret_value(SecretId=self.aws_sstore)
 
         except NoCredentialsError as err:
@@ -81,6 +84,10 @@ class AWSSecretLoader(Loader):
             self.logger.debug("Found %s values from AWS.", len(secrets))
             secrets = json.loads(response.get("SecretString", "{}"))
             self.loaded_values.update(secrets)
+
+        finally:
+            logging.getLogger("botocore.parsers").removeFilter(self.secrets_filter)
+
         return bool(secrets)
 
     def connect_aws_client(self) -> Optional[SecretsManagerClient]:
@@ -101,3 +108,19 @@ class AWSSecretLoader(Loader):
                 self.logger.error("Error creating AWS Secrets client: %s", err)
 
         return client
+
+    @staticmethod
+    def secrets_filter(record: logging.LogRecord) -> bool:
+        """
+        Hide botocore.parsers responses which include decrypted secrets
+
+        https://github.com/boto/botocore/issues/1211#issuecomment-327799341
+        """
+        if record.levelno > logging.DEBUG or not FILTER_SECRETS:
+            return True
+        if "body" in record.msg or "headers" in record.msg:
+            if isinstance(record.args, dict):
+                record.args = {key: "REDACTED" for key in record.args}
+            else:
+                record.args = ("REDACTED",) * len(record.args)
+        return True

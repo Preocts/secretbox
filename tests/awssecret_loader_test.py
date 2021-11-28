@@ -1,7 +1,10 @@
 """Unit tests for aws secrect manager interactions"""
 import importlib
+import logging
 import os
 import sys
+from typing import Any
+from typing import Generator
 from unittest.mock import patch
 
 import pytest
@@ -12,6 +15,14 @@ from tests.conftest import TEST_KEY_NAME
 from tests.conftest import TEST_REGION
 from tests.conftest import TEST_STORE
 from tests.conftest import TEST_VALUE
+
+
+@pytest.fixture
+def awssecret_loader() -> Generator[AWSSecretLoader, None, None]:
+    """Create a fixture to test with"""
+    loader = AWSSecretLoader()
+    assert not loader.loaded_values
+    yield loader
 
 
 @pytest.mark.usefixtures("remove_aws_creds")
@@ -98,3 +109,26 @@ def test_populate_region_store_names_kw(awssecret_loader: AWSSecretLoader) -> No
         )
         assert awssecret_loader.aws_sstore == "NewStore"
         assert awssecret_loader.aws_region == "NewRegion"
+
+
+def test_secret_filter(caplog: Any) -> None:
+    logger = logging.getLogger("secrets")
+    logger.addFilter(AWSSecretLoader.secrets_filter)
+    logger.setLevel("DEBUG")
+    secret_dict = {"allYour": "Passwords"}
+    secret_tuple = ("I am a plain-text secrets",)
+    secret_string = "Your password is 12345"
+
+    logger.debug("Reponse body: %s", secret_dict)
+    logger.debug("Reponse body: %s", secret_tuple)
+    logger.debug("Reponse body: %s", secret_string)
+    logger.debug("Response body:")
+    logger.debug("Standard log")
+
+    logger.info("Safe Info")
+
+    assert "Passwords" not in caplog.text
+    assert "plain-text" not in caplog.text
+    assert "12345" not in caplog.text
+    assert "Standard log" in caplog.text
+    assert "Safe Info" in caplog.text
