@@ -9,7 +9,6 @@ import pytest
 from boto3.session import Session
 from moto.secretsmanager import mock_secretsmanager
 from mypy_boto3_secretsmanager.client import SecretsManagerClient
-from secretbox.awssecret_loader import AWSSecretLoader
 from secretbox.envfile_loader import EnvFileLoader
 from secretbox.environ_loader import EnvironLoader
 from secretbox.secretbox import SecretBox
@@ -70,14 +69,6 @@ def fixtures_envfile_loader() -> Generator[EnvFileLoader, None, None]:
 def fixture_environ_loader() -> Generator[EnvironLoader, None, None]:
     """A fixture because this is what we do"""
     loader = EnvironLoader()
-    assert not loader.loaded_values
-    yield loader
-
-
-@pytest.fixture(scope="function", name="awssecret_loader")
-def fixtures_awssecret_loader() -> Generator[AWSSecretLoader, None, None]:
-    """Create a fixture to test with"""
-    loader = AWSSecretLoader()
     assert not loader.loaded_values
     yield loader
 
