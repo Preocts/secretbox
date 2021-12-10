@@ -4,13 +4,13 @@ from typing import Generator
 import pytest
 from secretbox.awsparameterstore_loader import AWSParameterStore
 
+from tests.conftest import TEST_LIST
 from tests.conftest import TEST_PATH
 from tests.conftest import TEST_REGION
 from tests.conftest import TEST_STORE
 from tests.conftest import TEST_STORE2
 from tests.conftest import TEST_STORE3
 from tests.conftest import TEST_VALUE
-from tests.conftest import TEST_LIST
 
 
 @pytest.fixture

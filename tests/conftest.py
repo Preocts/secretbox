@@ -4,13 +4,13 @@ import os
 import tempfile
 from typing import Generator
 from unittest.mock import patch
-from mypy_boto3_ssm.client import SSMClient
 
 import pytest
 from boto3.session import Session
 from moto.secretsmanager import mock_secretsmanager
 from moto.ssm import mock_ssm
 from mypy_boto3_secretsmanager.client import SecretsManagerClient
+from mypy_boto3_ssm.client import SSMClient
 from secretbox.envfile_loader import EnvFileLoader
 from secretbox.environ_loader import EnvironLoader
 from secretbox.secretbox import SecretBox

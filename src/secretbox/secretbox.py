@@ -12,8 +12,8 @@ from typing import List
 from typing import Optional
 from typing import Type
 
-from secretbox.awssecret_loader import AWSSecretLoader
 from secretbox.awsparameterstore_loader import AWSParameterStore
+from secretbox.awssecret_loader import AWSSecretLoader
 from secretbox.envfile_loader import EnvFileLoader
 from secretbox.environ_loader import EnvironLoader
 from secretbox.loader import Loader
