@@ -46,7 +46,7 @@ class AWSParameterStore(AWSSecretLoader):
             self.logger.error("Invalid SSM client")
             return False
 
-        # if the prefix contains forward slashes, only treat the last token as key name
+        # if the prefix contains forward slashes treat the last token as the key name
         do_split = "/" in self.aws_sstore
 
         try:
