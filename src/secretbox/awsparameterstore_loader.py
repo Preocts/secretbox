@@ -4,7 +4,9 @@ Created     : 2021-12-10
 SCM Repo    : https://github.com/Preocts/secretbox
 """
 import logging
-from typing import Any, Optional
+from typing import Any
+from typing import Optional
+
 from secretbox.awssecret_loader import AWSSecretLoader
 
 try:
