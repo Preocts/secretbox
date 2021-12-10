@@ -8,7 +8,9 @@ from unittest.mock import patch
 import pytest
 from boto3.session import Session
 from moto.secretsmanager import mock_secretsmanager
+from moto.ssm import mock_ssm
 from mypy_boto3_secretsmanager.client import SecretsManagerClient
+from mypy_boto3_ssm.client import SSMClient
 from secretbox.envfile_loader import EnvFileLoader
 from secretbox.environ_loader import EnvironLoader
 from secretbox.secretbox import SecretBox
@@ -16,7 +18,11 @@ from secretbox.secretbox import SecretBox
 TEST_KEY_NAME = "TEST_KEY"
 TEST_VALUE = "abcdefg"
 TEST_STORE = "my_store"
+TEST_STORE2 = "my_store2"
+TEST_STORE3 = "my_store3"
 TEST_REGION = "us-east-1"
+TEST_PATH = "/my/parameter/prefix/"
+TEST_LIST = ",".join([TEST_VALUE, TEST_VALUE, TEST_VALUE])
 
 AWS_ENV_KEYS = [
     "AWS_ACCESS_KEY",
@@ -133,5 +139,35 @@ def fixture_secretsmanager() -> Generator[SecretsManagerClient, None, None]:
             region_name=TEST_REGION,
         )
         client.create_secret(Name=TEST_STORE, SecretString=secret_values)
+
+        yield client
+
+
+@pytest.fixture(scope="function", name="parameterstore")
+def fixture_parameterstore() -> Generator[SSMClient, None, None]:
+    """Populate mock parameterstore with two values we can load via prefix"""
+
+    with mock_ssm():
+        session = Session()
+        client = session.client(
+            service_name="ssm",
+            region_name=TEST_REGION,
+        )
+        client.put_parameter(
+            Name=f"{TEST_PATH}{TEST_STORE}", Value=TEST_VALUE, Type="String"
+        )
+        # Load enough so pagination can be tested
+        for x in range(1, 31):
+            client.put_parameter(
+                Name=f"{TEST_PATH}{TEST_STORE}/{x}", Value=TEST_VALUE, Type="String"
+            )
+        client.put_parameter(
+            Name=f"{TEST_PATH}{TEST_STORE2}", Value=TEST_VALUE, Type="SecureString"
+        )
+        client.put_parameter(
+            Name=f"{TEST_PATH}{TEST_STORE3}",
+            Value=TEST_LIST,
+            Type="StringList",
+        )
 
         yield client

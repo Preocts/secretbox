@@ -42,7 +42,7 @@ class AWSSecretLoader(Loader):
         kw_sstore = kwargs.get("aws_sstore_name")
         kw_region = kwargs.get("aws_region_name")
         os_sstore = os.getenv("AWS_SSTORE_NAME")
-        os_region = os.getenv("AWS_REGION_NAME")
+        os_region = os.getenv("AWS_REGION_NAME", os.getenv("AWS_REGION"))  # Lambda's
 
         # Use the keyword over the os, default to None
         self.aws_sstore = kw_sstore if kw_sstore is not None else os_sstore
