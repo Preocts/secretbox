@@ -4,13 +4,13 @@ import os
 import tempfile
 from typing import Generator
 from unittest.mock import patch
-from mypy_boto3_ssm.client import SSMClient
 
 import pytest
 from boto3.session import Session
 from moto.secretsmanager import mock_secretsmanager
 from moto.ssm import mock_ssm
 from mypy_boto3_secretsmanager.client import SecretsManagerClient
+from mypy_boto3_ssm.client import SSMClient
 from secretbox.envfile_loader import EnvFileLoader
 from secretbox.environ_loader import EnvironLoader
 from secretbox.secretbox import SecretBox
@@ -156,9 +156,11 @@ def fixture_parameterstore() -> Generator[SSMClient, None, None]:
         client.put_parameter(
             Name=f"{TEST_PATH}{TEST_STORE}", Value=TEST_VALUE, Type="String"
         )
-        client.put_parameter(
-            Name=f"{TEST_PATH}{TEST_STORE}/", Value=TEST_VALUE, Type="String"
-        )
+        # Load enough so pagination can be tested
+        for x in range(1, 31):
+            client.put_parameter(
+                Name=f"{TEST_PATH}{TEST_STORE}/{x}", Value=TEST_VALUE, Type="String"
+            )
         client.put_parameter(
             Name=f"{TEST_PATH}{TEST_STORE2}", Value=TEST_VALUE, Type="SecureString"
         )
