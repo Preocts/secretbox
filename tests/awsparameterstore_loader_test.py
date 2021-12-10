@@ -85,6 +85,6 @@ def test_parameter_values(
     assert loader.load_values(aws_sstore_name=TEST_PATH, aws_region_name=TEST_REGION)
 
     # both our parameters exist and have the expected value
-    assert loader.loaded_values.get(f"{TEST_PATH}{TEST_STORE}") == TEST_VALUE
-    assert loader.loaded_values.get(f"{TEST_PATH}{TEST_STORE2}") == TEST_VALUE
-    assert loader.loaded_values.get(f"{TEST_PATH}{TEST_STORE3}") == TEST_LIST
+    assert loader.loaded_values.get(TEST_STORE) == TEST_VALUE
+    assert loader.loaded_values.get(TEST_STORE2) == TEST_VALUE
+    assert loader.loaded_values.get(TEST_STORE3) == TEST_LIST

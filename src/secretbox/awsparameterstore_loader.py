@@ -46,6 +46,9 @@ class AWSParameterStore(AWSSecretLoader):
             self.logger.error("Invalid SSM client")
             return False
 
+        # if the prefix contains forward slashes, only treat the last token as the key name
+        do_split = '/' in self.aws_sstore
+
         try:
             # ensure the http client doesn't write our sensitive payload to the logger
             logging.getLogger("botocore.parsers").addFilter(self.secrets_filter)
@@ -61,7 +64,9 @@ class AWSParameterStore(AWSSecretLoader):
             while True:
                 resp = aws_client.get_parameters_by_path(**args)
                 for param in resp["Parameters"] or []:
-                    self.loaded_values[param["Name"]] = param["Value"]
+                    # remove the prefix, we want /path/to/DB_PASSWORD to populate os.env.DB_PASSWORD
+                    key = param["Name"].split('/')[-1] if do_split else param['Name']
+                    self.loaded_values[key] = param["Value"]
 
                 if "NextToken" in resp and resp["NextToken"]:
                     args["NextToken"] = resp["NextToken"]
