@@ -13,6 +13,7 @@ from typing import Optional
 from typing import Type
 
 from secretbox.awssecret_loader import AWSSecretLoader
+from secretbox.awsparameterstore_loader import AWSParameterStore
 from secretbox.envfile_loader import EnvFileLoader
 from secretbox.environ_loader import EnvironLoader
 from secretbox.loader import Loader
@@ -21,6 +22,7 @@ LOADERS: Dict[str, Type[Loader]] = {
     "envfile": EnvFileLoader,
     "environ": EnvironLoader,
     "awssecret": AWSSecretLoader,
+    "awsparameterstore": AWSParameterStore,
 }
 
 
