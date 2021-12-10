@@ -13,9 +13,11 @@ Loaded values are also injected into the local environ. This is to assist with a
 ---
 
 ### Requirements
+
 - Python >=3.6
 
 ### Optional Dependencies
+
 - boto3
 - boto3-stubs[secretsmanager]
 
@@ -27,7 +29,8 @@ Loaded values are also injected into the local environ. This is to assist with a
 $ pip install secretbox
 ```
 
-*Optional AWS Secret Manager support*
+_Optional AWS Secret Manager support_
+
 ```bash
 $ pip install secretbox[aws]
 ```
@@ -90,12 +93,15 @@ if __name__ == "__main__":
 `SecretBox(*, auto_load: bool = False, load_debug: bool = False, **kwargs: Any)`
 
 **auto_load**
+
 - Loads environment variables and then the .env file from current working directory if found.
 
 **load_debug**
+
 - When true, internal logger level is set to DEBUG. Secret values are truncated, however it is not recommended to leave this on for production deployments.
 
 **kwargs**
+
 - All keyword arguments will be passed to loaders when called. These can also be given to the `load_from()` method as detailed below.
 
 ## SecretBox API:
@@ -103,15 +109,19 @@ if __name__ == "__main__":
 **NOTE:** All .get methods pull from the instance state of the class and do not reflect changes to the enviornment post-load.
 
 **.get(key: str, default: str | None = None) -> str**
+
 - Returns the string value of the loaded value by key name. If the key does not exists then `KeyError` will be raised unless a default is given, then that is returned.
 
 **.get_int(key: str, default: int | None = None) -> int**
+
 - Returns the int value of the loaded value by key name. Raise `ValueError` if the found key cannot convert to `int`. Raise `KeyError` if the key is not found and no default is given.
 
 **.get_list(key: str, delimiter: str = ",", default: list[str] | None = None) -> List[str]:**
+
 - Returns a list of the loaded value by key name, seperated at defined delimiter. No check is made if delimiter exists in value. `default` is returned if key is not found otherwise a `KeyError` is raised.
 
 **.load_from(loaders: list[str], \*\*kwargs: Any) -> None**
+
 - Runs load_values from each of the listed loadered in the order they appear
 - Loader options:
   - **environ**
@@ -120,6 +130,8 @@ if __name__ == "__main__":
     - Loads .env file. Optional `filename` kwarg can override the default load of the current working directory `.env` file.
   - **awssecret**
     - Loads secrets from an AWS secret manager. Requires `aws_sstore_name` and `aws_region_name` keywords to be provided or for those values to be in the environment variables under `AWS_SSTORE_NAME` and `AWS_REGION_NAME`. `aws_sstore_name` is the name of the store, not the arn.
+  - **awsparameterstore**
+    - Loads secrets from an AWS Parameter Store (SSM/ASM). Requires `aws_sstore_name` and `aws_region_name` keywords to be provided or for those values to be in the environment variables under `AWS_SSTORE_NAME` and `AWS_REGION_NAME`. `aws_sstore_name` is the name or prefix of the parameters to retrieve.
 - **kwargs**
   - All keyword arguments are passed into the loaders when they are called. Each loader details which extra keyword arguments it uses or requires above.
 
@@ -128,6 +140,7 @@ if __name__ == "__main__":
 ## `.env` file format
 
 Current format for the `.env` file supports strings only and is parsed in the following order:
+
 - Each seperate line is considered a new possible key/value set
 - Each set is delimted by the first `=` found
 - Leading `export` keyword is removed from key, case agnostic
@@ -137,6 +150,7 @@ Current format for the `.env` file supports strings only and is parsed in the fo
 I'm open to suggestions on standards to follow here. This is compiled from "crowd standard" and what is useful at the time.
 
 This `.env` example:
+
 ```conf
 # Comments are ignored
 
@@ -146,11 +160,13 @@ Invalid lines without the equal sign delimiter will also be ignored
 ```
 
 Will be parsed as:
+
 ```python
 {"KEY": "value"}
 ```
 
 This `.env` example:
+
 ```conf
 export PASSWORD = correct horse battery staple
 USER_NAME="not_admin"
@@ -159,6 +175,7 @@ MESSAGE = '    Totally not an "admin" account logging in'
 ```
 
 Will be parsed as:
+
 ```python
 {
     "PASSWORD": "correct horse battery staple",
@@ -174,12 +191,14 @@ Will be parsed as:
 It is **highly** recommended to use a `venv` for installation. Leveraging a `venv` will ensure the installed dependency files will not impact other python projects.
 
 Clone this repo and enter root directory of repo:
+
 ```bash
 $ git clone https://github.com/Preocts/secretbox
 $ cd secretbox
 ```
 
 Create and activate `venv`:
+
 ```bash
 # Linux/MacOS
 python3 -m venv venv
@@ -196,6 +215,7 @@ venv\Scripts\activate.bat
 Your command prompt should now have a `(venv)` prefix on it.
 
 Install editable library and development requirements:
+
 ```bash
 # Linux/MacOS
 pip install -r requirements-dev.txt
@@ -210,17 +230,20 @@ py -m pip install --editable .[aws,test]
 ```
 
 Install pre-commit hooks to local repo:
+
 ```bash
 pre-commit install
 pre-commit autoupdate
 ```
 
 Run tests
+
 ```bash
 tox
 ```
 
 To exit the `venv`:
+
 ```bash
 deactivate
 ```
