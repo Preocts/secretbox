@@ -5,16 +5,50 @@ from typing import Generator
 from unittest.mock import patch
 
 import pytest
+from boto3.session import Session
+from moto.ssm import mock_ssm
+from mypy_boto3_ssm.client import SSMClient
 from secretbox import awsparameterstore_loader as ssm_loader_module
 from secretbox.awsparameterstore_loader import AWSParameterStore
 
-from tests.conftest import TEST_LIST
-from tests.conftest import TEST_PATH
-from tests.conftest import TEST_REGION
-from tests.conftest import TEST_STORE
-from tests.conftest import TEST_STORE2
-from tests.conftest import TEST_STORE3
-from tests.conftest import TEST_VALUE
+TEST_VALUE = "abcdefg"
+TEST_LIST = ",".join([TEST_VALUE, TEST_VALUE, TEST_VALUE])
+TEST_PATH = "/my/parameter/prefix/"
+TEST_REGION = "us-east-1"
+TEST_STORE = "my_store"
+TEST_STORE2 = "my_store2"
+TEST_STORE3 = "my_store3"
+TEST_VALUE = "abcdefg"
+
+
+@pytest.fixture
+def parameterstore() -> Generator[SSMClient, None, None]:
+    """Populate mock parameterstore with two values we can load via prefix"""
+
+    with mock_ssm():
+        session = Session()
+        client = session.client(
+            service_name="ssm",
+            region_name=TEST_REGION,
+        )
+        client.put_parameter(
+            Name=f"{TEST_PATH}{TEST_STORE}", Value=TEST_VALUE, Type="String"
+        )
+        # Load enough so pagination can be tested
+        for x in range(1, 31):
+            client.put_parameter(
+                Name=f"{TEST_PATH}{TEST_STORE}/{x}", Value=TEST_VALUE, Type="String"
+            )
+        client.put_parameter(
+            Name=f"{TEST_PATH}{TEST_STORE2}", Value=TEST_VALUE, Type="SecureString"
+        )
+        client.put_parameter(
+            Name=f"{TEST_PATH}{TEST_STORE3}",
+            Value=TEST_LIST,
+            Type="StringList",
+        )
+
+        yield client
 
 
 @pytest.fixture

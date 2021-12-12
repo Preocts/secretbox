@@ -1,12 +1,21 @@
 """Unit tests against secretbox.py"""
 import os
 from typing import Any
+from typing import Generator
 from unittest.mock import patch
 
 import pytest
 from secretbox import SecretBox
 
 from tests.conftest import ENV_FILE_EXPECTED
+
+
+@pytest.fixture
+def secretbox() -> Generator[SecretBox, None, None]:
+    """Default instance of LoadEnv"""
+    secrets = SecretBox()
+    assert not secrets.loaded_values
+    yield secrets
 
 
 def test_load_from_with_unknown(secretbox: SecretBox, mock_env_file: str) -> None:

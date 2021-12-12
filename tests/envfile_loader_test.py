@@ -1,7 +1,18 @@
 """Unit tests for .env file loader"""
+from typing import Generator
+
+import pytest
 from secretbox.envfile_loader import EnvFileLoader
 
 from tests.conftest import ENV_FILE_EXPECTED
+
+
+@pytest.fixture
+def envfile_loader() -> Generator[EnvFileLoader, None, None]:
+    """Create us a fixture"""
+    loader = EnvFileLoader()
+    assert not loader.loaded_values
+    yield loader
 
 
 def test_load_env_file(mock_env_file: str, envfile_loader: EnvFileLoader) -> None:
