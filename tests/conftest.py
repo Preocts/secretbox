@@ -11,9 +11,6 @@ from moto.secretsmanager import mock_secretsmanager
 from moto.ssm import mock_ssm
 from mypy_boto3_secretsmanager.client import SecretsManagerClient
 from mypy_boto3_ssm.client import SSMClient
-from secretbox.envfile_loader import EnvFileLoader
-from secretbox.environ_loader import EnvironLoader
-from secretbox.secretbox import SecretBox
 
 TEST_KEY_NAME = "TEST_KEY"
 TEST_VALUE = "abcdefg"
@@ -58,42 +55,9 @@ ENV_FILE_EXPECTED = {
     "SHELL_COMPATIBLE": "well, that happened",
 }
 
-##############################################################################
-# Base fixtures
-##############################################################################
 
-
-@pytest.fixture(scope="function", name="envfile_loader")
-def fixtures_envfile_loader() -> Generator[EnvFileLoader, None, None]:
-    """Create us a fixture"""
-    loader = EnvFileLoader()
-    assert not loader.loaded_values
-    yield loader
-
-
-@pytest.fixture(scope="function", name="environ_loader")
-def fixture_environ_loader() -> Generator[EnvironLoader, None, None]:
-    """A fixture because this is what we do"""
-    loader = EnvironLoader()
-    assert not loader.loaded_values
-    yield loader
-
-
-@pytest.fixture(scope="function", name="secretbox")
-def fixture_secretbox() -> Generator[SecretBox, None, None]:
-    """Default instance of LoadEnv"""
-    secrets = SecretBox()
-    assert not secrets.loaded_values
-    yield secrets
-
-
-##############################################################################
-# Mocking .env file loading
-##############################################################################
-
-
-@pytest.fixture(scope="function", name="mock_env_file")
-def fixture_mock_env_file() -> Generator[str, None, None]:
+@pytest.fixture
+def mock_env_file() -> Generator[str, None, None]:
     """Builds and returns filename of a mock .env file"""
     try:
         file_desc, path = tempfile.mkstemp()

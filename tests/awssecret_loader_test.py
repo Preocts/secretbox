@@ -1,5 +1,6 @@
 """Unit tests for aws secrect manager interactions"""
 import importlib
+import json
 import logging
 import os
 import sys
@@ -8,13 +9,32 @@ from typing import Generator
 from unittest.mock import patch
 
 import pytest
+from boto3.session import Session
+from moto.secretsmanager import mock_secretsmanager
+from mypy_boto3_secretsmanager.client import SecretsManagerClient
 from secretbox import awssecret_loader as awssecret_loader_module
 from secretbox.awssecret_loader import AWSSecretLoader
 
-from tests.conftest import TEST_KEY_NAME
-from tests.conftest import TEST_REGION
-from tests.conftest import TEST_STORE
-from tests.conftest import TEST_VALUE
+TEST_KEY_NAME = "TEST_KEY"
+TEST_VALUE = "abcdefg"
+TEST_STORE = "my_store"
+TEST_REGION = "us-east-1"
+
+
+@pytest.fixture
+def secretsmanager() -> Generator[SecretsManagerClient, None, None]:
+    """Populate mock secretsmanager with TEST_SECRET_KEY in us-east-1"""
+    secret_values = json.dumps({TEST_KEY_NAME: TEST_VALUE})
+
+    with mock_secretsmanager():
+        session = Session()
+        client = session.client(
+            service_name="secretsmanager",
+            region_name=TEST_REGION,
+        )
+        client.create_secret(Name=TEST_STORE, SecretString=secret_values)
+
+        yield client
 
 
 @pytest.fixture
