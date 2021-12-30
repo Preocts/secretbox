@@ -14,9 +14,7 @@ from typing import Optional
 try:
     import boto3
     from botocore.exceptions import ClientError
-    from botocore.exceptions import InvalidRegionError
     from botocore.exceptions import NoCredentialsError
-    from botocore.exceptions import NoRegionError
     from mypy_boto3_secretsmanager.client import SecretsManagerClient
 except ImportError:
     boto3 = None
@@ -58,27 +56,29 @@ class AWSSecretLoader(Loader):
         `aws_sstore_name` is the name of the store, not the arn.
         """
         if boto3 is None:
-            self.logger.debug("Skipping AWS loader, boto3 is not available.")
+            self.logger.error("Required boto3 modules missing, can't load AWS secrets")
             return False
 
         self.populate_region_store_names(**kwargs)
-        secrets: Dict[str, str] = {}
-        aws_client = self.connect_aws_client()
-
-        if aws_client is None or self.aws_sstore is None:
-            self.logger.debug("Cannot load AWS secrets, no valid client.")
+        if self.aws_sstore is None:
+            self.logger.error("Missing secret store name")
             return False
 
+        aws_client = self.connect_aws_client()
+        if aws_client is None:
+            self.logger.error("Invalid secrets manager client")
+            return False
+
+        secrets: Dict[str, str] = {}
         try:
             logging.getLogger("botocore.parsers").addFilter(self.secrets_filter)
             response = aws_client.get_secret_value(SecretId=self.aws_sstore)
 
         except NoCredentialsError as err:
-            self.logger.error("Error routing message! %s", err)
+            self.logger.error("Missing AWS credentials (%s)", err)
 
         except ClientError as err:
-            code = err.response["Error"]["Code"]
-            self.logger.error("ClientError: %s, (%s)", err, code)
+            self._log_client_error(err)
 
         else:
             self.logger.debug("Found %s values from AWS.", len(secrets))
@@ -92,11 +92,13 @@ class AWSSecretLoader(Loader):
 
     def connect_aws_client(self) -> Optional[SecretsManagerClient]:
         """Make connection"""
+        # Define client here for type hinting
         client: Optional[SecretsManagerClient] = None
         session = boto3.session.Session()
 
-        if self.aws_region is None:
+        if not self.aws_region:
             self.logger.debug("No valid AWS region, cannot create client.")
+            return None
 
         else:
             try:
@@ -104,10 +106,19 @@ class AWSSecretLoader(Loader):
                     service_name="secretsmanager",
                     region_name=self.aws_region,
                 )
-            except (ValueError, InvalidRegionError, NoRegionError) as err:
-                self.logger.error("Error creating AWS Secrets client: %s", err)
+                return client
+            except ClientError as err:
+                self._log_client_error(err)
+                return None
 
-        return client
+    def _log_client_error(self, err: ClientError) -> None:
+        """Internal: reusable logging"""
+        self.logger.error(
+            "%s - %s (%s)",
+            err.response["Error"]["Code"],
+            err.response["Error"]["Message"],
+            err.response["ResponseMetadata"],
+        )
 
     @staticmethod
     def secrets_filter(record: logging.LogRecord) -> bool:
@@ -122,5 +133,5 @@ class AWSSecretLoader(Loader):
             if isinstance(record.args, dict):
                 record.args = {key: "REDACTED" for key in record.args}
             else:
-                record.args = ("REDACTED",) * len(record.args)
+                record.args = ("REDACTED",) * len(record.args or [])
         return True
