@@ -10,3 +10,4 @@ build/
 dist/
 __pycache__/
 .vscode/
+.mypy_cache/
