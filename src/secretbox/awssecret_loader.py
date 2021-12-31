@@ -15,9 +15,12 @@ try:
     import boto3
     from botocore.exceptions import ClientError
     from botocore.exceptions import NoCredentialsError
-    from mypy_boto3_secretsmanager.client import SecretsManagerClient
 except ImportError:
     boto3 = None
+
+try:
+    from mypy_boto3_secretsmanager.client import SecretsManagerClient
+except ImportError:
     SecretsManagerClient = None
 
 from secretbox.loader import Loader
