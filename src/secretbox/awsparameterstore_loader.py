@@ -11,9 +11,13 @@ from secretbox.awssecret_loader import AWSSecretLoader
 
 try:
     import boto3
-    from mypy_boto3_ssm.client import SSMClient
+    from botocore.exceptions import ClientError
 except ImportError:
     boto3 = None
+
+try:
+    from mypy_boto3_ssm.client import SSMClient
+except ImportError:
     SSMClient = None
 
 
@@ -41,7 +45,7 @@ class AWSParameterStore(AWSSecretLoader):
             self.logger.warning("Missing parameter name")
             return True  # this isn't a failure on our part
 
-        aws_client = self.connect_aws_client()
+        aws_client = self.connect_aws_ssm_client()
         if aws_client is None:
             self.logger.error("Invalid SSM client")
             return False
@@ -75,8 +79,8 @@ class AWSParameterStore(AWSSecretLoader):
                 else:
                     break
 
-        except Exception as err:
-            self.logger.error("Error retrieving from parameter store: %s", err)
+        except ClientError as err:
+            self._log_client_error(err)
             return False
 
         finally:
@@ -88,7 +92,7 @@ class AWSParameterStore(AWSSecretLoader):
         )
         return True
 
-    def connect_aws_client(self) -> Optional[SSMClient]:
+    def connect_aws_ssm_client(self) -> Optional[SSMClient]:
         """Make the connection"""
 
         if self.aws_region is None:
@@ -101,6 +105,6 @@ class AWSParameterStore(AWSSecretLoader):
                 service_name="ssm",
                 region_name=self.aws_region,
             )
-        except Exception as err:
-            self.logger.error("Error creating SSM client: %s", err)
+        except ClientError as err:
+            self._log_client_error(err)
             return None

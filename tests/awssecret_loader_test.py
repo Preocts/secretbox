@@ -72,7 +72,7 @@ def test_load_aws_secrets(
     awssecret_loader: AWSSecretLoader,
     store: str,
     region: str,
-    expected: str,
+    expected: Any,
 ) -> None:
     """Load a secret from mocked AWS secret server"""
     assert not awssecret_loader.loaded_values.get(TEST_KEY_NAME)
@@ -82,18 +82,40 @@ def test_load_aws_secrets(
 
 @pytest.mark.usefixtures("mask_aws_creds", "secretsmanager")
 def test_boto3_not_installed_auto_load(awssecret_loader: AWSSecretLoader) -> None:
-    """Silently skip loading AWS secrets manager if no boto3"""
+    """Skip loading AWS secrets manager if no boto3"""
     with patch.object(awssecret_loader_module, "boto3", None):
         assert not awssecret_loader.loaded_values
-        awssecret_loader.load_values(aws_sstore=TEST_STORE, aws_region=TEST_REGION)
+        awssecret_loader.load_values(
+            aws_sstore_name=TEST_STORE,
+            aws_region_name=TEST_REGION,
+        )
         assert not awssecret_loader.loaded_values
+
+
+@pytest.mark.usefixtures("mask_aws_creds", "secretsmanager")
+def test_boto3_stubs_not_installed(awssecret_loader: AWSSecretLoader) -> None:
+    """Continue loading AWS secrets manager without boto3-stubs"""
+    with patch.object(awssecret_loader_module, "SecretsManagerClient", None):
+        assert not awssecret_loader.loaded_values
+        awssecret_loader.load_values(
+            aws_sstore_name=TEST_STORE,
+            aws_region_name=TEST_REGION,
+        )
+        assert awssecret_loader.loaded_values
 
 
 def test_boto3_missing_import_catch() -> None:
-    """Reload loadenv without boto3"""
     with patch.dict(sys.modules, {"boto3": None}):
         importlib.reload(awssecret_loader_module)
         assert awssecret_loader_module.boto3 is None
+    # Reload after test to avoid polution
+    importlib.reload(awssecret_loader_module)
+
+
+def test_boto3_stubs_missing_import_catch() -> None:
+    with patch.dict(sys.modules, {"mypy_boto3_secretsmanager.client": None}):
+        importlib.reload(awssecret_loader_module)
+        assert awssecret_loader_module.SecretsManagerClient is None
     # Reload after test to avoid polution
     importlib.reload(awssecret_loader_module)
 
