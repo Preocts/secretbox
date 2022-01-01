@@ -7,7 +7,7 @@ import logging
 from typing import Any
 from typing import Optional
 
-from secretbox.awssecret_loader import AWSSecretLoader
+from secretbox.aws_loader import AWSLoader
 
 try:
     import boto3
@@ -21,7 +21,7 @@ except ImportError:
     SSMClient = None
 
 
-class AWSParameterStore(AWSSecretLoader):
+class AWSParameterStore(AWSLoader):
     """Load secrets from an AWS Parameter Store"""
 
     def __init__(self) -> None:
@@ -45,7 +45,7 @@ class AWSParameterStore(AWSSecretLoader):
             self.logger.warning("Missing parameter name")
             return True  # this isn't a failure on our part
 
-        aws_client = self.connect_aws_ssm_client()
+        aws_client = self.get_aws_client()
         if aws_client is None:
             self.logger.error("Invalid SSM client")
             return False
@@ -80,7 +80,7 @@ class AWSParameterStore(AWSSecretLoader):
                     break
 
         except ClientError as err:
-            self._log_client_error(err)
+            self.log_aws_error(err)
             return False
 
         finally:
@@ -92,7 +92,7 @@ class AWSParameterStore(AWSSecretLoader):
         )
         return True
 
-    def connect_aws_ssm_client(self) -> Optional[SSMClient]:
+    def get_aws_client(self) -> Optional[SSMClient]:
         """Make the connection"""
 
         if self.aws_region is None:
@@ -106,5 +106,5 @@ class AWSParameterStore(AWSSecretLoader):
                 region_name=self.aws_region,
             )
         except ClientError as err:
-            self._log_client_error(err)
+            self.log_aws_error(err)
             return None

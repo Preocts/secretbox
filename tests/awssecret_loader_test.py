@@ -1,8 +1,6 @@
 """Unit tests for aws secrect manager interactions"""
 import importlib
 import json
-import logging
-import os
 import sys
 from typing import Any
 from typing import Generator
@@ -118,59 +116,3 @@ def test_boto3_stubs_missing_import_catch() -> None:
         assert awssecret_loader_module.SecretsManagerClient is None
     # Reload after test to avoid polution
     importlib.reload(awssecret_loader_module)
-
-
-def test_populate_region_store_names_none(awssecret_loader: AWSSecretLoader) -> None:
-    """Nothing provided"""
-    with patch.dict(os.environ):
-        os.environ.pop("AWS_SSTORE_NAME", None)
-        os.environ.pop("AWS_REGION_NAME", None)
-        awssecret_loader.populate_region_store_names()
-        assert awssecret_loader.aws_sstore is None
-        assert awssecret_loader.aws_region is None
-
-
-def test_populate_region_store_names_os(awssecret_loader: AWSSecretLoader) -> None:
-    """values in environ"""
-    with patch.dict(os.environ):
-        os.environ["AWS_SSTORE_NAME"] = "MockStore"
-        os.environ["AWS_REGION_NAME"] = "MockRegion"
-        awssecret_loader.populate_region_store_names()
-        assert awssecret_loader.aws_sstore == "MockStore"
-        assert awssecret_loader.aws_region == "MockRegion"
-
-
-def test_populate_region_store_names_kw(awssecret_loader: AWSSecretLoader) -> None:
-    """values in environ but keywords given"""
-    with patch.dict(os.environ):
-        os.environ["AWS_SSTORE_NAME"] = "MockStore"
-        os.environ["AWS_REGION_NAME"] = "MockRegion"
-        awssecret_loader.populate_region_store_names(
-            aws_sstore_name="NewStore",
-            aws_region_name="NewRegion",
-        )
-        assert awssecret_loader.aws_sstore == "NewStore"
-        assert awssecret_loader.aws_region == "NewRegion"
-
-
-def test_secret_filter(caplog: Any) -> None:
-    logger = logging.getLogger("secrets")
-    logger.addFilter(AWSSecretLoader.secrets_filter)
-    logger.setLevel("DEBUG")
-    secret_dict = {"allYour": "Passwords"}
-    secret_tuple = ("I am a plain-text secrets",)
-    secret_string = "Your password is 12345"
-
-    logger.debug("Reponse body: %s", secret_dict)
-    logger.debug("Reponse body: %s", secret_tuple)
-    logger.debug("Reponse body: %s", secret_string)
-    logger.debug("Response body:")
-    logger.debug("Standard log")
-
-    logger.info("Safe Info")
-
-    assert "Passwords" not in caplog.text
-    assert "plain-text" not in caplog.text
-    assert "12345" not in caplog.text
-    assert "Standard log" in caplog.text
-    assert "Safe Info" in caplog.text
