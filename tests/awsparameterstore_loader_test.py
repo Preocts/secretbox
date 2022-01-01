@@ -116,17 +116,3 @@ def test_count_parameters(
 
     # loaded the proper number of parameters
     assert len(loader.loaded_values) == expectedCnt
-
-
-@pytest.mark.usefixtures("mask_aws_creds", "parameterstore")
-def test_parameter_values(
-    loader: AWSParameterStore,
-) -> None:
-    """compare parameters from mocked loader to what we put in there"""
-    # loading succeeded
-    assert loader.load_values(aws_sstore_name=TEST_PATH, aws_region_name=TEST_REGION)
-
-    # both our parameters exist and have the expected value
-    assert loader.loaded_values.get(TEST_STORE) == TEST_VALUE
-    assert loader.loaded_values.get(TEST_STORE2) == TEST_VALUE
-    assert loader.loaded_values.get(TEST_STORE3) == TEST_LIST
