@@ -77,6 +77,14 @@ def test_boto3_missing_import_catch() -> None:
     importlib.reload(ssm_loader_module)
 
 
+def test_boto3_stubs_missing_import_catch() -> None:
+    with patch.dict(sys.modules, {"mypy_boto3_ssm.client": None}):
+        importlib.reload(ssm_loader_module)
+        assert ssm_loader_module.SSMClient is None
+    # Reload after test to avoid polution
+    importlib.reload(ssm_loader_module)
+
+
 @pytest.mark.parametrize(
     ("prefix", "region", "expectedCnt"),
     (

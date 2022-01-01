@@ -105,10 +105,17 @@ def test_boto3_stubs_not_installed(awssecret_loader: AWSSecretLoader) -> None:
 
 
 def test_boto3_missing_import_catch() -> None:
-    """Reload loadenv without boto3"""
     with patch.dict(sys.modules, {"boto3": None}):
         importlib.reload(awssecret_loader_module)
         assert awssecret_loader_module.boto3 is None
+    # Reload after test to avoid polution
+    importlib.reload(awssecret_loader_module)
+
+
+def test_boto3_stubs_missing_import_catch() -> None:
+    with patch.dict(sys.modules, {"mypy_boto3_secretsmanager.client": None}):
+        importlib.reload(awssecret_loader_module)
+        assert awssecret_loader_module.SecretsManagerClient is None
     # Reload after test to avoid polution
     importlib.reload(awssecret_loader_module)
 
