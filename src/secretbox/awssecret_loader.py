@@ -6,7 +6,6 @@ Git Repo: https://github.com/Preocts/secretbox
 """
 import json
 import logging
-import os
 from typing import Any
 from typing import Dict
 from typing import Optional
@@ -23,31 +22,11 @@ try:
 except ImportError:
     SecretsManagerClient = None
 
-from secretbox.loader import Loader
-
-FILTER_SECRETS = True
+from secretbox.aws_loader import AWSLoader
 
 
-class AWSSecretLoader(Loader):
+class AWSSecretLoader(AWSLoader):
     """Load secrets from an AWS secret manager"""
-
-    logger = logging.getLogger(__name__)
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.aws_sstore: Optional[str] = None
-        self.aws_region: Optional[str] = None
-
-    def populate_region_store_names(self, **kwargs: Any) -> None:
-        """Populates store/region name"""
-        kw_sstore = kwargs.get("aws_sstore_name")
-        kw_region = kwargs.get("aws_region_name")
-        os_sstore = os.getenv("AWS_SSTORE_NAME")
-        os_region = os.getenv("AWS_REGION_NAME", os.getenv("AWS_REGION"))  # Lambda's
-
-        # Use the keyword over the os, default to None
-        self.aws_sstore = kw_sstore if kw_sstore is not None else os_sstore
-        self.aws_region = kw_region if kw_region is not None else os_region
 
     def load_values(self, **kwargs: Any) -> bool:
         """
@@ -67,7 +46,7 @@ class AWSSecretLoader(Loader):
             self.logger.error("Missing secret store name")
             return False
 
-        aws_client = self.connect_aws_client()
+        aws_client = self.get_aws_client()
         if aws_client is None:
             self.logger.error("Invalid secrets manager client")
             return False
@@ -81,7 +60,7 @@ class AWSSecretLoader(Loader):
             self.logger.error("Missing AWS credentials (%s)", err)
 
         except ClientError as err:
-            self._log_client_error(err)
+            self.log_aws_error(err)
 
         else:
             self.logger.debug("Found %s values from AWS.", len(secrets))
@@ -93,14 +72,14 @@ class AWSSecretLoader(Loader):
 
         return bool(secrets)
 
-    def connect_aws_client(self) -> Optional[SecretsManagerClient]:
-        """Make connection"""
+    def get_aws_client(self) -> Optional[SecretsManagerClient]:
+        """Return Secrets Manager client"""
         # Define client here for type hinting
         client: Optional[SecretsManagerClient] = None
         session = boto3.session.Session()
 
         if not self.aws_region:
-            self.logger.debug("No valid AWS region, cannot create client.")
+            self.logger.error("No valid AWS region, cannot create client.")
             return None
 
         else:
@@ -111,30 +90,5 @@ class AWSSecretLoader(Loader):
                 )
                 return client
             except ClientError as err:
-                self._log_client_error(err)
+                self.log_aws_error(err)
                 return None
-
-    def _log_client_error(self, err: ClientError) -> None:
-        """Internal: reusable logging"""
-        self.logger.error(
-            "%s - %s (%s)",
-            err.response["Error"]["Code"],
-            err.response["Error"]["Message"],
-            err.response["ResponseMetadata"],
-        )
-
-    @staticmethod
-    def secrets_filter(record: logging.LogRecord) -> bool:
-        """
-        Hide botocore.parsers responses which include decrypted secrets
-
-        https://github.com/boto/botocore/issues/1211#issuecomment-327799341
-        """
-        if record.levelno > logging.DEBUG or not FILTER_SECRETS:
-            return True
-        if "body" in record.msg or "headers" in record.msg:
-            if isinstance(record.args, dict):
-                record.args = {key: "REDACTED" for key in record.args}
-            else:
-                record.args = ("REDACTED",) * len(record.args or [])
-        return True
