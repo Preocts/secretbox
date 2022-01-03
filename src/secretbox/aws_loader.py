@@ -7,7 +7,13 @@ Git Repo: https://github.com/Preocts/secretbox
 import logging
 import os
 from typing import Any
+from typing import Dict
 from typing import Optional
+
+try:
+    from botocore.awsrequest import HeadersDict
+except ImportError:
+    HeadersDict = Dict
 
 from secretbox.loader import Loader
 
@@ -68,8 +74,10 @@ class AWSLoader(Loader):
         if record.levelno > logging.DEBUG or not AWSLoader.filter_secrets:
             return True
         if "body" in record.msg or "headers" in record.msg:
-            if isinstance(record.args, dict):
+            if isinstance(record.args, tuple):
+                record.args = ("REDACTED",) * len(record.args)
+            elif isinstance(record.args, (dict, HeadersDict)):
                 record.args = {key: "REDACTED" for key in record.args}
             else:
-                record.args = ("REDACTED",) * len(record.args or [])
+                record.args = ("REDACTED",)
         return True
