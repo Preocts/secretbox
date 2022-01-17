@@ -54,7 +54,7 @@ def mock_env_file() -> Generator[str, None, None]:
         os.remove(path)
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def mask_aws_creds() -> Generator[None, None, None]:
     """Mask local AWS creds to avoid moto calling out"""
     with patch.dict(os.environ):
