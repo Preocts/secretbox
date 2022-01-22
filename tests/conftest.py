@@ -1,4 +1,4 @@
-"""Global fixtures"""
+"""Global fixtures and statics"""
 import os
 import tempfile
 from typing import Generator
@@ -56,7 +56,7 @@ def mock_env_file() -> Generator[str, None, None]:
 
 @pytest.fixture(autouse=True)
 def mask_aws_creds() -> Generator[None, None, None]:
-    """Mask local AWS creds to avoid moto calling out"""
+    """Mask local AWS creds to avoid calling out to AWS"""
     with patch.dict(os.environ):
         for key in AWS_ENV_KEYS:
             os.environ[key] = "masked"
@@ -65,7 +65,7 @@ def mask_aws_creds() -> Generator[None, None, None]:
 
 @pytest.fixture
 def remove_aws_creds() -> Generator[None, None, None]:
-    """Removes AWS cresd from environment"""
+    """Removes AWS creds from environment, for testing missing creds"""
     with patch.dict(os.environ):
         for key in AWS_ENV_KEYS:
             os.environ.pop(key, None)
