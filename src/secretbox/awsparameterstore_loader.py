@@ -100,12 +100,7 @@ class AWSParameterStore(AWSLoader):
             self.logger.debug("Missing AWS region, cannot create client")
             return None
 
-        try:
-            # session = boto3.session.Session()
-            return boto3.client(
-                service_name="ssm",
-                region_name=self.aws_region,
-            )
-        except ClientError as err:
-            self.log_aws_error(err)
-            return None
+        return boto3.client(
+            service_name="ssm",
+            region_name=self.aws_region,
+        )
