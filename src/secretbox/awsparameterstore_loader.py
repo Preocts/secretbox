@@ -73,11 +73,12 @@ class AWSParameterStore(AWSLoader):
                     key = param["Name"].split("/")[-1] if do_split else param["Name"]
                     self.loaded_values[key] = param["Value"]
 
-                if "NextToken" in resp and resp["NextToken"]:
-                    args["NextToken"] = resp["NextToken"]
-                    self.logger.debug("fetching next page: %s", args["NextToken"])
-                else:
+                args["NextToken"] = resp.get("NextToken")
+
+                if not args["NextToken"]:
                     break
+
+                self.logger.debug("fetching next page: %s", args["NextToken"])
 
         except ClientError as err:
             self.log_aws_error(err)
