@@ -1,15 +1,21 @@
 """Unit tests for aws parameter store interactions"""
 import importlib
 import sys
+from typing import Any
+from typing import Dict
 from typing import Generator
+from typing import List
 from unittest.mock import patch
 
+import botocore.client
+import botocore.session
 import pytest
-from boto3.session import Session
-from moto.ssm import mock_ssm
-from mypy_boto3_ssm.client import SSMClient
+from botocore.client import BaseClient
+from botocore.exceptions import StubAssertionError
+from botocore.stub import Stubber
 from secretbox import awsparameterstore_loader as ssm_loader_module
 from secretbox.awsparameterstore_loader import AWSParameterStore
+
 
 TEST_VALUE = "abcdefg"
 TEST_LIST = ",".join([TEST_VALUE, TEST_VALUE, TEST_VALUE])
@@ -22,111 +28,212 @@ TEST_VALUE = "abcdefg"
 
 
 @pytest.fixture
-def parameterstore() -> Generator[SSMClient, None, None]:
-    """Populate mock parameterstore with two values we can load via prefix"""
+def valid_ssm() -> Generator[BaseClient, None, None]:
+    """
+    Creates a mock ssm for testing. Response valids are shortened for test
 
-    with mock_ssm():
-        session = Session()
-        client = session.client(
-            service_name="ssm",
-            region_name=TEST_REGION,
-        )
-        client.put_parameter(
-            Name=f"{TEST_PATH}{TEST_STORE}", Value=TEST_VALUE, Type="String"
-        )
-        # Load enough so pagination can be tested
-        for x in range(1, 31):
-            client.put_parameter(
-                Name=f"{TEST_PATH}{TEST_STORE}/{x}", Value=TEST_VALUE, Type="String"
-            )
-        client.put_parameter(
-            Name=f"{TEST_PATH}{TEST_STORE2}", Value=TEST_VALUE, Type="SecureString"
-        )
-        client.put_parameter(
-            Name=f"{TEST_PATH}{TEST_STORE3}",
-            Value=TEST_LIST,
-            Type="StringList",
-        )
+    Supports three calls
+        - .get_parameters_by_path
+            - No `NextToken`
+            - `NextToken` exists
+            - `NextToken` exists
+    """
 
-        yield client
+    # Matches args in class
+    expected_parameters = {
+        "Recursive": True,
+        "MaxResults": 10,
+        "WithDecryption": True,
+        "Path": TEST_PATH,
+    }
+
+    responses: List[Dict[str, str]] = []
+    responses.append(
+        {
+            "Name": f"{TEST_PATH}{TEST_STORE}",
+            "Value": TEST_VALUE,
+            "Type": "String",
+        }
+    )
+    # Build enough responses to test pagination
+    for idx in range(0, 26):
+        responses.append(
+            {
+                "Name": f"{TEST_PATH}{TEST_STORE}/{idx}",
+                "Value": TEST_VALUE,
+                "Type": "String",
+            }
+        )
+    # Add additonal cases, asserting we collect pagination correctly
+    responses.append(
+        {
+            "Name": f"{TEST_PATH}{TEST_STORE2}",
+            "Value": TEST_VALUE,
+            "Type": "SecureString",
+        }
+    )
+    responses.append(
+        {
+            "Name": f"{TEST_PATH}{TEST_STORE3}",
+            "Value": TEST_LIST,
+            "Type": "StringList",
+        }
+    )
+
+    call_one = {"Parameters": responses[0:9], "NextToken": "callone"}
+    call_two = {"Parameters": responses[10:19], "NextToken": "calltwo"}
+    call_three = {"Parameters": responses[20:29]}
+
+    ssm_session = botocore.session.get_session().create_client(
+        service_name="ssm",
+        region_name=TEST_REGION,
+    )
+
+    with Stubber(ssm_session) as stubber:
+        stubber.add_response(
+            method="get_parameters_by_path",
+            service_response=call_one,
+            expected_params=expected_parameters,
+        )
+        stubber.add_response(
+            method="get_parameters_by_path",
+            service_response=call_two,
+            expected_params=dict(**expected_parameters, NextToken="callone"),
+        )
+        stubber.add_response(
+            method="get_parameters_by_path",
+            service_response=call_three,
+            expected_params=dict(**expected_parameters, NextToken="calltwo"),
+        )
+        yield ssm_session
+
+
+@pytest.fixture
+def invalid_ssm() -> Generator[BaseClient, None, None]:
+    """
+    Creates a mock ssm for testing. Response is a ClientError
+    """
+
+    # Matches args in class
+    expected_parameters = {
+        "Recursive": True,
+        "MaxResults": 10,
+        "WithDecryption": True,
+        "Path": TEST_PATH,
+    }
+
+    ssm_session = botocore.session.get_session().create_client(
+        service_name="ssm",
+        region_name=TEST_REGION,
+    )
+
+    with Stubber(ssm_session) as stubber:
+        stubber.add_client_error(
+            method="get_parameters_by_path",
+            service_error_code="ResourceNotFoundException",
+            service_message="Mock Client Error",
+            http_status_code=404,
+            expected_params=expected_parameters,
+        )
+        yield ssm_session
+
+
+@pytest.fixture
+def stub_loader(valid_ssm: BaseClient) -> Generator[AWSParameterStore, None, None]:
+    """Wraps AWS client with Stubber"""
+    store = AWSParameterStore()
+    with patch.object(store, "get_aws_client", return_value=valid_ssm):
+        yield store
 
 
 @pytest.fixture
 def loader() -> Generator[AWSParameterStore, None, None]:
-    """Create a fixture to test with"""
-    clazz = AWSParameterStore()
-    assert not clazz.loaded_values
-    yield clazz
+    """Pass an unaltered loader"""
+    loader = AWSParameterStore()
+    yield loader
 
 
-@pytest.mark.usefixtures("mask_aws_creds", "parameterstore")
-def test_boto3_not_installed_auto_load(loader: AWSParameterStore) -> None:
-    """Silently skip loading AWS parameter store if no boto3"""
+@pytest.fixture
+def broken_loader(invalid_ssm: BaseClient) -> Generator[AWSParameterStore, None, None]:
+    """Pass a loader that raises ClientError"""
+    store = AWSParameterStore()
+    with patch.object(store, "get_aws_client", return_value=invalid_ssm):
+        yield store
+
+
+@pytest.fixture
+def noboto() -> Generator[None, None, None]:
+    """Dirty module to remove boto3 and assert import catches"""
+    with patch.dict(sys.modules, {"boto3": None, "mypy_boto3_ssm.client": None}):
+        importlib.reload(ssm_loader_module)
+        yield None
+    importlib.reload(ssm_loader_module)
+
+
+def test_empty_values_on_init(loader: AWSParameterStore) -> None:
+    assert not loader.loaded_values
+
+
+def test_stubber_passed_for_client(stub_loader: AWSParameterStore) -> None:
+    assert isinstance(stub_loader.get_aws_client(), BaseClient)
+
+
+def test_fall_through_with_no_boto3(loader: AWSParameterStore) -> None:
     with patch.object(ssm_loader_module, "boto3", None):
-        assert not loader.loaded_values
         assert not loader.load_values(aws_sstore=TEST_PATH, aws_region=TEST_REGION)
         assert not loader.loaded_values
 
 
-def test_boto3_missing_import_catch() -> None:
-    """Reload loadenv without boto3"""
-    with patch.dict(sys.modules, {"boto3": None}):
-        importlib.reload(ssm_loader_module)
-        assert ssm_loader_module.boto3 is None
-    # Reload after test to avoid polution
-    importlib.reload(ssm_loader_module)
+@pytest.mark.usefixtures("noboto")
+def test_catch_boto3_missing_import_on_module_load() -> None:
+    assert ssm_loader_module.boto3 is None
 
 
-def test_boto3_stubs_missing_import_catch() -> None:
-    with patch.dict(sys.modules, {"mypy_boto3_ssm.client": None}):
-        importlib.reload(ssm_loader_module)
-        assert ssm_loader_module.SSMClient is None
-    # Reload after test to avoid polution
-    importlib.reload(ssm_loader_module)
+@pytest.mark.usefixtures("noboto")
+def test_catch_boto3_stubs_missing_import_on_module_load() -> None:
+    assert ssm_loader_module.SSMClient is None
 
 
-@pytest.mark.parametrize(
-    ("prefix", "region", "expectedCnt"),
-    (
-        (TEST_PATH, TEST_REGION, 33),  # correct, root node
-        (f"{TEST_PATH}{TEST_STORE}/", TEST_REGION, 30),  # correct, child node
-        (TEST_STORE, TEST_REGION, 0),  # wrong prefix
-        (None, TEST_REGION, 0),  # no prefix
-        (TEST_PATH, "us-east-2", 0),  # wrong region
-        (TEST_PATH, None, 0),  # no region
-    ),
-)
-@pytest.mark.usefixtures("mask_aws_creds", "parameterstore")
-def test_count_parameters(
-    loader: AWSParameterStore,
-    prefix: str,
-    region: str,
-    expectedCnt: int,
-) -> None:
-    """Load a parameter from mocked loader"""
-    # nothing has been loaded
-    assert loader.loaded_values.get(prefix) is None
-
-    # loading succeeded
-    if expectedCnt > 0:
-        # don't assert this if we're trying to make it fail!
-        assert loader.load_values(aws_sstore_name=prefix, aws_region_name=region)
-    else:
-        loader.load_values(aws_sstore_name=prefix, aws_region_name=region)
-
-    # loaded the proper number of parameters
-    assert len(loader.loaded_values) == expectedCnt
+def test_parameter_values_success_load(stub_loader: AWSParameterStore) -> None:
+    assert stub_loader.load_values(
+        aws_sstore_name=TEST_PATH,
+        aws_region_name=TEST_REGION,
+    )
+    assert stub_loader.loaded_values.get(TEST_STORE) == TEST_VALUE
+    assert stub_loader.loaded_values.get(TEST_STORE2) == TEST_VALUE
+    assert stub_loader.loaded_values.get(TEST_STORE3) == TEST_LIST
 
 
-@pytest.mark.usefixtures("mask_aws_creds", "parameterstore")
-def test_parameter_values(
-    loader: AWSParameterStore,
-) -> None:
-    """compare parameters from mocked loader to what we put in there"""
-    # loading succeeded
-    assert loader.load_values(aws_sstore_name=TEST_PATH, aws_region_name=TEST_REGION)
+def test_loading_wrong_prefix(stub_loader: AWSParameterStore) -> None:
+    # Catch this as an unhappy path. Outside of a stubber this would return nothing
+    with pytest.raises(StubAssertionError):
+        assert stub_loader.load_values(
+            aws_sstore_name=TEST_STORE,
+            aws_region_name=TEST_REGION,
+        )
 
-    # both our parameters exist and have the expected value
-    assert loader.loaded_values.get(TEST_STORE) == TEST_VALUE
-    assert loader.loaded_values.get(TEST_STORE2) == TEST_VALUE
-    assert loader.loaded_values.get(TEST_STORE3) == TEST_LIST
+
+def test_missing_store_name(loader: AWSParameterStore, caplog: Any) -> None:
+    assert loader.load_values()
+    assert "Missing parameter name" in caplog.text
+
+
+def test_missing_region(loader: AWSParameterStore, caplog: Any) -> None:
+    assert not loader.load_values(aws_sstore_name=TEST_STORE)
+    assert "Invalid SSM client" in caplog.text
+
+
+def test_client_error_catch_on_load(broken_loader: AWSParameterStore) -> None:
+    assert not broken_loader.load_values(
+        aws_sstore_name=TEST_PATH,
+        aws_region_name=TEST_REGION,
+    )
+
+
+def test_none_client_no_region(loader: AWSParameterStore) -> None:
+    assert loader.get_aws_client() is None
+
+
+def test_client_with_region(loader: AWSParameterStore) -> None:
+    loader.aws_region = TEST_REGION
+    assert loader.get_aws_client() is not None

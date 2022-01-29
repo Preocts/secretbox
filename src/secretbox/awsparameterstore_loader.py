@@ -73,11 +73,12 @@ class AWSParameterStore(AWSLoader):
                     key = param["Name"].split("/")[-1] if do_split else param["Name"]
                     self.loaded_values[key] = param["Value"]
 
-                if "NextToken" in resp and resp["NextToken"]:
-                    args["NextToken"] = resp["NextToken"]
-                    self.logger.debug("fetching next page: %s", args["NextToken"])
-                else:
+                args["NextToken"] = resp.get("NextToken")
+
+                if not args["NextToken"]:
                     break
+
+                self.logger.debug("fetching next page: %s", args["NextToken"])
 
         except ClientError as err:
             self.log_aws_error(err)
@@ -99,12 +100,7 @@ class AWSParameterStore(AWSLoader):
             self.logger.debug("Missing AWS region, cannot create client")
             return None
 
-        try:
-            # session = boto3.session.Session()
-            return boto3.client(
-                service_name="ssm",
-                region_name=self.aws_region,
-            )
-        except ClientError as err:
-            self.log_aws_error(err)
-            return None
+        return boto3.client(
+            service_name="ssm",
+            region_name=self.aws_region,
+        )

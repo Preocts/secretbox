@@ -74,10 +74,9 @@ class AWSLoader(Loader):
         if record.levelno > logging.DEBUG or not AWSLoader.filter_secrets:
             return True
         if "body" in record.msg or "headers" in record.msg:
-            if isinstance(record.args, tuple):
-                record.args = ("REDACTED",) * len(record.args)
-            elif isinstance(record.args, (dict, HeadersDict)):
+            if isinstance(record.args, (dict, HeadersDict)):
                 record.args = {key: "REDACTED" for key in record.args}
             else:
-                record.args = ("REDACTED",)
+                record.args = tuple(["REDACTED" for _ in record.args or []])
+
         return True

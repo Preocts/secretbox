@@ -74,21 +74,12 @@ class AWSSecretLoader(AWSLoader):
 
     def get_aws_client(self) -> Optional[SecretsManagerClient]:
         """Return Secrets Manager client"""
-        # Define client here for type hinting
-        client: Optional[SecretsManagerClient] = None
-        session = boto3.session.Session()
 
         if not self.aws_region:
             self.logger.error("No valid AWS region, cannot create client.")
             return None
 
-        else:
-            try:
-                client = session.client(
-                    service_name="secretsmanager",
-                    region_name=self.aws_region,
-                )
-                return client
-            except ClientError as err:
-                self.log_aws_error(err)
-                return None
+        return boto3.client(
+            service_name="secretsmanager",
+            region_name=self.aws_region,
+        )
