@@ -5,7 +5,7 @@ init:
 .PHONY: dev-install
 dev-install:
 	pip install -r requirements-dev.txt
-	pip install --editable .[aws,tests]
+	pip install --editable .[aws]
 	pre-commit install
 	pre-commit autoupdate
 
