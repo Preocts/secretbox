@@ -20,6 +20,7 @@ Loaded values are also injected into the local environ. This is to assist with a
 
 - boto3
 - boto3-stubs[secretsmanager]
+- boto3-stubs[ssm]
 
 ---
 
@@ -219,14 +220,14 @@ Install editable library and development requirements:
 ```bash
 # Linux/MacOS
 pip install -r requirements-dev.txt
-pip install --editable .[aws,tests]
+pip install --editable .[aws]
 
 # Windows
 python -m pip install -r requirements-dev.txt
-python -m pip install --editable .[aws,test]
+python -m pip install --editable .[aws]
 # or
 py -m pip install -r requirements-dev.txt
-py -m pip install --editable .[aws,test]
+py -m pip install --editable .[aws]
 ```
 
 Install pre-commit hooks to local repo:
