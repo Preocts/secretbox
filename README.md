@@ -14,7 +14,7 @@ Loaded values are also injected into the local environ. This is to assist with a
 
 ### Requirements
 
-- Python >=3.6
+- Python >=3.7
 
 ### Optional Dependencies
 
@@ -24,7 +24,7 @@ Loaded values are also injected into the local environ. This is to assist with a
 
 ---
 
-## Install
+## Installation
 
 ```bash
 $ pip install secretbox
@@ -37,6 +37,12 @@ $ pip install secretbox[aws]
 ```
 
 ---
+
+## [Development Installation Guide](docs/development.md)
+
+---
+
+## Documentation:
 
 ## Example use with `auto_load=True`
 
@@ -184,80 +190,3 @@ Will be parsed as:
     "MESSAGE": '    Toally not an "admin" account logging in',
 }
 ```
-
----
-
-## Local developer installation
-
-It is **highly** recommended to use a `venv` for installation. Leveraging a `venv` will ensure the installed dependency files will not impact other python projects.
-
-Clone this repo and enter root directory of repo:
-
-```bash
-$ git clone https://github.com/Preocts/secretbox
-$ cd secretbox
-```
-
-Create and activate `venv`:
-
-```bash
-# Linux/MacOS
-python3 -m venv venv
-. venv/bin/activate
-
-# Windows
-python -m venv venv
-venv\Scripts\activate.bat
-# or
-py -m venv venv
-venv\Scripts\activate.bat
-```
-
-Your command prompt should now have a `(venv)` prefix on it.
-
-Install editable library and development requirements:
-
-```bash
-# Linux/MacOS
-pip install -r requirements-dev.txt
-pip install --editable .[aws]
-
-# Windows
-python -m pip install -r requirements-dev.txt
-python -m pip install --editable .[aws]
-# or
-py -m pip install -r requirements-dev.txt
-py -m pip install --editable .[aws]
-```
-
-Install pre-commit hooks to local repo:
-
-```bash
-pre-commit install
-pre-commit autoupdate
-```
-
-Run tests
-
-```bash
-tox
-```
-
-To exit the `venv`:
-
-```bash
-deactivate
-```
-
----
-
-### Makefile
-
-This repo has a Makefile with some quality of life scripts if your system supports `make`.
-
-- `update` : Clean all artifacts, update pip, update requirements, install everything
-- `build-dist` : Build source distribution and wheel distribution
-- `clean-artifacts` : Deletes python/mypy artifacts including eggs, cache, and pyc files
-- `clean-tests` : Deletes tox, coverage, and pytest artifacts
-- `clean-build` : Deletes build artifacts
-- `clean-all` : Runs all clean scripts
