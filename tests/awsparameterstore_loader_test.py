@@ -1,20 +1,22 @@
-"""Unit tests for aws parameter store interactions"""
-import importlib
-import sys
+"""Unit tests for aws parameter store interactions with boto3"""
 from typing import Any
 from typing import Dict
 from typing import Generator
 from typing import List
 from unittest.mock import patch
 
-import botocore.client
-import botocore.session
 import pytest
-from botocore.client import BaseClient
-from botocore.exceptions import StubAssertionError
-from botocore.stub import Stubber
-from secretbox import awsparameterstore_loader as ssm_loader_module
 from secretbox.awsparameterstore_loader import AWSParameterStore
+
+boto3_lib = pytest.importorskip("boto3", reason="boto3")
+mypy_boto3 = pytest.importorskip("mypy_boto3_ssm", reason="mypy_boto3")
+
+if True:
+    import botocore.client
+    import botocore.session
+    from botocore.client import BaseClient
+    from botocore.exceptions import StubAssertionError
+    from botocore.stub import Stubber
 
 
 TEST_VALUE = "abcdefg"
@@ -139,18 +141,18 @@ def invalid_ssm() -> Generator[BaseClient, None, None]:
 
 
 @pytest.fixture
+def loader() -> Generator[AWSParameterStore, None, None]:
+    """Pass an unaltered loader"""
+    loader = AWSParameterStore()
+    yield loader
+
+
+@pytest.fixture
 def stub_loader(valid_ssm: BaseClient) -> Generator[AWSParameterStore, None, None]:
     """Wraps AWS client with Stubber"""
     store = AWSParameterStore()
     with patch.object(store, "get_aws_client", return_value=valid_ssm):
         yield store
-
-
-@pytest.fixture
-def loader() -> Generator[AWSParameterStore, None, None]:
-    """Pass an unaltered loader"""
-    loader = AWSParameterStore()
-    yield loader
 
 
 @pytest.fixture
@@ -161,37 +163,8 @@ def broken_loader(invalid_ssm: BaseClient) -> Generator[AWSParameterStore, None,
         yield store
 
 
-@pytest.fixture
-def noboto() -> Generator[None, None, None]:
-    """Dirty module to remove boto3 and assert import catches"""
-    with patch.dict(sys.modules, {"boto3": None, "mypy_boto3_ssm.client": None}):
-        importlib.reload(ssm_loader_module)
-        yield None
-    importlib.reload(ssm_loader_module)
-
-
-def test_empty_values_on_init(loader: AWSParameterStore) -> None:
-    assert not loader.loaded_values
-
-
 def test_stubber_passed_for_client(stub_loader: AWSParameterStore) -> None:
     assert isinstance(stub_loader.get_aws_client(), BaseClient)
-
-
-def test_fall_through_with_no_boto3(loader: AWSParameterStore) -> None:
-    with patch.object(ssm_loader_module, "boto3", None):
-        assert not loader.load_values(aws_sstore=TEST_PATH, aws_region=TEST_REGION)
-        assert not loader.loaded_values
-
-
-@pytest.mark.usefixtures("noboto")
-def test_catch_boto3_missing_import_on_module_load() -> None:
-    assert ssm_loader_module.boto3 is None
-
-
-@pytest.mark.usefixtures("noboto")
-def test_catch_boto3_stubs_missing_import_on_module_load() -> None:
-    assert ssm_loader_module.SSMClient is None
 
 
 def test_parameter_values_success_load(stub_loader: AWSParameterStore) -> None:
@@ -228,10 +201,6 @@ def test_client_error_catch_on_load(broken_loader: AWSParameterStore) -> None:
         aws_sstore_name=TEST_PATH,
         aws_region_name=TEST_REGION,
     )
-
-
-def test_none_client_no_region(loader: AWSParameterStore) -> None:
-    assert loader.get_aws_client() is None
 
 
 def test_client_with_region(loader: AWSParameterStore) -> None:
