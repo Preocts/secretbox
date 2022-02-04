@@ -1,19 +1,23 @@
-"""Unit tests for aws secrect manager interactions"""
-import importlib
+"""Unit tests for aws secrect manager interactions with boto3"""
 import json
-import sys
 from datetime import datetime
 from typing import Any
 from typing import Generator
 from unittest.mock import patch
 
-import botocore.client
-import botocore.session
 import pytest
-from botocore.client import BaseClient
-from botocore.stub import Stubber
 from secretbox import awssecret_loader as awssecret_loader_module
 from secretbox.awssecret_loader import AWSSecretLoader
+
+boto3_lib = pytest.importorskip("boto3", reason="boto3")
+mypy_boto3 = pytest.importorskip("mypy_boto3_secretsmanager", reason="mypy_boto3")
+
+# Isolate boto3 lib requirements, silence flake8 by nesting in if statement
+if True:
+    import botocore.client
+    import botocore.session
+    from botocore.client import BaseClient
+    from botocore.stub import Stubber
 
 TEST_KEY_NAME = "TEST_KEY"
 TEST_VALUE = "abcdefg"
@@ -75,25 +79,6 @@ def awssecret_loader() -> Generator[AWSSecretLoader, None, None]:
     yield loader
 
 
-@pytest.mark.usefixtures("remove_aws_creds")
-def test_load_aws_no_credentials(awssecret_loader: AWSSecretLoader) -> None:
-    """Cause a NoCredentialsError to be handled"""
-    awssecret_loader.load_values(
-        aws_sstore_name=TEST_STORE,
-        aws_region_name=TEST_REGION,
-    )
-    assert not awssecret_loader.loaded_values
-
-
-@pytest.mark.usefixtures("remove_aws_creds")
-def test_load_aws_no_secret_store_defined(awssecret_loader: AWSSecretLoader) -> None:
-    awssecret_loader.load_values(
-        aws_sstore_name=None,
-        aws_region_name=TEST_REGION,
-    )
-    assert not awssecret_loader.loaded_values
-
-
 def test_load_aws_client_no_region(
     awssecret_loader: AWSSecretLoader,
     caplog: Any,
@@ -104,17 +89,6 @@ def test_load_aws_client_no_region(
             aws_region_name=TEST_REGION,
         )
     assert "Invalid secrets manager client" in caplog.text
-
-
-@pytest.mark.usefixtures("remove_aws_creds")
-def test_get_client_without_region(
-    awssecret_loader: AWSSecretLoader,
-    caplog: Any,
-) -> None:
-    awssecret_loader.aws_region = None
-    result = awssecret_loader.get_aws_client()
-    assert result is None
-    assert "No valid AWS region" in caplog.text
 
 
 def test_load_aws_secrets_valid_store_and_invalid_store(
@@ -140,17 +114,6 @@ def test_load_aws_secrets_valid_store_and_invalid_store(
         assert awssecret_loader.loaded_values.get(TEST_KEY_NAME) is None
 
 
-def test_boto3_not_installed_auto_load(awssecret_loader: AWSSecretLoader) -> None:
-    """Skip loading AWS secrets manager if no boto3"""
-    with patch.object(awssecret_loader_module, "boto3", None):
-        assert not awssecret_loader.loaded_values
-        awssecret_loader.load_values(
-            aws_sstore_name=TEST_STORE,
-            aws_region_name=TEST_REGION,
-        )
-        assert not awssecret_loader.loaded_values
-
-
 def test_boto3_stubs_not_installed(
     awssecret_loader: AWSSecretLoader,
     mockclient: BaseClient,
@@ -164,19 +127,3 @@ def test_boto3_stubs_not_installed(
                 aws_region_name=TEST_REGION,
             )
             assert awssecret_loader.loaded_values
-
-
-def test_boto3_missing_import_catch() -> None:
-    with patch.dict(sys.modules, {"boto3": None}):
-        importlib.reload(awssecret_loader_module)
-        assert awssecret_loader_module.boto3 is None
-    # Reload after test to avoid polution
-    importlib.reload(awssecret_loader_module)
-
-
-def test_boto3_stubs_missing_import_catch() -> None:
-    with patch.dict(sys.modules, {"mypy_boto3_secretsmanager.client": None}):
-        importlib.reload(awssecret_loader_module)
-        assert awssecret_loader_module.SecretsManagerClient is None
-    # Reload after test to avoid polution
-    importlib.reload(awssecret_loader_module)
