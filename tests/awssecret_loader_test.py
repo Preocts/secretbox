@@ -1,4 +1,4 @@
-"""Unit tests for aws secrect manager interactions"""
+"""Unit tests for aws secrect manager interactions with boto3"""
 import json
 from datetime import datetime
 from typing import Any
@@ -12,6 +12,7 @@ from secretbox.awssecret_loader import AWSSecretLoader
 boto3_lib = pytest.importorskip("boto3", reason="boto3")
 mypy_boto3 = pytest.importorskip("mypy_boto3_secretsmanager", reason="mypy_boto3")
 
+# Isolate boto3 lib requirements, silence flake8 by nesting in if statement
 if True:
     import botocore.client
     import botocore.session

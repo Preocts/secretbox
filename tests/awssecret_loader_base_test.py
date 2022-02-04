@@ -1,4 +1,4 @@
-"""Unit tests for aws secrect manager interactions"""
+"""Unit tests for aws secrect manager interactions without boto3"""
 from typing import Any
 from typing import Generator
 from unittest.mock import patch

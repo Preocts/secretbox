@@ -11,6 +11,7 @@ from secretbox.awsparameterstore_loader import AWSParameterStore
 boto3_lib = pytest.importorskip("boto3", reason="boto3")
 mypy_boto3 = pytest.importorskip("mypy_boto3_ssm", reason="mypy_boto3")
 
+# Isolate boto3 lib requirements, silence flake8 by nesting in if statement
 if True:
     import botocore.client
     import botocore.session
