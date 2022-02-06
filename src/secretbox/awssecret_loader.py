@@ -4,11 +4,11 @@ Load secrets from an AWS secret manager
 Author  : Preocts <Preocts#8196>
 Git Repo: https://github.com/Preocts/secretbox
 """
+from __future__ import annotations
+
 import json
 import logging
 from typing import Any
-from typing import Dict
-from typing import Optional
 
 try:
     import boto3
@@ -51,7 +51,7 @@ class AWSSecretLoader(AWSLoader):
             self.logger.error("Invalid secrets manager client")
             return False
 
-        secrets: Dict[str, str] = {}
+        secrets: dict[str, str] = {}
         try:
             logging.getLogger("botocore.parsers").addFilter(self.secrets_filter)
             response = aws_client.get_secret_value(SecretId=self.aws_sstore)
@@ -72,7 +72,7 @@ class AWSSecretLoader(AWSLoader):
 
         return bool(secrets)
 
-    def get_aws_client(self) -> Optional[SecretsManagerClient]:
+    def get_aws_client(self) -> SecretsManagerClient | None:
         """Return Secrets Manager client"""
 
         if not self.aws_region:

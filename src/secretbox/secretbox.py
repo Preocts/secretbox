@@ -4,13 +4,11 @@ Loads various environment variables/secrets for use
 Author  : Preocts <Preocts#8196>
 Git Repo: https://github.com/Preocts/secretbox
 """
+from __future__ import annotations
+
 import logging
 import os
 from typing import Any
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Type
 
 from secretbox.awsparameterstore_loader import AWSParameterStore
 from secretbox.awssecret_loader import AWSSecretLoader
@@ -18,7 +16,7 @@ from secretbox.envfile_loader import EnvFileLoader
 from secretbox.environ_loader import EnvironLoader
 from secretbox.loader import Loader
 
-LOADERS: Dict[str, Type[Loader]] = {
+LOADERS: dict[str, type[Loader]] = {
     "envfile": EnvFileLoader,
     "environ": EnvironLoader,
     "awssecret": AWSSecretLoader,
@@ -51,20 +49,20 @@ class SecretBox:
         self.logger.setLevel(level="DEBUG" if debug_flag else "ERROR")
         self.logger.debug("Debug flag passed.")
 
-        self.loaded_values: Dict[str, str] = {}
+        self.loaded_values: dict[str, str] = {}
         self.kwarg_defaults = kwargs
 
         if auto_load:
             self.load_from(["environ", "envfile"])
 
-    def get(self, key: str, default: Optional[str] = None) -> str:
+    def get(self, key: str, default: str | None = None) -> str:
         """Get a value by key, return default if not found or raise if no default"""
         if default is None:
             return self.loaded_values[key]
         else:
             return self.loaded_values.get(key, default)
 
-    def get_int(self, key: str, default: Optional[int] = None) -> int:
+    def get_int(self, key: str, default: int | None = None) -> int:
         """Convert value by key to int."""
         if default is None:
             return int(self.get(key))
@@ -76,8 +74,8 @@ class SecretBox:
         self,
         key: str,
         delimiter: str = ",",
-        default: Optional[List[str]] = None,
-    ) -> List[str]:
+        default: list[str] | None = None,
+    ) -> list[str]:
         """Convert value by key to list seperated by delimiter."""
         if default is None:
             default = []
@@ -89,7 +87,7 @@ class SecretBox:
 
     def load_from(
         self,
-        loaders: List[str],
+        loaders: list[str],
         **kwargs: Any,
     ) -> None:
         """
@@ -119,7 +117,7 @@ class SecretBox:
             self._update_loaded_values(loader.loaded_values)
         self._push_to_environment()
 
-    def _update_loaded_values(self, new_values: Dict[str, str]) -> None:
+    def _update_loaded_values(self, new_values: dict[str, str]) -> None:
         """Update/Create instance state of loaded values with new values"""
         self.loaded_values.update(new_values)
 
@@ -129,6 +127,6 @@ class SecretBox:
             self.logger.debug("Push, %s : ***%s", key, value[-(len(value) // 4) :])
             os.environ[key] = value
 
-    def _join_kwarg_defaults(self, new_kwargs: Dict[str, str]) -> Dict[str, str]:
+    def _join_kwarg_defaults(self, new_kwargs: dict[str, str]) -> dict[str, str]:
         """Update default kwargs with specific while not mutating either"""
         return {**self.kwarg_defaults, **new_kwargs}

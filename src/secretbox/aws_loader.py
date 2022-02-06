@@ -4,16 +4,16 @@ Super class for AWS secrets manager and parameter store loaders
 Author  : Preocts <preocts#8196>
 Git Repo: https://github.com/Preocts/secretbox
 """
+from __future__ import annotations
+
 import logging
 import os
 from typing import Any
-from typing import Dict
-from typing import Optional
 
 try:
     from botocore.awsrequest import HeadersDict
 except ImportError:
-    HeadersDict = Dict
+    HeadersDict = dict
 
 from secretbox.loader import Loader
 
@@ -27,8 +27,8 @@ class AWSLoader(Loader):
 
     def __init__(self) -> None:
         super().__init__()
-        self.aws_sstore: Optional[str] = None
-        self.aws_region: Optional[str] = None
+        self.aws_sstore: str | None = None
+        self.aws_region: str | None = None
 
     def get_aws_client(self) -> Any:
         """Returns correct AWS client for low-level API requests"""

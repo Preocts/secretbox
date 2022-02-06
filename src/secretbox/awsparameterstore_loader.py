@@ -3,9 +3,10 @@ Author      : James McKain (@jjmckain)
 Created     : 2021-12-10
 SCM Repo    : https://github.com/Preocts/secretbox
 """
+from __future__ import annotations
+
 import logging
 from typing import Any
-from typing import Optional
 
 from secretbox.aws_loader import AWSLoader
 
@@ -93,7 +94,7 @@ class AWSParameterStore(AWSLoader):
         )
         return True
 
-    def get_aws_client(self) -> Optional[SSMClient]:
+    def get_aws_client(self) -> SSMClient | None:
         """Make the connection"""
 
         if self.aws_region is None:
