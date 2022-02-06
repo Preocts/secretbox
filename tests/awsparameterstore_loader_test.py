@@ -1,8 +1,8 @@
 """Unit tests for aws parameter store interactions with boto3"""
+from __future__ import annotations
+
 from typing import Any
-from typing import Dict
 from typing import Generator
-from typing import List
 from unittest.mock import patch
 
 import pytest
@@ -50,7 +50,7 @@ def valid_ssm() -> Generator[BaseClient, None, None]:
         "Path": TEST_PATH,
     }
 
-    responses: List[Dict[str, str]] = []
+    responses: list[dict[str, str]] = []
     responses.append(
         {
             "Name": f"{TEST_PATH}{TEST_STORE}",

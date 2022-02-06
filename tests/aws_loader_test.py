@@ -4,7 +4,6 @@ import logging
 import os
 import sys
 from typing import Any
-from typing import Dict
 from typing import Generator
 from unittest.mock import patch
 
@@ -32,7 +31,7 @@ def noboto() -> Generator[None, None, None]:
 
 @pytest.mark.usefixtures("noboto")
 def test_catch_botocore_missing_import_on_module_load() -> None:
-    assert issubclass(loader_module.HeadersDict, Dict)
+    assert issubclass(loader_module.HeadersDict, dict)
 
 
 def test_populate_region_store_names_none(awsloader: AWSLoader) -> None:
