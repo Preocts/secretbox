@@ -1,14 +1,11 @@
 """Unit tests for aws loader"""
-import importlib
 import logging
 import os
-import sys
 from typing import Any
 from typing import Generator
 from unittest.mock import patch
 
 import pytest
-from secretbox import aws_loader as loader_module
 from secretbox.aws_loader import AWSLoader
 
 
@@ -18,20 +15,6 @@ def awsloader() -> Generator[AWSLoader, None, None]:
     loader = AWSLoader()
     assert not loader.loaded_values
     yield loader
-
-
-@pytest.fixture
-def noboto() -> Generator[None, None, None]:
-    """Dirty module to remove botocore and assert import catches"""
-    with patch.dict(sys.modules, {"botocore.awsrequest": None}):
-        importlib.reload(loader_module)
-        yield None
-    importlib.reload(loader_module)
-
-
-@pytest.mark.usefixtures("noboto")
-def test_catch_botocore_missing_import_on_module_load() -> None:
-    assert issubclass(loader_module.HeadersDict, dict)
 
 
 def test_populate_region_store_names_none(awsloader: AWSLoader) -> None:
