@@ -25,9 +25,6 @@ except ImportError:
 class AWSParameterStore(AWSLoader):
     """Load secrets from an AWS Parameter Store"""
 
-    def __init__(self) -> None:
-        super().__init__()
-
     def load_values(self, **kwargs: Any) -> bool:
         """
         Load all secrets from AWS parameter store

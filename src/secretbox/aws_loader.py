@@ -77,6 +77,7 @@ class AWSLoader(Loader):
             if isinstance(record.args, (dict, HeadersDict)):
                 record.args = {key: "REDACTED" for key in record.args}
             else:
-                record.args = tuple(["REDACTED" for _ in record.args or []])
+                args = ["REDACTED" for _ in record.args or []]
+                record.args = tuple(args)
 
         return True
