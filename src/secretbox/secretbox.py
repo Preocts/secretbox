@@ -59,16 +59,16 @@ class SecretBox:
         """Get a value by key, return default if not found or raise if no default"""
         if default is None:
             return self.loaded_values[key]
-        else:
-            return self.loaded_values.get(key, default)
+
+        return self.loaded_values.get(key, default)
 
     def get_int(self, key: str, default: int | None = None) -> int:
         """Convert value by key to int."""
         if default is None:
             return int(self.get(key))
-        else:
-            value = self.get(key, "")
-            return int(value) if value else default
+
+        value = self.get(key, "")
+        return int(value) if value else default
 
     def get_list(
         self,
@@ -79,11 +79,12 @@ class SecretBox:
         """Convert value by key to list seperated by delimiter."""
         if default is None:
             default = []
+
         if not default:
             return self.get(key).split(delimiter)
-        else:
-            value = self.get(key, "")
-            return value.split(delimiter) if value else default
+
+        value = self.get(key, "")
+        return value.split(delimiter) if value else default
 
     def load_from(
         self,
