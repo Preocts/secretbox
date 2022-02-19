@@ -187,6 +187,6 @@ Will be parsed as:
 {
     "PASSWORD": "correct horse battery staple",
     "USER_NAME": "not_admin",
-    "MESSAGE": '    Toally not an "admin" account logging in',
+    "MESSAGE": '    Totally not an "admin" account logging in',
 }
 ```
