@@ -13,4 +13,4 @@ class Loader(ABC):
 
     def load_values(self, **kwargs: Any) -> bool:
         """Override with loading optionation, store within self.loaded_values"""
-        raise NotImplementedError()  # pragma: no cover
+        raise NotImplementedError()

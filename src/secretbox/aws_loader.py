@@ -33,7 +33,7 @@ class AWSLoader(Loader):
     def get_aws_client(self) -> Any:
         """Returns correct AWS client for low-level API requests"""
         # NOTE: Override in client specific implementation
-        raise NotImplementedError  # pragma: no cover
+        raise NotImplementedError
 
     def populate_region_store_names(self, **kwargs: Any) -> None:
         """Populates store/region name"""
