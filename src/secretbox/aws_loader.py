@@ -71,13 +71,22 @@ class AWSLoader(Loader):
     @contextmanager
     def filter_boto_debug(self) -> Generator[None, None, None]:
         """Context manager to enforce level 20 (INFO) logging minimum at root logger."""
-        current_level = self.logger.root.level
-        if self.hide_boto_debug and self.logger.root.level < logging.INFO:
-            self.logger.root.level = logging.INFO
-            logging.getLogger("boto3").level = logging.INFO
+        restore_data: list[tuple[logging.Logger, int]] = []
+
+        # Step through all loggers, force INFO level or higher
+        if self.hide_boto_debug:
+            self.logger.info("Forcing all loggers to > DEBUG level.")
+            for log_obj in logging.root.manager.loggerDict:
+                logger = logging.getLogger(log_obj)
+                if logger.level < logging.INFO:
+                    restore_data.append((logger, logger.level))
+                    logger.level = logging.INFO
 
         try:
             yield None
+
         finally:
-            self.logger.root.level = current_level
-            logging.getLogger("boto3").level = current_level
+            if self.hide_boto_debug:
+                self.logger.info("Restoring previous loggers settings.")
+            for logger, level in restore_data:
+                logger.level = level
