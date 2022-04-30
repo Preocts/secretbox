@@ -50,27 +50,55 @@ def test_populate_region_store_names_kw(awsloader: AWSLoader) -> None:
         assert awsloader.aws_region == "NewRegion"
 
 
-def test_secret_filter(caplog: Any) -> None:
+def test_filter_boto_debug(caplog: Any, awsloader: AWSLoader) -> None:
+    try:
+        logger = logging.getLogger("secrets")
+        logger.setLevel("DEBUG")
+        error_logger = logging.getLogger("errors")
+        error_logger.setLevel("ERROR")
+        current_level = logger.root.level
+        # logger.root.setLevel("DEBUG")
+
+        with awsloader.disable_debug_logging():
+            logger.debug("OHNO")
+            logger.info("ALLGOOD")
+
+    finally:
+        logger.root.level = current_level
+
+    assert "OHNO" not in caplog.text
+    assert "ALLGOOD" in caplog.text
+    assert logger.level == logging.DEBUG
+    assert error_logger.level == logging.ERROR
+
+
+def test_filter_boto_debug_no_action(caplog: Any, awsloader: AWSLoader) -> None:
     logger = logging.getLogger("secrets")
-    logger.addFilter(AWSLoader.secrets_filter)
-    logger.setLevel("DEBUG")
-    secret_dict = {"allYour": "Passwords"}
-    secret_tuple = ("I am a plain-text secrets",)
-    secret_string = "Your password is 12345"
 
-    logger.debug("Reponse body: %s", secret_dict)
-    logger.debug("Reponse body: %s", secret_tuple)
-    logger.debug("Reponse body: %s", secret_string)
-    logger.debug("Response body:")
-    logger.debug("Standard log")
+    with awsloader.disable_debug_logging():
+        logger.debug("OHNO")
+        logger.error("ALLGOOD")
 
-    logger.info("Safe Info")
+    assert "OHNO" not in caplog.text
+    assert "ALLGOOD" in caplog.text
 
-    assert "Passwords" not in caplog.text
-    assert "plain-text" not in caplog.text
-    assert "12345" not in caplog.text
-    assert "Standard log" in caplog.text
-    assert "Safe Info" in caplog.text
+
+def test_filter_boto_debug_disabled(caplog: Any, awsloader: AWSLoader) -> None:
+    try:
+        logger = logging.getLogger("secrets")
+        current_level = logger.root.level
+        logger.root.setLevel("DEBUG")
+        awsloader.hide_boto_debug = False
+
+        with awsloader.disable_debug_logging():
+            logger.debug("DEBUG")
+            logger.info("INFO")
+
+    finally:
+        logger.root.level = current_level
+
+    assert "DEBUG" in caplog.text
+    assert "INFO" in caplog.text
 
 
 def test_log_aws_error_with_nonaws_error(awsloader: AWSLoader, caplog: Any) -> None:

@@ -7,7 +7,6 @@ Git Repo: https://github.com/Preocts/secretbox
 from __future__ import annotations
 
 import json
-import logging
 from typing import Any
 
 try:
@@ -53,8 +52,9 @@ class AWSSecretLoader(AWSLoader):
 
         secrets: dict[str, str] = {}
         try:
-            logging.getLogger("botocore.parsers").addFilter(self.secrets_filter)
-            response = aws_client.get_secret_value(SecretId=self.aws_sstore)
+            # ensure that boto3 doesn't write sensitive payload to the logger
+            with self.disable_debug_logging():
+                response = aws_client.get_secret_value(SecretId=self.aws_sstore)
 
         except NoCredentialsError as err:
             self.logger.error("Missing AWS credentials (%s)", err)
@@ -67,9 +67,6 @@ class AWSSecretLoader(AWSLoader):
             secrets = json.loads(response.get("SecretString", "{}"))
             self.loaded_values.update(secrets)
 
-        finally:
-            logging.getLogger("botocore.parsers").removeFilter(self.secrets_filter)
-
         return bool(secrets)
 
     def get_aws_client(self) -> SecretsManagerClient | None:
@@ -79,7 +76,10 @@ class AWSSecretLoader(AWSLoader):
             self.logger.error("No valid AWS region, cannot create client.")
             return None
 
-        return boto3.client(
-            service_name="secretsmanager",
-            region_name=self.aws_region,
-        )
+        with self.disable_debug_logging():
+            client = boto3.client(
+                service_name="secretsmanager",
+                region_name=self.aws_region,
+            )
+
+        return client

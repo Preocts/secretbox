@@ -8,7 +8,9 @@ from __future__ import annotations
 
 import logging
 import os
+from contextlib import contextmanager
 from typing import Any
+from typing import Generator
 
 try:
     from botocore.awsrequest import HeadersDict
@@ -22,8 +24,10 @@ class AWSLoader(Loader):
     """Super class with mutual methods of AWS loaders, inherits Loader"""
 
     logger = logging.getLogger(__name__)
-    # Override filter_secrets to False to allow full debug logging of boto3.parsers
-    filter_secrets = True
+
+    # Override hide_boto_debug to False to allow full debug logging of boto3 libraries
+    # NOTE: This exposes sensitive data and should never be in production
+    hide_boto_debug = True
 
     def __init__(self) -> None:
         super().__init__()
@@ -64,20 +68,25 @@ class AWSLoader(Loader):
         else:
             self.logger.error("Unexpected error occurred: '%s'", str(err))
 
-    @staticmethod
-    def secrets_filter(record: logging.LogRecord) -> bool:
-        """
-        Hide botocore.parsers responses which include decrypted secrets
+    @contextmanager
+    def disable_debug_logging(self) -> Generator[None, None, None]:
+        """Context manager to enforce level 20 (INFO) logging minimum at root logger."""
+        restore_data: list[tuple[logging.Logger, int]] = []
 
-        https://github.com/boto/botocore/issues/1211#issuecomment-327799341
-        """
-        if record.levelno > logging.DEBUG or not AWSLoader.filter_secrets:
-            return True
-        if "body" in record.msg or "headers" in record.msg:
-            if isinstance(record.args, (dict, HeadersDict)):
-                record.args = {key: "REDACTED" for key in record.args}
-            else:
-                args = ["REDACTED" for _ in record.args or []]
-                record.args = tuple(args)
+        # Step through all loggers, force INFO level or higher
+        if self.hide_boto_debug:
+            self.logger.info("Forcing all loggers to > DEBUG level.")
+            for log_obj in logging.root.manager.loggerDict:
+                logger = logging.getLogger(log_obj)
+                if logger.level < logging.INFO:
+                    restore_data.append((logger, logger.level))
+                    logger.level = logging.INFO
 
-        return True
+        try:
+            yield None
+
+        finally:
+            if self.hide_boto_debug:
+                self.logger.info("Restoring previous loggers settings.")
+            for logger, level in restore_data:
+                logger.level = level
