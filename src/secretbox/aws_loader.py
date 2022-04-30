@@ -24,8 +24,10 @@ class AWSLoader(Loader):
     """Super class with mutual methods of AWS loaders, inherits Loader"""
 
     logger = logging.getLogger(__name__)
-    # Override filter_secrets to False to allow full debug logging of boto3.parsers
-    filter_secrets = True
+
+    # Override hide_boto_debug to False to allow full debug logging of boto3 libraries
+    # NOTE: This exposes sensitive data and should never be in production
+    hide_boto_debug = True
 
     def __init__(self) -> None:
         super().__init__()
@@ -70,29 +72,10 @@ class AWSLoader(Loader):
     def filter_boto_debug(self) -> Generator[None, None, None]:
         """Context manager to enforce level 20 (INFO) logging minimum at root logger."""
         current_level = self.logger.root.level
-        # TODO: Rename filter_secrets -> boto_debug
-        if self.filter_secrets and self.logger.root.level < logging.INFO:
+        if self.hide_boto_debug and self.logger.root.level < logging.INFO:
             self.logger.root.level = logging.INFO
 
         try:
             yield None
         finally:
             self.logger.root.level = current_level
-
-    @staticmethod
-    def secrets_filter(record: logging.LogRecord) -> bool:
-        """
-        Hide botocore.parsers responses which include decrypted secrets
-
-        https://github.com/boto/botocore/issues/1211#issuecomment-327799341
-        """
-        if record.levelno > logging.DEBUG or not AWSLoader.filter_secrets:
-            return True
-        if "body" in record.msg or "headers" in record.msg:
-            if isinstance(record.args, (dict, HeadersDict)):
-                record.args = {key: "REDACTED" for key in record.args}
-            else:
-                args = ["REDACTED" for _ in record.args or []]
-                record.args = tuple(args)
-
-        return True
