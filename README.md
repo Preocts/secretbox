@@ -30,7 +30,7 @@ Loaded values are also injected into the local environ. This is to assist with a
 $ pip install secretbox
 ```
 
-_Optional AWS Secret Manager support_
+_Optional AWS support_
 
 ```bash
 $ pip install secretbox[aws]
@@ -141,6 +141,12 @@ if __name__ == "__main__":
     - Loads secrets from an AWS Parameter Store (SSM/ASM). Requires `aws_sstore_name` and `aws_region_name` keywords to be provided or for those values to be in the environment variables under `AWS_SSTORE_NAME` and `AWS_REGION_NAME`. `aws_sstore_name` is the name or prefix of the parameters to retrieve.
 - **kwargs**
   - All keyword arguments are passed into the loaders when they are called. Each loader details which extra keyword arguments it uses or requires above.
+
+---
+
+## A note about logging output
+
+This library restricts any `DEBUG` logging output during the use of a `boto3` client or the methods of that client. This is to prevent the logging of your secrets as well as the bearer tokens used within AWS. You can disable this at the aws loader by adjusting `hide_boto_debug` to be `False`. You will need to define your own instance of the `AWSParameterStore` or `AWSSecretLoader` and adjust their flag before calling `load_values()`.
 
 ---
 
