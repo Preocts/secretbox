@@ -53,7 +53,7 @@ class AWSSecretLoader(AWSLoader):
         secrets: dict[str, str] = {}
         try:
             # ensure that boto3 doesn't write sensitive payload to the logger
-            with self.filter_boto_debug():
+            with self.disable_debug_logging():
                 response = aws_client.get_secret_value(SecretId=self.aws_sstore)
 
         except NoCredentialsError as err:
@@ -76,7 +76,10 @@ class AWSSecretLoader(AWSLoader):
             self.logger.error("No valid AWS region, cannot create client.")
             return None
 
-        return boto3.client(
-            service_name="secretsmanager",
-            region_name=self.aws_region,
-        )
+        with self.disable_debug_logging():
+            client = boto3.client(
+                service_name="secretsmanager",
+                region_name=self.aws_region,
+            )
+
+        return client

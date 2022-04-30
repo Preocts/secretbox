@@ -54,10 +54,12 @@ def test_filter_boto_debug(caplog: Any, awsloader: AWSLoader) -> None:
     try:
         logger = logging.getLogger("secrets")
         logger.setLevel("DEBUG")
+        error_logger = logging.getLogger("errors")
+        error_logger.setLevel("ERROR")
         current_level = logger.root.level
-        logger.root.setLevel("DEBUG")
+        # logger.root.setLevel("DEBUG")
 
-        with awsloader.filter_boto_debug():
+        with awsloader.disable_debug_logging():
             logger.debug("OHNO")
             logger.info("ALLGOOD")
 
@@ -67,12 +69,13 @@ def test_filter_boto_debug(caplog: Any, awsloader: AWSLoader) -> None:
     assert "OHNO" not in caplog.text
     assert "ALLGOOD" in caplog.text
     assert logger.level == logging.DEBUG
+    assert error_logger.level == logging.ERROR
 
 
 def test_filter_boto_debug_no_action(caplog: Any, awsloader: AWSLoader) -> None:
     logger = logging.getLogger("secrets")
 
-    with awsloader.filter_boto_debug():
+    with awsloader.disable_debug_logging():
         logger.debug("OHNO")
         logger.error("ALLGOOD")
 
@@ -87,7 +90,7 @@ def test_filter_boto_debug_disabled(caplog: Any, awsloader: AWSLoader) -> None:
         logger.root.setLevel("DEBUG")
         awsloader.hide_boto_debug = False
 
-        with awsloader.filter_boto_debug():
+        with awsloader.disable_debug_logging():
             logger.debug("DEBUG")
             logger.info("INFO")
 

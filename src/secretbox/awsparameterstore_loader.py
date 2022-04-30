@@ -62,7 +62,7 @@ class AWSParameterStore(AWSLoader):
 
             try:
                 # ensure that boto3 doesn't write sensitive payload to the logger
-                with self.filter_boto_debug():
+                with self.disable_debug_logging():
                     resp = aws_client.get_parameters_by_path(**args)
 
             except ClientError as err:
@@ -95,7 +95,10 @@ class AWSParameterStore(AWSLoader):
             self.logger.debug("Missing AWS region, cannot create client")
             return None
 
-        return boto3.client(
-            service_name="ssm",
-            region_name=self.aws_region,
-        )
+        with self.disable_debug_logging():
+            client = boto3.client(
+                service_name="ssm",
+                region_name=self.aws_region,
+            )
+
+        return client

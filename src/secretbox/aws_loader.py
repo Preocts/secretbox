@@ -69,7 +69,7 @@ class AWSLoader(Loader):
             self.logger.error("Unexpected error occurred: '%s'", str(err))
 
     @contextmanager
-    def filter_boto_debug(self) -> Generator[None, None, None]:
+    def disable_debug_logging(self) -> Generator[None, None, None]:
         """Context manager to enforce level 20 (INFO) logging minimum at root logger."""
         restore_data: list[tuple[logging.Logger, int]] = []
 
