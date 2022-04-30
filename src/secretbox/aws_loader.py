@@ -74,8 +74,10 @@ class AWSLoader(Loader):
         current_level = self.logger.root.level
         if self.hide_boto_debug and self.logger.root.level < logging.INFO:
             self.logger.root.level = logging.INFO
+            logging.getLogger("boto3").level = logging.INFO
 
         try:
             yield None
         finally:
             self.logger.root.level = current_level
+            logging.getLogger("boto3").level = current_level
