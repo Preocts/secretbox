@@ -8,7 +8,9 @@ from __future__ import annotations
 
 import logging
 import os
+from contextlib import contextmanager
 from typing import Any
+from typing import Generator
 
 try:
     from botocore.awsrequest import HeadersDict
@@ -63,6 +65,19 @@ class AWSLoader(Loader):
             )
         else:
             self.logger.error("Unexpected error occurred: '%s'", str(err))
+
+    @contextmanager
+    def filter_boto_debug(self) -> Generator[None, None, None]:
+        """Context manager to enforce level 20 (INFO) logging minimum at root logger."""
+        current_level = self.logger.root.level
+        # TODO: Rename filter_secrets -> boto_debug
+        if self.filter_secrets and self.logger.root.level < logging.INFO:
+            self.logger.root.level = logging.INFO
+
+        try:
+            yield None
+        finally:
+            self.logger.root.level = current_level
 
     @staticmethod
     def secrets_filter(record: logging.LogRecord) -> bool:

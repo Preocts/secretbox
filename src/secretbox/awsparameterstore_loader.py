@@ -5,7 +5,6 @@ SCM Repo    : https://github.com/Preocts/secretbox
 """
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from secretbox.aws_loader import AWSLoader
@@ -51,40 +50,38 @@ class AWSParameterStore(AWSLoader):
         # if the prefix contains forward slashes treat the last token as the key name
         do_split = "/" in self.aws_sstore
 
-        try:
-            # ensure the http client doesn't write our sensitive payload to the logger
-            logging.getLogger("botocore.parsers").addFilter(self.secrets_filter)
+        args: dict[str, Any] = {
+            "Path": self.aws_sstore,
+            "Recursive": True,
+            "MaxResults": 10,
+            "WithDecryption": True,
+        }
 
-            args = {
-                "Path": self.aws_sstore,
-                "Recursive": True,
-                "MaxResults": 10,
-                "WithDecryption": True,
-            }
+        # loop through next page tokens, page size caps at 10
+        while True:
 
-            # loop through next page tokens, page size caps at 10
-            while True:
-                resp = aws_client.get_parameters_by_path(**args)
-                for param in resp["Parameters"] or []:
-                    # remove the prefix
-                    # we want /path/to/DB_PASSWORD to populate os.env.DB_PASSWORD
-                    key = param["Name"].split("/")[-1] if do_split else param["Name"]
-                    self.loaded_values[key] = param["Value"]
+            try:
+                # ensure that boto3 doesn't write sensitive payload to the logger
+                with self.filter_boto_debug():
+                    resp = aws_client.get_parameters_by_path(**args)
 
-                args["NextToken"] = resp.get("NextToken")
+            except ClientError as err:
+                self.log_aws_error(err)
+                return False
 
-                if not args["NextToken"]:
-                    break
+            # Process results, break if finished
+            for param in resp["Parameters"] or []:
+                # remove the prefix
+                # we want /path/to/DB_PASSWORD to populate os.env.DB_PASSWORD
+                key = param["Name"].split("/")[-1] if do_split else param["Name"]
+                self.loaded_values[key] = param["Value"]
 
-                self.logger.debug("fetching next page: %s", args["NextToken"])
+            args["NextToken"] = resp.get("NextToken")
 
-        except ClientError as err:
-            self.log_aws_error(err)
-            return False
+            if not args["NextToken"]:
+                break
 
-        finally:
-            # remove our logging filter
-            logging.getLogger("botocore.parsers").removeFilter(self.secrets_filter)
+            self.logger.debug("fetching next page: %s", args["NextToken"])
 
         self.logger.info(
             "loaded %d parameters matching %s", len(self.loaded_values), self.aws_sstore
