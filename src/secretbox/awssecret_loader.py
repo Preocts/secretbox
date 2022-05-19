@@ -63,11 +63,20 @@ class AWSSecretLoader(AWSLoader):
             self.log_aws_error(err)
 
         else:
-            self.logger.debug("Found %s values from AWS.", len(secrets))
-            secrets = json.loads(response.get("SecretString", "{}"))
+            secrets = self._resolve_response(response)
             self.loaded_values.update(secrets)
 
         return bool(secrets)
+
+    def _resolve_response(self, response: Any) -> dict[str, str]:
+        """Resolve response body to json."""
+        try:
+            secrets = json.loads(response.get("SecretString", "{}"))
+        except json.JSONDecodeError:
+            secrets = {response.get("Name", ""): response.get("SecretString", "")}
+        self.logger.debug("Found %s values from AWS.", len(secrets))
+
+        return secrets
 
     def get_aws_client(self) -> SecretsManagerClient | None:
         """Return Secrets Manager client"""

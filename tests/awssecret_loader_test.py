@@ -1,4 +1,6 @@
 """Unit tests for aws secrect manager interactions with boto3"""
+from __future__ import annotations
+
 import json
 from datetime import datetime
 from typing import Any
@@ -77,6 +79,24 @@ def awssecret_loader() -> Generator[AWSSecretLoader, None, None]:
     loader = AWSSecretLoader()
     assert not loader.loaded_values
     yield loader
+
+
+@pytest.mark.parametrize(
+    ("response", "expected"),
+    (
+        ({"SecretString": '{"test": "value"}', "Name": "TEST"}, {"test": "value"}),
+        ({"SecretString": "value", "Name": "TEST"}, {"TEST": "value"}),
+        ({}, {}),
+    ),
+)
+def test_resolve_response(
+    awssecret_loader: AWSSecretLoader,
+    response: dict[str, str],
+    expected: dict[str, str],
+) -> None:
+    result = awssecret_loader._resolve_response(response)
+
+    assert result == expected
 
 
 def test_load_aws_client_no_region(
