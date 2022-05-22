@@ -33,3 +33,10 @@ def test_load_env_vars(environ_loader: EnvironLoader) -> None:
         environ_loader.load_values()
         for key, value in MOCK_ENV.items():
             assert environ_loader.loaded_values.get(key) == value, f"{key}, {value}"
+
+
+def test_run_load_values(environ_loader: EnvironLoader) -> None:
+    with patch.dict(os.environ, MOCK_ENV):
+        environ_loader.run()
+        for key, value in MOCK_ENV.items():
+            assert environ_loader.loaded_values.get(key) == value, f"{key}, {value}"
