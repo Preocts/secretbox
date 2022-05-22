@@ -14,7 +14,10 @@ I'm open to suggestions on standards to follow here.
 Author  : Preocts <Preocts#8196>
 Git Repo: https://github.com/Preocts/secretbox
 """
+from __future__ import annotations
+
 import logging
+import os
 import re
 
 from secretbox.loader import Loader
@@ -29,14 +32,34 @@ class EnvFileLoader(Loader):
 
     logger = logging.getLogger(__name__)
 
-    def load_values(self, **kwargs: str) -> bool:
+    def __init__(self, filename: str | None = None) -> None:
         """
-        Loads local .env from cwd or path, if provided
+        Load local .env file.
 
-        Keywords:
+        Args:
+            filename: Optional filename (with path) to load, default is `.env`
+        """
+        self.loaded_values: dict[str, str] = {}
+        self._filename = filename
+
+    def run(self) -> bool:
+        """Load .env, or instantiated filename, to class state and environ."""
+        was_loaded = self.load_values()
+
+        for key, value in self.loaded_values.items():
+            self.logger.debug("Found, %s : ***%s", key, value[-(len(value) // 4) :])
+            os.environ[key] = value
+
+        return was_loaded
+
+    def load_values(self, filename: str | None = None, **kwargs: str) -> bool:
+        """
+        Load values from .env, or provided filename, to class state.
+
+        Args:
             filename : [str] Alternate filename to load over `.env`
         """
-        filename = kwargs.get("filename", ".env")
+        filename = self._filename or filename or ".env"
         self.logger.debug("Reading vars from '%s'", filename)
         try:
             with open(filename, "r", encoding="utf-8") as input_file:

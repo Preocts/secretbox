@@ -1,4 +1,5 @@
 """Unit tests for .env file loader"""
+import os
 from typing import Generator
 
 import pytest
@@ -26,3 +27,10 @@ def test_load_missing_file(envfile_loader: EnvFileLoader) -> None:
     """Confirm clean run if file is missing"""
     result = envfile_loader.load_values(filename="BYWHATCHANGEWOULDTHISSEXIST")
     assert not result
+
+
+def test_run_loads_environ(mock_env_file: str, envfile_loader: EnvFileLoader) -> None:
+    envfile_loader._filename = mock_env_file
+    envfile_loader.run()
+    for key, value in ENV_FILE_EXPECTED.items():
+        assert os.getenv(key) == value, f"{key}, {value}"
