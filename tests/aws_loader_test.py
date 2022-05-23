@@ -13,7 +13,6 @@ from secretbox.aws_loader import AWSLoader
 def awsloader() -> Generator[AWSLoader, None, None]:
     """Create a fixture to test with"""
     loader = AWSLoader()
-    assert not loader.loaded_values
     yield loader
 
 
