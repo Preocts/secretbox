@@ -178,6 +178,18 @@ def test_parameter_values_success_load(stub_loader: AWSParameterStore) -> None:
     assert stub_loader.loaded_values.get(TEST_STORE3) == TEST_LIST
 
 
+def test_parameter_values_success_load_with_run(stub_loader: AWSParameterStore) -> None:
+    stub_loader.aws_sstore = TEST_PATH
+    stub_loader.aws_region = TEST_REGION
+
+    result = stub_loader.run()
+
+    assert result is True
+    assert stub_loader.loaded_values.get(TEST_STORE) == TEST_VALUE
+    assert stub_loader.loaded_values.get(TEST_STORE2) == TEST_VALUE
+    assert stub_loader.loaded_values.get(TEST_STORE3) == TEST_LIST
+
+
 def test_loading_wrong_prefix(stub_loader: AWSParameterStore) -> None:
     # Catch this as an unhappy path. Outside of a stubber this would return nothing
     with pytest.raises(StubAssertionError):
