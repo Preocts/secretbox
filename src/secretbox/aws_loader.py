@@ -30,10 +30,12 @@ class AWSLoader(Loader):
     hide_boto_debug = True
 
     def load_values(self, **kwargs: Any) -> bool:
-        return super().load_values(**kwargs)
+        """To be overrided in child classes"""
+        raise NotImplementedError()
 
     def run(self) -> bool:
-        return super().run()
+        """To be overrided in child classes"""
+        raise NotImplementedError()
 
     def get_aws_client(self) -> Any:
         """Returns correct AWS client for low-level API requests"""
