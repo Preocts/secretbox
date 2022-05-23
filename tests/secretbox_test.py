@@ -52,21 +52,11 @@ def test_update_loaded_values(secretbox: SecretBox) -> None:
     assert secretbox.get("TEST") == "TEST02"
 
 
-# def test_join_kwarg_defaults(secretbox: SecretBox) -> None:
-#     """Mutables are fun, this should never create side-effects"""
-#     secretbox.kwarg_defaults = {"TEST": "TEST01"}
-#     new_kwargs = {"TEST": "TEST02"}
-#     final_kwargs = secretbox._join_kwarg_defaults(new_kwargs)
-#     assert secretbox.kwarg_defaults == {"TEST": "TEST01"}
-#     assert new_kwargs == {"TEST": "TEST02"}
-#     assert final_kwargs == new_kwargs
+def test_auto_load_flag() -> None:
+    with patch.object(SecretBox, "load_from") as mocked_load_from:
+        SecretBox(auto_load=True)
 
-
-# def test_autoload_tempfile(mock_env_file: str) -> None:
-#     """One less line of code needed"""
-#     secretbox = SecretBox(filename=mock_env_file, auto_load=True)
-#     for key, value in ENV_FILE_EXPECTED.items():
-#         assert secretbox.get(key) == value
+        mocked_load_from.assert_called_once()
 
 
 def test_get_missing_key_is_empty(secretbox: SecretBox) -> None:
