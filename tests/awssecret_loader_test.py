@@ -134,6 +134,20 @@ def test_load_aws_secrets_valid_store_and_invalid_store(
         assert awssecret_loader.loaded_values.get(TEST_KEY_NAME) is None
 
 
+def test_load_aws_secrets_with_run(
+    awssecret_loader: AWSSecretLoader,
+    mockclient: BaseClient,
+) -> None:
+    awssecret_loader.aws_sstore = TEST_STORE
+    awssecret_loader.aws_region = TEST_REGION
+    with patch.object(awssecret_loader, "get_aws_client", return_value=mockclient):
+
+        result = awssecret_loader.run()
+
+    assert result is True
+    assert awssecret_loader.loaded_values.get(TEST_KEY_NAME) == TEST_VALUE
+
+
 def test_boto3_stubs_not_installed(
     awssecret_loader: AWSSecretLoader,
     mockclient: BaseClient,
