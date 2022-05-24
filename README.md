@@ -38,15 +38,11 @@ $ pip install secretbox[aws]
 
 ---
 
-## [Development Installation Guide](docs/development.md)
-
----
-
-## Documentation:
+# Documentation:
 
 ## Example use with `auto_load=True`
 
-This loads the system environ and the `.env` from the current working directory into the class state for quick reference.
+This loads the system environ and the `.env` from the current working directory into the class state for quick reference. Loaded secrets can be accessed from the `.values` property or from other methods such as `os.getenviron()`.
 
 ```python
 from secretbox import SecretBox
@@ -56,7 +52,7 @@ secrets = SecretBox(auto_load=True)
 
 def main() -> int:
     """Main function"""
-    my_sevice_password = secrets.get("SERVICE_PW")
+    my_sevice_password = secrets.values.get("SERVICE_PW")
     # More code
     return 0
 
@@ -65,26 +61,30 @@ if __name__ == "__main__":
     raise SystemExit(main())
 ```
 
-## Example use with `load_from()`
+## Example use with `use_loaders()`
 
-This loads our system environ, our AWS secret store, and then a specific `.env` file if it exists (replacing any values from the prior to loads)
+Loaders collect key:value pair secrets from various sources. When you need more than one source loaded, in a particular order, with a single collection of all loaded values then `.use_loaders()` is the solution. Each loader is executed in turn and the results compiled with the `SecretBox` object.
 
-Notice we can declare our parameters when creating the `SecretBox` instance and when calling `load_from()`. All keywords will be sent to the loaders with preference to the `load_from()` values.
+This loads the system environment variables, an AWS secret store, and then a specific `.env` file if it exists. Secrets are loaded in the order of loaders, replacing any matching keys from the prior loader.
 
 ```python
+from secretbox import AWSSecretLoader
+from secretbox import EnvFileLoader
+from secretbox import EnvironLoader
 from secretbox import SecretBox
 
-secrets = SecretBox(filename="sandbox/.override_env")
+secrets = SecretBox()
 
 
 def main() -> int:
     """Main function"""
-    secrets.load_from(
-        loaders=["environ", "awssecret", "envfile"],
-        aws_sstore_name="mySecrets",
-        aws_region_name="us-east-1",
+    secrets.use_loaders(
+        EnvironLoader(),
+        AWSSecretLoader("mySecrets", "us-east-1"),
+        EnvFileLoader("sandbox/.override_env"),
     )
-    my_sevice_password = secrets.get("SERVICE_PW")
+
+    my_sevice_password = secrets.values.get("SERVICE_PW")
     # More code
     return 0
 
@@ -95,9 +95,35 @@ if __name__ == "__main__":
 
 ---
 
-## SecretBox arguments:
+## Example use with stand-alone loader
 
-`SecretBox(*, auto_load: bool = False, load_debug: bool = False, **kwargs: Any)`
+Loaders can be used as needed. For this example we only need to load an AWS Parameter store.
+
+```python
+from secretbox import AWSParameterStoreLoader
+
+secrets = AWSParameterStoreLoader("mystore/params/", "us-west-2")
+secrets.run()
+
+
+def main() -> int:
+    """Main function"""
+    my_sevice_password = secrets.values.get("SERVICE_PW")
+    # More code
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+```
+
+---
+
+
+
+### SecretBox arguments:
+
+`SecretBox(*, auto_load: bool = False, load_debug: bool = False)`
 
 **auto_load**
 
@@ -107,27 +133,33 @@ if __name__ == "__main__":
 
 - When true, internal logger level is set to DEBUG. Secret values are truncated, however it is not recommended to leave this on for production deployments.
 
-**kwargs**
+### SecretBox API:
 
-- All keyword arguments will be passed to loaders when called. These can also be given to the `load_from()` method as detailed below.
+**.values**
 
-## SecretBox API:
+- *Property*: A copy of the `dict[str, str]` key:value pairs loaded
+
+**.use_loaders(\*loaders: Loader) -> None**
+
+- Loaded results are injected into environ and stored in state.
+
+---
 
 **NOTE:** All .get methods pull from the instance state of the class and do not reflect changes to the enviornment post-load.
 
-**.get(key: str, default: str | None = None) -> str**
+**.get(key: str, default: str | None = None) -> str** -- *deprecated*
 
 - Returns the string value of the loaded value by key name. If the key does not exists then `KeyError` will be raised unless a default is given, then that is returned.
 
-**.get_int(key: str, default: int | None = None) -> int**
+**.get_int(key: str, default: int | None = None) -> int** -- *deprecated*
 
 - Returns the int value of the loaded value by key name. Raise `ValueError` if the found key cannot convert to `int`. Raise `KeyError` if the key is not found and no default is given.
 
-**.get_list(key: str, delimiter: str = ",", default: list[str] | None = None) -> List[str]:**
+**.get_list(key: str, delimiter: str = ",", default: list[str] | None = None) -> List[str]:** -- *deprecated*
 
 - Returns a list of the loaded value by key name, seperated at defined delimiter. No check is made if delimiter exists in value. `default` is returned if key is not found otherwise a `KeyError` is raised.
 
-**.load_from(loaders: list[str], \*\*kwargs: Any) -> None**
+**.load_from(loaders: list[str], \*\*kwargs: Any) -> None** -- *deprecated*
 
 - Runs load_values from each of the listed loadered in the order they appear
 - Loader options:
@@ -141,6 +173,43 @@ if __name__ == "__main__":
     - Loads secrets from an AWS Parameter Store (SSM/ASM). Requires `aws_sstore_name` and `aws_region_name` keywords to be provided or for those values to be in the environment variables under `AWS_SSTORE_NAME` and `AWS_REGION_NAME`. `aws_sstore_name` is the name or prefix of the parameters to retrieve.
 - **kwargs**
   - All keyword arguments are passed into the loaders when they are called. Each loader details which extra keyword arguments it uses or requires above.
+
+---
+
+### Loaders
+
+All loaders follow the same abstract base class. Calling `.run()` will load secrets from the loader's source. Each loader will have optional parameters definable on instantiation.
+
+**EnvironLoader**
+
+Load system environ values
+
+**EnvFileLoader**
+
+Load local .env file.
+
+- Args:
+  - filename: [str] Optional filename (with path) to load, default is `.env`
+
+**AWSSecretLoader**
+
+Load secrets from an AWS secret manager.
+
+- Args:
+  - aws_sstore: [str] Name of the secret store (not the arn)
+    - Can be provided through environ `AWS_SSTORE_NAME`
+  - aws_region: [str] Regional location of secret store
+    - Can be provided through environ `AWS_REGION_NAME` or `AWS_REGION`
+
+**AWSParameterStoreLoader**
+
+Load secrets from AWS parameter store.
+
+- Args:
+  - aws_sstore: [str] Name of parameter or path of parameters if endings with `/`
+    - Can be provided through environ `AWS_SSTORE_NAME`
+  - aws_region: [str] Regional Location of parameter(s)
+    - Can be provided through environ `AWS_REGION_NAME` or `AWS_REGION`
 
 ---
 
@@ -196,3 +265,127 @@ Will be parsed as:
     "MESSAGE": '    Totally not an "admin" account logging in',
 }
 ```
+
+---
+
+## Local developer installation
+
+It is **strongly** recommended to use a virtual environment
+([`venv`](https://docs.python.org/3/library/venv.html)) when working with python
+projects. Leveraging a `venv` will ensure the installed dependency files will
+not impact other python projects or any system dependencies.
+
+The following steps outline how to install this repo for local development. See
+the [CONTRIBUTING.md](../CONTRIBUTING.md) file in the repo root for information
+on contributing to the repo.
+
+**Windows users**: Depending on your python install you will use `py` in place
+of `python` to create the `venv`.
+
+**Linux/Mac users**: Replace `python`, if needed, with the appropriate call to
+the desired version while creating the `venv`. (e.g. `python3` or `python3.8`)
+
+**All users**: Once inside an active `venv` all systems should allow the use of
+`python` for command line instructions. This will ensure you are using the
+`venv`'s python and not the system level python.
+
+---
+
+## Installation steps
+
+Clone this repo and enter root directory of repo:
+
+```bash
+git clone https://github.com/Preocts/secretbox
+cd secretbox
+```
+
+Create the `venv`:
+
+```bash
+python -m venv venv
+```
+
+Activate the `venv`:
+
+```bash
+# Linux/Mac
+. venv/bin/activate
+
+# Windows
+venv\Scripts\activate
+```
+
+The command prompt should now have a `(venv)` prefix on it. `python` will now
+call the version of the interpreter used to create the `venv`
+
+Install editable library and development requirements:
+
+```bash
+# Update pip and tools
+python -m pip install --upgrade pip wheel setuptools
+
+# Install development requirements
+python -m pip install -r requirements-dev.txt
+
+# Install requirements (if any defined)
+python -m pip install -r requirements.txt
+```
+
+Install pre-commit [(see below for details)](#pre-commit):
+
+```bash
+pre-commit install
+```
+
+---
+
+## Misc Steps
+
+Run pre-commit on all files:
+
+```bash
+pre-commit run --all-files
+```
+
+Run tests:
+
+```bash
+tox [-r] [-e py3x]
+```
+
+To deactivate (exit) the `venv`:
+
+```bash
+deactivate
+```
+
+---
+
+## [pre-commit](https://pre-commit.com)
+
+> A framework for managing and maintaining multi-language pre-commit hooks.
+
+This repo is setup with a `.pre-commit-config.yaml` with the expectation that
+any code submitted for review already passes all selected pre-commit checks.
+`pre-commit` is installed with the development requirements and runs seemlessly
+with `git` hooks.
+
+---
+
+## Makefile
+
+This repo has a Makefile with some quality of life scripts if the system
+supports `make`.  Please note there are no checks for an active `venv` in the
+Makefile.
+
+| PHONY             | Description                                                        |
+| ----------------- | ------------------------------------------------------------------ |
+| `init`            | Update pip, setuptools, and wheel to newest version                |
+| `dev-install`     | install development requirements and project                       |
+| `update`          | Run any update scripts for requirements                            |
+| `build-dist`      | Build source distribution and wheel distribution                   |
+| `clean-artifacts` | Deletes python/mypy artifacts including eggs, cache, and pyc files |
+| `clean-tests`     | Deletes tox, coverage, and pytest artifacts                        |
+| `clean-build`     | Deletes build artifacts                                            |
+| `clean-all`       | Runs all clean scripts                                             |
