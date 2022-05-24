@@ -77,7 +77,7 @@ def mockclient() -> Generator[BaseClient, None, None]:
 def awssecret_loader() -> Generator[AWSSecretLoader, None, None]:
     """Create a fixture to test with"""
     loader = AWSSecretLoader()
-    assert not loader._loaded_values
+    assert not loader.values
     yield loader
 
 
@@ -123,7 +123,7 @@ def test_load_aws_secrets_valid_store_and_invalid_store(
             aws_sstore_name=TEST_STORE,
             aws_region_name=TEST_REGION,
         )
-        assert awssecret_loader._loaded_values.get(TEST_KEY_NAME) == TEST_VALUE
+        assert awssecret_loader.values.get(TEST_KEY_NAME) == TEST_VALUE
 
         # Reset and test invalid response
         awssecret_loader._loaded_values = {}
@@ -131,7 +131,7 @@ def test_load_aws_secrets_valid_store_and_invalid_store(
             aws_sstore_name=TEST_STORE_INVALID,
             aws_region_name=TEST_REGION,
         )
-        assert awssecret_loader._loaded_values.get(TEST_KEY_NAME) is None
+        assert awssecret_loader.values.get(TEST_KEY_NAME) is None
 
 
 def test_load_aws_secrets_with_run(
@@ -145,7 +145,7 @@ def test_load_aws_secrets_with_run(
         result = awssecret_loader.run()
 
     assert result is True
-    assert awssecret_loader._loaded_values.get(TEST_KEY_NAME) == TEST_VALUE
+    assert awssecret_loader.values.get(TEST_KEY_NAME) == TEST_VALUE
 
 
 def test_boto3_stubs_not_installed(
@@ -155,9 +155,9 @@ def test_boto3_stubs_not_installed(
     """Continue loading AWS secrets manager without boto3-stubs"""
     with patch.object(awssecret_loader, "get_aws_client", return_value=mockclient):
         with patch.object(awssecret_loader_module, "SecretsManagerClient", None):
-            assert not awssecret_loader._loaded_values
+            assert not awssecret_loader.values
             awssecret_loader.load_values(
                 aws_sstore_name=TEST_STORE,
                 aws_region_name=TEST_REGION,
             )
-            assert awssecret_loader._loaded_values
+            assert awssecret_loader.values

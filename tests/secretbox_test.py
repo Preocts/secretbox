@@ -16,15 +16,15 @@ from tests.conftest import ENV_FILE_EXPECTED
 def secretbox() -> Generator[SecretBox, None, None]:
     """Default instance of LoadEnv"""
     secrets = SecretBox()
-    assert not secrets._loaded_values
+    assert not secrets.values
     yield secrets
 
 
 def test_load_from_with_unknown(secretbox: SecretBox, mock_env_file: str) -> None:
     """Load secrets, throw an unknown loader in to ensure clean fall-through"""
-    assert not secretbox._loaded_values
+    assert not secretbox.values
     secretbox.load_from(["envfile", "unknown"], filename=mock_env_file)
-    assert secretbox._loaded_values
+    assert secretbox.values
 
 
 def test_load_order_file_over_environ(secretbox: SecretBox, mock_env_file: str) -> None:

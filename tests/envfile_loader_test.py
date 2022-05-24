@@ -12,7 +12,7 @@ from tests.conftest import ENV_FILE_EXPECTED
 def envfile_loader() -> Generator[EnvFileLoader, None, None]:
     """Create us a fixture"""
     loader = EnvFileLoader()
-    assert not loader._loaded_values
+    assert not loader.values
     yield loader
 
 
@@ -20,7 +20,7 @@ def test_load_env_file(mock_env_file: str, envfile_loader: EnvFileLoader) -> Non
     """Load and confirm expected values"""
     envfile_loader.load_values(filename=mock_env_file)
     for key, value in ENV_FILE_EXPECTED.items():
-        assert envfile_loader._loaded_values.get(key) == value, f"{key}, {value}"
+        assert envfile_loader.values.get(key) == value, f"{key}, {value}"
 
 
 def test_load_missing_file(envfile_loader: EnvFileLoader) -> None:
