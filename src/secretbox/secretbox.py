@@ -10,7 +10,7 @@ import logging
 import os
 from typing import Any
 
-from secretbox.awsparameterstore_loader import AWSParameterStore
+from secretbox.awsparameterstore_loader import AWSParameterStoreLoader
 from secretbox.awssecret_loader import AWSSecretLoader
 from secretbox.envfile_loader import EnvFileLoader
 from secretbox.environ_loader import EnvironLoader
@@ -20,7 +20,7 @@ LOADERS: dict[str, type[Loader]] = {
     "envfile": EnvFileLoader,
     "environ": EnvironLoader,
     "awssecret": AWSSecretLoader,
-    "awsparameterstore": AWSParameterStore,
+    "awsparameterstore": AWSParameterStoreLoader,
 }
 
 

@@ -21,7 +21,7 @@ except ImportError:
     SSMClient = None
 
 
-class AWSParameterStore(AWSLoader):
+class AWSParameterStoreLoader(AWSLoader):
     """Load secrets from an AWS Parameter Store"""
 
     def __init__(

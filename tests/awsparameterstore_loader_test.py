@@ -6,7 +6,7 @@ from typing import Generator
 from unittest.mock import patch
 
 import pytest
-from secretbox.awsparameterstore_loader import AWSParameterStore
+from secretbox.awsparameterstore_loader import AWSParameterStoreLoader
 
 boto3_lib = pytest.importorskip("boto3", reason="boto3")
 mypy_boto3 = pytest.importorskip("mypy_boto3_ssm", reason="mypy_boto3")
@@ -142,33 +142,37 @@ def invalid_ssm() -> Generator[BaseClient, None, None]:
 
 
 @pytest.fixture
-def loader() -> Generator[AWSParameterStore, None, None]:
+def loader() -> Generator[AWSParameterStoreLoader, None, None]:
     """Pass an unaltered loader"""
-    loader = AWSParameterStore()
+    loader = AWSParameterStoreLoader()
     yield loader
 
 
 @pytest.fixture
-def stub_loader(valid_ssm: BaseClient) -> Generator[AWSParameterStore, None, None]:
+def stub_loader(
+    valid_ssm: BaseClient,
+) -> Generator[AWSParameterStoreLoader, None, None]:
     """Wraps AWS client with Stubber"""
-    store = AWSParameterStore()
+    store = AWSParameterStoreLoader()
     with patch.object(store, "get_aws_client", return_value=valid_ssm):
         yield store
 
 
 @pytest.fixture
-def broken_loader(invalid_ssm: BaseClient) -> Generator[AWSParameterStore, None, None]:
+def broken_loader(
+    invalid_ssm: BaseClient,
+) -> Generator[AWSParameterStoreLoader, None, None]:
     """Pass a loader that raises ClientError"""
-    store = AWSParameterStore()
+    store = AWSParameterStoreLoader()
     with patch.object(store, "get_aws_client", return_value=invalid_ssm):
         yield store
 
 
-def test_stubber_passed_for_client(stub_loader: AWSParameterStore) -> None:
+def test_stubber_passed_for_client(stub_loader: AWSParameterStoreLoader) -> None:
     assert isinstance(stub_loader.get_aws_client(), BaseClient)
 
 
-def test_parameter_values_success_load(stub_loader: AWSParameterStore) -> None:
+def test_parameter_values_success_load(stub_loader: AWSParameterStoreLoader) -> None:
     assert stub_loader.load_values(
         aws_sstore_name=TEST_PATH,
         aws_region_name=TEST_REGION,
@@ -178,7 +182,9 @@ def test_parameter_values_success_load(stub_loader: AWSParameterStore) -> None:
     assert stub_loader.loaded_values.get(TEST_STORE3) == TEST_LIST
 
 
-def test_parameter_values_success_load_with_run(stub_loader: AWSParameterStore) -> None:
+def test_parameter_values_success_load_with_run(
+    stub_loader: AWSParameterStoreLoader,
+) -> None:
     stub_loader.aws_sstore = TEST_PATH
     stub_loader.aws_region = TEST_REGION
 
@@ -190,7 +196,7 @@ def test_parameter_values_success_load_with_run(stub_loader: AWSParameterStore) 
     assert stub_loader.loaded_values.get(TEST_STORE3) == TEST_LIST
 
 
-def test_loading_wrong_prefix(stub_loader: AWSParameterStore) -> None:
+def test_loading_wrong_prefix(stub_loader: AWSParameterStoreLoader) -> None:
     # Catch this as an unhappy path. Outside of a stubber this would return nothing
     with pytest.raises(StubAssertionError):
         assert stub_loader.load_values(
@@ -199,23 +205,23 @@ def test_loading_wrong_prefix(stub_loader: AWSParameterStore) -> None:
         )
 
 
-def test_missing_store_name(loader: AWSParameterStore, caplog: Any) -> None:
+def test_missing_store_name(loader: AWSParameterStoreLoader, caplog: Any) -> None:
     assert loader.load_values()
     assert "Missing parameter name" in caplog.text
 
 
-def test_missing_region(loader: AWSParameterStore, caplog: Any) -> None:
+def test_missing_region(loader: AWSParameterStoreLoader, caplog: Any) -> None:
     assert not loader.load_values(aws_sstore_name=TEST_STORE)
     assert "Invalid SSM client" in caplog.text
 
 
-def test_client_error_catch_on_load(broken_loader: AWSParameterStore) -> None:
+def test_client_error_catch_on_load(broken_loader: AWSParameterStoreLoader) -> None:
     assert not broken_loader.load_values(
         aws_sstore_name=TEST_PATH,
         aws_region_name=TEST_REGION,
     )
 
 
-def test_client_with_region(loader: AWSParameterStore) -> None:
+def test_client_with_region(loader: AWSParameterStoreLoader) -> None:
     loader.aws_region = TEST_REGION
     assert loader.get_aws_client() is not None
