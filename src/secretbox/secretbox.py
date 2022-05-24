@@ -58,7 +58,7 @@ class SecretBox:
         """
         Runs load_values from each of the listed loader in the order they appear
 
-        Deprecated: This method will be replaced with `.use_loader()` in v2.7.0
+        Deprecated: This method will be replaced with `.use_loaders()` in v2.7.0
 
         Loader options:
             environ:
@@ -81,8 +81,8 @@ class SecretBox:
                 continue
             loader = interface()
             loader.load_values(**kwargs)
-            self.logger.debug("Loaded %d values.", len(loader.loaded_values))
-            self._update_loaded_values(loader.loaded_values)
+            self.logger.debug("Loaded %d values.", len(loader.values))
+            self._update_loaded_values(loader.values)
         self._push_to_environment()
 
     def _update_loaded_values(self, new_values: dict[str, str]) -> None:

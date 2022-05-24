@@ -18,13 +18,13 @@ def loader() -> Generator[AWSParameterStoreLoader, None, None]:
 
 
 def test_empty_values_on_init(loader: AWSParameterStoreLoader) -> None:
-    assert not loader.loaded_values
+    assert not loader._loaded_values
 
 
 def test_fall_through_with_no_boto3(loader: AWSParameterStoreLoader) -> None:
     with patch.object(ssm_loader_module, "boto3", None):
         assert not loader.load_values(aws_sstore=TEST_PATH, aws_region=TEST_REGION)
-        assert not loader.loaded_values
+        assert not loader._loaded_values
 
 
 def test_none_client_no_region(loader: AWSParameterStoreLoader) -> None:

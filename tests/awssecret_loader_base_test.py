@@ -18,7 +18,7 @@ TEST_REGION = "us-east-1"
 def awssecret_loader() -> Generator[AWSSecretLoader, None, None]:
     """Create a fixture to test with"""
     loader = AWSSecretLoader()
-    assert not loader.loaded_values
+    assert not loader._loaded_values
     yield loader
 
 
@@ -29,7 +29,7 @@ def test_load_aws_no_credentials(awssecret_loader: AWSSecretLoader) -> None:
         aws_sstore_name=TEST_STORE,
         aws_region_name=TEST_REGION,
     )
-    assert not awssecret_loader.loaded_values
+    assert not awssecret_loader._loaded_values
 
 
 @pytest.mark.usefixtures("remove_aws_creds")
@@ -38,7 +38,7 @@ def test_load_aws_no_secret_store_defined(awssecret_loader: AWSSecretLoader) -> 
         aws_sstore_name=None,
         aws_region_name=TEST_REGION,
     )
-    assert not awssecret_loader.loaded_values
+    assert not awssecret_loader._loaded_values
 
 
 @pytest.mark.usefixtures("remove_aws_creds")
@@ -55,9 +55,9 @@ def test_get_client_without_region(
 def test_boto3_not_installed_auto_load(awssecret_loader: AWSSecretLoader) -> None:
     """Skip loading AWS secrets manager if no boto3"""
     with patch.object(awssecret_loader_module, "boto3", None):
-        assert not awssecret_loader.loaded_values
+        assert not awssecret_loader._loaded_values
         awssecret_loader.load_values(
             aws_sstore_name=TEST_STORE,
             aws_region_name=TEST_REGION,
         )
-        assert not awssecret_loader.loaded_values
+        assert not awssecret_loader._loaded_values

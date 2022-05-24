@@ -34,13 +34,18 @@ class AWSSecretLoader(AWSLoader):
         self.aws_sstore = aws_sstore_name
         self.aws_region = aws_region_name
 
-        self.loaded_values: dict[str, str] = {}
+        self._loaded_values: dict[str, str] = {}
+
+    @property
+    def values(self) -> dict[str, str]:
+        """Copy of loaded values"""
+        return self._loaded_values.copy()
 
     def run(self) -> bool:
         """Load all secrets from given AWS secret store."""
         has_loaded = self.load_values()
 
-        for key, value in self.loaded_values.items():
+        for key, value in self._loaded_values.items():
             self.logger.debug("Found, %s : ***%s", key, value[-(len(value) // 4) :])
 
         return has_loaded
@@ -97,7 +102,7 @@ class AWSSecretLoader(AWSLoader):
 
         else:
             secrets = self._resolve_response(response)
-            self.loaded_values.update(secrets)
+            self._loaded_values.update(secrets)
 
         return bool(secrets)
 

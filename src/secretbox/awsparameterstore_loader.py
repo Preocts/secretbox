@@ -33,13 +33,18 @@ class AWSParameterStoreLoader(AWSLoader):
         self.aws_sstore = aws_sstore_name
         self.aws_region = aws_region_name
 
-        self.loaded_values: dict[str, str] = {}
+        self._loaded_values: dict[str, str] = {}
+
+    @property
+    def values(self) -> dict[str, str]:
+        """Copy of loaded values"""
+        return self._loaded_values.copy()
 
     def run(self) -> bool:
         """Load all secrets from given AWS parameter store."""
         has_loaded = self.load_values()
 
-        for key, value in self.loaded_values.items():
+        for key, value in self._loaded_values.items():
             self.logger.debug("Found, %s : ***%s", key, value[-(len(value) // 4) :])
 
         return has_loaded
@@ -109,7 +114,7 @@ class AWSParameterStoreLoader(AWSLoader):
                 # remove the prefix
                 # we want /path/to/DB_PASSWORD to populate os.env.DB_PASSWORD
                 key = param["Name"].split("/")[-1] if do_split else param["Name"]
-                self.loaded_values[key] = param["Value"]
+                self._loaded_values[key] = param["Value"]
 
             args["NextToken"] = resp.get("NextToken")
 
@@ -119,7 +124,9 @@ class AWSParameterStoreLoader(AWSLoader):
             self.logger.debug("fetching next page: %s", args["NextToken"])
 
         self.logger.info(
-            "loaded %d parameters matching %s", len(self.loaded_values), self.aws_sstore
+            "loaded %d parameters matching %s",
+            len(self._loaded_values),
+            self.aws_sstore,
         )
         return True
 

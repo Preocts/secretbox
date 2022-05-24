@@ -33,6 +33,11 @@ class AWSLoader(Loader):
         """To be overrided in child classes"""
         raise NotImplementedError()
 
+    @property
+    def values(self) -> dict[str, str]:
+        """To be overrided in child classes"""
+        raise NotImplementedError()
+
     def run(self) -> bool:
         """To be overrided in child classes"""
         raise NotImplementedError()

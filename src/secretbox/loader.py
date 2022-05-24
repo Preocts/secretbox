@@ -8,7 +8,11 @@ from typing import Any
 class Loader(ABC):
     """Abstract Base Class for all loaders"""
 
-    loaded_values: dict[str, str]
+    @property
+    @abstractmethod
+    def values(self) -> dict[str, str]:
+        """Property: loaded values."""
+        raise NotImplementedError()
 
     @abstractmethod
     def run(self) -> bool:

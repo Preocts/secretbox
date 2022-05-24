@@ -23,7 +23,7 @@ MOCK_ENV = {
 def environ_loader() -> Generator[EnvironLoader, None, None]:
     """A fixture because this is what we do"""
     loader = EnvironLoader()
-    assert not loader.loaded_values
+    assert not loader._loaded_values
     yield loader
 
 
@@ -32,11 +32,11 @@ def test_load_env_vars(environ_loader: EnvironLoader) -> None:
     with patch.dict(os.environ, MOCK_ENV):
         environ_loader.load_values()
         for key, value in MOCK_ENV.items():
-            assert environ_loader.loaded_values.get(key) == value, f"{key}, {value}"
+            assert environ_loader._loaded_values.get(key) == value, f"{key}, {value}"
 
 
 def test_run_load_values(environ_loader: EnvironLoader) -> None:
     with patch.dict(os.environ, MOCK_ENV):
         environ_loader.run()
         for key, value in MOCK_ENV.items():
-            assert environ_loader.loaded_values.get(key) == value, f"{key}, {value}"
+            assert environ_loader._loaded_values.get(key) == value, f"{key}, {value}"

@@ -177,9 +177,9 @@ def test_parameter_values_success_load(stub_loader: AWSParameterStoreLoader) -> 
         aws_sstore_name=TEST_PATH,
         aws_region_name=TEST_REGION,
     )
-    assert stub_loader.loaded_values.get(TEST_STORE) == TEST_VALUE
-    assert stub_loader.loaded_values.get(TEST_STORE2) == TEST_VALUE
-    assert stub_loader.loaded_values.get(TEST_STORE3) == TEST_LIST
+    assert stub_loader._loaded_values.get(TEST_STORE) == TEST_VALUE
+    assert stub_loader._loaded_values.get(TEST_STORE2) == TEST_VALUE
+    assert stub_loader._loaded_values.get(TEST_STORE3) == TEST_LIST
 
 
 def test_parameter_values_success_load_with_run(
@@ -191,9 +191,9 @@ def test_parameter_values_success_load_with_run(
     result = stub_loader.run()
 
     assert result is True
-    assert stub_loader.loaded_values.get(TEST_STORE) == TEST_VALUE
-    assert stub_loader.loaded_values.get(TEST_STORE2) == TEST_VALUE
-    assert stub_loader.loaded_values.get(TEST_STORE3) == TEST_LIST
+    assert stub_loader._loaded_values.get(TEST_STORE) == TEST_VALUE
+    assert stub_loader._loaded_values.get(TEST_STORE2) == TEST_VALUE
+    assert stub_loader._loaded_values.get(TEST_STORE3) == TEST_LIST
 
 
 def test_loading_wrong_prefix(stub_loader: AWSParameterStoreLoader) -> None:

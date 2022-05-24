@@ -39,14 +39,19 @@ class EnvFileLoader(Loader):
         Args:
             filename: Optional filename (with path) to load, default is `.env`
         """
-        self.loaded_values: dict[str, str] = {}
+        self._loaded_values: dict[str, str] = {}
         self._filename = filename
+
+    @property
+    def values(self) -> dict[str, str]:
+        """Copy of loaded values"""
+        return self._loaded_values.copy()
 
     def run(self) -> bool:
         """Load .env, or instantiated filename, to class state and environ."""
         was_loaded = self.load_values()
 
-        for key, value in self.loaded_values.items():
+        for key, value in self._loaded_values.items():
             self.logger.debug("Found, %s : ***%s", key, value[-(len(value) // 4) :])
             os.environ[key] = value
 
@@ -83,7 +88,7 @@ class EnvFileLoader(Loader):
             elif value.startswith("'"):
                 value = self.remove_lt_sgl_quotes(value)
 
-            self.loaded_values[key] = value
+            self._loaded_values[key] = value
 
     def remove_lt_dbl_quotes(self, in_: str) -> str:
         """Removes matched leading and trailing double quotes"""
