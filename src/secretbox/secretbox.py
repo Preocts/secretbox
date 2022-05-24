@@ -45,10 +45,26 @@ class SecretBox:
         self.logger.setLevel(level="DEBUG" if debug_flag else "ERROR")
         self.logger.debug("Debug flag passed.")
 
-        self.loaded_values: dict[str, str] = {}
+        self._loaded_values: dict[str, str] = {}
 
         if auto_load:
             self.load_from(["environ", "envfile"])
+
+    @property
+    def values(self) -> dict[str, str]:
+        """Property: loaded values."""
+        return self._loaded_values.copy()
+
+    def use_loaders(self, *loaders: Loader) -> None:
+        """
+        Loaded results are injected into environ and stored in state.
+
+        Args:
+            loaders: Variable length argument list of Loaders to execute.
+        """
+        for loader in loaders:
+            loader.run()
+            self._loaded_values.update(loader.values)
 
     def load_from(
         self,
@@ -87,11 +103,11 @@ class SecretBox:
 
     def _update_loaded_values(self, new_values: dict[str, str]) -> None:
         """Update/Create instance state of loaded values with new values"""
-        self.loaded_values.update(new_values)
+        self._loaded_values.update(new_values)
 
     def _push_to_environment(self) -> None:
         """Pushes loaded values to local environment vars, will overwrite existing"""
-        for key, value in self.loaded_values.items():
+        for key, value in self._loaded_values.items():
             self.logger.debug("Push, %s : ***%s", key, value[-(len(value) // 4) :])
             os.environ[key] = value
 
@@ -99,9 +115,9 @@ class SecretBox:
         """Get a value by key, return default if not found or raise if no default"""
         self.logger.warning("Deprecated: `.get()` will be removed in v2.7.0")
         if default is None:
-            return self.loaded_values[key]
+            return self._loaded_values[key]
 
-        return self.loaded_values.get(key, default)
+        return self._loaded_values.get(key, default)
 
     def get_int(self, key: str, default: int | None = None) -> int:
         """Convert value by key to int."""
