@@ -29,7 +29,15 @@ class AWSParameterStoreLoader(AWSLoader):
         aws_sstore_name: str | None = None,
         aws_region_name: str | None = None,
     ) -> None:
-        """Load secrets from an AWS Parameter Store"""
+        """
+        Load secrets from AWS parameter store.
+
+        Args:
+            aws_sstore: Name of parameter or path of parameters if endings with `/`
+                Can be provided through environ `AWS_SSTORE_NAME`
+            aws_region: Regional Location of parameter(s)
+                Can be provided through environ `AWS_REGION_NAME` or `AWS_REGION`
+        """
         self.aws_sstore = aws_sstore_name
         self.aws_region = aws_region_name
 
@@ -41,15 +49,15 @@ class AWSParameterStoreLoader(AWSLoader):
         return self._loaded_values.copy()
 
     def run(self) -> bool:
-        """Load all secrets from given AWS parameter store."""
-        has_loaded = self.load_values()
+        """Load secrets from given AWS parameter store."""
+        has_loaded = self._load_values()
 
         for key, value in self._loaded_values.items():
             self.logger.debug("Found, %s : ***%s", key, value[-(len(value) // 4) :])
 
         return has_loaded
 
-    def load_values(
+    def _load_values(
         self,
         aws_sstore_name: str | None = None,
         aws_region_name: str | None = None,

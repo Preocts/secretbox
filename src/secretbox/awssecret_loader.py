@@ -30,7 +30,15 @@ class AWSSecretLoader(AWSLoader):
         aws_sstore_name: str | None = None,
         aws_region_name: str | None = None,
     ) -> None:
-        """Load secrets from an AWS secret manager."""
+        """
+        Load secrets from an AWS secret manager.
+
+        Args:
+            aws_sstore: Name of the secret store (not the arn)
+                Can be provided through environ `AWS_SSTORE_NAME`
+            aws_region: Regional location of secret store
+                Can be provided through environ `AWS_REGION_NAME` or `AWS_REGION`
+        """
         self.aws_sstore = aws_sstore_name
         self.aws_region = aws_region_name
 
@@ -43,14 +51,14 @@ class AWSSecretLoader(AWSLoader):
 
     def run(self) -> bool:
         """Load all secrets from given AWS secret store."""
-        has_loaded = self.load_values()
+        has_loaded = self._load_values()
 
         for key, value in self._loaded_values.items():
             self.logger.debug("Found, %s : ***%s", key, value[-(len(value) // 4) :])
 
         return has_loaded
 
-    def load_values(
+    def _load_values(
         self,
         aws_sstore_name: str | None = None,
         aws_region_name: str | None = None,
@@ -65,7 +73,7 @@ class AWSSecretLoader(AWSLoader):
         Args:
             aws_sstore: Name of the secret store (not the arn)
                 Can be provided through environ `AWS_SSTORE_NAME`
-            aws_region: Location of secret store
+            aws_region: Regional location of secret store
                 Can be provided through environ `AWS_REGION_NAME` or `AWS_REGION`
 
         Keyword Args:

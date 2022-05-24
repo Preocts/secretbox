@@ -104,7 +104,7 @@ def test_load_aws_client_no_region(
     caplog: Any,
 ) -> None:
     with patch.object(awssecret_loader, "get_aws_client", return_value=None):
-        assert not awssecret_loader.load_values(
+        assert not awssecret_loader._load_values(
             aws_sstore_name=TEST_STORE,
             aws_region_name=TEST_REGION,
         )
@@ -119,7 +119,7 @@ def test_load_aws_secrets_valid_store_and_invalid_store(
     with patch.object(awssecret_loader, "get_aws_client", return_value=mockclient):
 
         # Test valid response
-        awssecret_loader.load_values(
+        awssecret_loader._load_values(
             aws_sstore_name=TEST_STORE,
             aws_region_name=TEST_REGION,
         )
@@ -127,7 +127,7 @@ def test_load_aws_secrets_valid_store_and_invalid_store(
 
         # Reset and test invalid response
         awssecret_loader._loaded_values = {}
-        awssecret_loader.load_values(
+        awssecret_loader._load_values(
             aws_sstore_name=TEST_STORE_INVALID,
             aws_region_name=TEST_REGION,
         )
@@ -156,7 +156,7 @@ def test_boto3_stubs_not_installed(
     with patch.object(awssecret_loader, "get_aws_client", return_value=mockclient):
         with patch.object(awssecret_loader_module, "SecretsManagerClient", None):
             assert not awssecret_loader.values
-            awssecret_loader.load_values(
+            awssecret_loader._load_values(
                 aws_sstore_name=TEST_STORE,
                 aws_region_name=TEST_REGION,
             )

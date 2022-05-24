@@ -20,6 +20,6 @@ class Loader(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def load_values(self, **kwargs: Any) -> bool:
+    def _load_values(self, **kwargs: Any) -> bool:
         """Load from source, store values with class instance."""
         raise NotImplementedError()

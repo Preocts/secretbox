@@ -96,7 +96,7 @@ class SecretBox:
                 self.logger.error("Loader `%s` unknown, skipping", loader_name)
                 continue
             loader = interface()
-            loader.load_values(**kwargs)
+            loader._load_values(**kwargs)
             self.logger.debug("Loaded %d values.", len(loader.values))
             self._update_loaded_values(loader.values)
         self._push_to_environment()

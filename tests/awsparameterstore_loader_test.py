@@ -173,7 +173,7 @@ def test_stubber_passed_for_client(stub_loader: AWSParameterStoreLoader) -> None
 
 
 def test_parameter_values_success_load(stub_loader: AWSParameterStoreLoader) -> None:
-    assert stub_loader.load_values(
+    assert stub_loader._load_values(
         aws_sstore_name=TEST_PATH,
         aws_region_name=TEST_REGION,
     )
@@ -199,24 +199,24 @@ def test_parameter_values_success_load_with_run(
 def test_loading_wrong_prefix(stub_loader: AWSParameterStoreLoader) -> None:
     # Catch this as an unhappy path. Outside of a stubber this would return nothing
     with pytest.raises(StubAssertionError):
-        assert stub_loader.load_values(
+        assert stub_loader._load_values(
             aws_sstore_name=TEST_STORE,
             aws_region_name=TEST_REGION,
         )
 
 
 def test_missing_store_name(loader: AWSParameterStoreLoader, caplog: Any) -> None:
-    assert loader.load_values()
+    assert loader._load_values()
     assert "Missing parameter name" in caplog.text
 
 
 def test_missing_region(loader: AWSParameterStoreLoader, caplog: Any) -> None:
-    assert not loader.load_values(aws_sstore_name=TEST_STORE)
+    assert not loader._load_values(aws_sstore_name=TEST_STORE)
     assert "Invalid SSM client" in caplog.text
 
 
 def test_client_error_catch_on_load(broken_loader: AWSParameterStoreLoader) -> None:
-    assert not broken_loader.load_values(
+    assert not broken_loader._load_values(
         aws_sstore_name=TEST_PATH,
         aws_region_name=TEST_REGION,
     )

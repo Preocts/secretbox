@@ -49,7 +49,7 @@ class EnvFileLoader(Loader):
 
     def run(self) -> bool:
         """Load .env, or instantiated filename, to class state and environ."""
-        was_loaded = self.load_values()
+        was_loaded = self._load_values()
 
         for key, value in self._loaded_values.items():
             self.logger.debug("Found, %s : ***%s", key, value[-(len(value) // 4) :])
@@ -57,7 +57,7 @@ class EnvFileLoader(Loader):
 
         return was_loaded
 
-    def load_values(self, filename: str | None = None, **kwargs: str) -> bool:
+    def _load_values(self, filename: str | None = None, **kwargs: str) -> bool:
         """
         Load values from .env, or provided filename, to class state.
 

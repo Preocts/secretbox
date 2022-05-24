@@ -23,7 +23,7 @@ def test_empty_values_on_init(loader: AWSParameterStoreLoader) -> None:
 
 def test_fall_through_with_no_boto3(loader: AWSParameterStoreLoader) -> None:
     with patch.object(ssm_loader_module, "boto3", None):
-        assert not loader.load_values(aws_sstore=TEST_PATH, aws_region=TEST_REGION)
+        assert not loader._load_values(aws_sstore=TEST_PATH, aws_region=TEST_REGION)
         assert not loader._loaded_values
 
 

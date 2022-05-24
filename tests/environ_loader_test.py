@@ -30,7 +30,7 @@ def environ_loader() -> Generator[EnvironLoader, None, None]:
 def test_load_env_vars(environ_loader: EnvironLoader) -> None:
     """Load and confirm values from environ"""
     with patch.dict(os.environ, MOCK_ENV):
-        environ_loader.load_values()
+        environ_loader._load_values()
         for key, value in MOCK_ENV.items():
             assert environ_loader.values.get(key) == value, f"{key}, {value}"
 

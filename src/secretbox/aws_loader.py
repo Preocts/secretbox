@@ -29,7 +29,7 @@ class AWSLoader(Loader):
     # NOTE: This exposes sensitive data and should never be in production
     hide_boto_debug = True
 
-    def load_values(self, **kwargs: Any) -> bool:
+    def _load_values(self, **kwargs: Any) -> bool:
         """To be overrided in child classes"""
         raise NotImplementedError()
 

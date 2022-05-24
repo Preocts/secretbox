@@ -25,7 +25,7 @@ def awssecret_loader() -> Generator[AWSSecretLoader, None, None]:
 @pytest.mark.usefixtures("remove_aws_creds")
 def test_load_aws_no_credentials(awssecret_loader: AWSSecretLoader) -> None:
     """Cause a NoCredentialsError to be handled"""
-    awssecret_loader.load_values(
+    awssecret_loader._load_values(
         aws_sstore_name=TEST_STORE,
         aws_region_name=TEST_REGION,
     )
@@ -34,7 +34,7 @@ def test_load_aws_no_credentials(awssecret_loader: AWSSecretLoader) -> None:
 
 @pytest.mark.usefixtures("remove_aws_creds")
 def test_load_aws_no_secret_store_defined(awssecret_loader: AWSSecretLoader) -> None:
-    awssecret_loader.load_values(
+    awssecret_loader._load_values(
         aws_sstore_name=None,
         aws_region_name=TEST_REGION,
     )
@@ -56,7 +56,7 @@ def test_boto3_not_installed_auto_load(awssecret_loader: AWSSecretLoader) -> Non
     """Skip loading AWS secrets manager if no boto3"""
     with patch.object(awssecret_loader_module, "boto3", None):
         assert not awssecret_loader._loaded_values
-        awssecret_loader.load_values(
+        awssecret_loader._load_values(
             aws_sstore_name=TEST_STORE,
             aws_region_name=TEST_REGION,
         )
