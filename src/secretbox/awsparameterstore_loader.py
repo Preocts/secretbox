@@ -21,23 +21,71 @@ except ImportError:
     SSMClient = None
 
 
-class AWSParameterStore(AWSLoader):
+class AWSParameterStoreLoader(AWSLoader):
     """Load secrets from an AWS Parameter Store"""
 
-    def load_values(self, **kwargs: Any) -> bool:
+    def __init__(
+        self,
+        aws_sstore_name: str | None = None,
+        aws_region_name: str | None = None,
+    ) -> None:
         """
-        Load all secrets from AWS parameter store
-        Requires `aws_sstore_name` and `aws_region_name` keywords to be
-        provided or for those values to be in the environment variables
-        under `AWS_SSTORE_NAME` and `AWS_REGION_NAME`.
+        Load secrets from AWS parameter store.
 
-        `aws_sstore_name` is the parameter name or prefix.
+        Args:
+            aws_sstore: Name of parameter or path of parameters if endings with `/`
+                Can be provided through environ `AWS_SSTORE_NAME`
+            aws_region: Regional Location of parameter(s)
+                Can be provided through environ `AWS_REGION_NAME` or `AWS_REGION`
+        """
+        self.aws_sstore = aws_sstore_name
+        self.aws_region = aws_region_name
+
+        self._loaded_values: dict[str, str] = {}
+
+    @property
+    def values(self) -> dict[str, str]:
+        """Copy of loaded values"""
+        return self._loaded_values.copy()
+
+    def run(self) -> bool:
+        """Load secrets from given AWS parameter store."""
+        has_loaded = self._load_values()
+
+        for key, value in self._loaded_values.items():
+            self.logger.debug("Found, %s : ***%s", key, value[-(len(value) // 4) :])
+
+        return has_loaded
+
+    def _load_values(
+        self,
+        aws_sstore_name: str | None = None,
+        aws_region_name: str | None = None,
+        **kwargs: Any,
+    ) -> bool:
+        """
+        Load all secrets from AWS parameter store.
+
+        Parameter values set at class instantiation are used if values
+        are not provided here.
+
+        Args:
+            aws_sstore: Name of parameter or path of parameters if endings with `/`
+                Can be provided through environ `AWS_SSTORE_NAME`
+            aws_region: Regional Location of parameter(s)
+                Can be provided through environ `AWS_REGION_NAME` or `AWS_REGION`
+
+        Keyword Args:
+            Deprecated.
         """
         if boto3 is None:
             self.logger.debug("Skipping AWS loader, boto3 is not available.")
             return False
 
-        self.populate_region_store_names(**kwargs)
+        aws_sstore = aws_sstore_name or self.aws_sstore
+        aws_region = aws_region_name or self.aws_region
+
+        self.populate_region_store_names(aws_sstore, aws_region, **kwargs)
         if self.aws_sstore is None:
             self.logger.warning("Missing parameter name")
             return True  # this isn't a failure on our part
@@ -74,7 +122,7 @@ class AWSParameterStore(AWSLoader):
                 # remove the prefix
                 # we want /path/to/DB_PASSWORD to populate os.env.DB_PASSWORD
                 key = param["Name"].split("/")[-1] if do_split else param["Name"]
-                self.loaded_values[key] = param["Value"]
+                self._loaded_values[key] = param["Value"]
 
             args["NextToken"] = resp.get("NextToken")
 
@@ -84,7 +132,9 @@ class AWSParameterStore(AWSLoader):
             self.logger.debug("fetching next page: %s", args["NextToken"])
 
         self.logger.info(
-            "loaded %d parameters matching %s", len(self.loaded_values), self.aws_sstore
+            "loaded %d parameters matching %s",
+            len(self._loaded_values),
+            self.aws_sstore,
         )
         return True
 

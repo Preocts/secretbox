@@ -29,20 +29,33 @@ class AWSLoader(Loader):
     # NOTE: This exposes sensitive data and should never be in production
     hide_boto_debug = True
 
-    def __init__(self) -> None:
-        super().__init__()
-        self.aws_sstore: str | None = None
-        self.aws_region: str | None = None
+    def _load_values(self, **kwargs: Any) -> bool:
+        """To be overrided in child classes"""
+        raise NotImplementedError()
+
+    @property
+    def values(self) -> dict[str, str]:
+        """To be overrided in child classes"""
+        raise NotImplementedError()
+
+    def run(self) -> bool:
+        """To be overrided in child classes"""
+        raise NotImplementedError()
 
     def get_aws_client(self) -> Any:
         """Returns correct AWS client for low-level API requests"""
         # NOTE: Override in client specific implementation
         raise NotImplementedError
 
-    def populate_region_store_names(self, **kwargs: Any) -> None:
-        """Populates store/region name"""
-        kw_sstore = kwargs.get("aws_sstore_name")
-        kw_region = kwargs.get("aws_region_name")
+    def populate_region_store_names(
+        self,
+        sstore: str | None = None,
+        region: str | None = None,
+        **kwargs: str,
+    ) -> None:
+        """Populate store/region values."""
+        kw_sstore = sstore or kwargs.get("aws_sstore_name")
+        kw_region = region or kwargs.get("aws_region_name")
         os_sstore = os.getenv("AWS_SSTORE_NAME")
         os_region = os.getenv("AWS_REGION_NAME", os.getenv("AWS_REGION"))  # Lambda's
 

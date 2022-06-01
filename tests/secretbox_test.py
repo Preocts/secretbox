@@ -5,6 +5,8 @@ from typing import Generator
 from unittest.mock import patch
 
 import pytest
+from secretbox import EnvFileLoader
+from secretbox import EnvironLoader
 from secretbox import SecretBox
 
 from tests.conftest import ENV_FILE_EXPECTED
@@ -14,22 +16,22 @@ from tests.conftest import ENV_FILE_EXPECTED
 def secretbox() -> Generator[SecretBox, None, None]:
     """Default instance of LoadEnv"""
     secrets = SecretBox()
-    assert not secrets.loaded_values
+    assert not secrets.values
     yield secrets
 
 
 def test_load_from_with_unknown(secretbox: SecretBox, mock_env_file: str) -> None:
     """Load secrets, throw an unknown loader in to ensure clean fall-through"""
-    assert not secretbox.loaded_values
+    assert not secretbox.values
     secretbox.load_from(["envfile", "unknown"], filename=mock_env_file)
-    assert secretbox.loaded_values
+    assert secretbox.values
 
 
 def test_load_order_file_over_environ(secretbox: SecretBox, mock_env_file: str) -> None:
     """Loaded file should override existing environ values"""
     altered_expected = {key: f"{value} ALT" for key, value in ENV_FILE_EXPECTED.items()}
     with patch.dict(os.environ, altered_expected):
-        secretbox.load_from(["environ", "envfile"], filename=mock_env_file)
+        secretbox.use_loaders(EnvironLoader(), EnvFileLoader(mock_env_file))
         for key, value in ENV_FILE_EXPECTED.items():
             assert secretbox.get(key) == value, f"Expected: {key}, {value}"
 
@@ -52,21 +54,11 @@ def test_update_loaded_values(secretbox: SecretBox) -> None:
     assert secretbox.get("TEST") == "TEST02"
 
 
-def test_join_kwarg_defaults(secretbox: SecretBox) -> None:
-    """Mutables are fun, this should never create side-effects"""
-    secretbox.kwarg_defaults = {"TEST": "TEST01"}
-    new_kwargs = {"TEST": "TEST02"}
-    final_kwargs = secretbox._join_kwarg_defaults(new_kwargs)
-    assert secretbox.kwarg_defaults == {"TEST": "TEST01"}
-    assert new_kwargs == {"TEST": "TEST02"}
-    assert final_kwargs == new_kwargs
+def test_auto_load_flag() -> None:
+    with patch.object(SecretBox, "load_from") as mocked_load_from:
+        SecretBox(auto_load=True)
 
-
-def test_autoload_tempfile(mock_env_file: str) -> None:
-    """One less line of code needed"""
-    secretbox = SecretBox(filename=mock_env_file, auto_load=True)
-    for key, value in ENV_FILE_EXPECTED.items():
-        assert secretbox.get(key) == value
+        mocked_load_from.assert_called_once()
 
 
 def test_get_missing_key_is_empty(secretbox: SecretBox) -> None:

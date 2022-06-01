@@ -2,15 +2,15 @@
 init:
 	pip install --upgrade pip setuptools wheel pip-tools
 
-.PHONY: dev-install
-dev-install:
+.PHONY: install
+install:
+	pip install .
+
+.PHONY: install-dev
+install-dev:
 	pip install -r requirements-dev.txt
 	pip install --editable .[aws]
 	pre-commit install
-	pre-commit autoupdate
-
-.PHONY: update
-update: clean-artifacts clean-tests init dev-install
 
 .PHONY: clean-artifacts
 clean-artifacts:
@@ -27,7 +27,6 @@ clean-tests:
 	rm -rf .tox
 	rm -rf coverage_html_report
 	rm -rf .coverage
-	rm -f code_lines.txt
 	find . -name '.pytest_cache' -exec rm -rf {} +
 
 .PHONY: clean-build
