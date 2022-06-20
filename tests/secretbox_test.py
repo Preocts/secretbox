@@ -114,3 +114,17 @@ def test_load_debug_flag(caplog: Any) -> None:
 
     _ = SecretBox(debug_flag=True)
     assert "Debug flag passed." in caplog.text
+
+
+def test_set(secretbox: SecretBox) -> None:
+    """Set a value"""
+    secretbox.set("TEST", "TEST")
+    assert secretbox.get("TEST") == "TEST"
+    assert os.getenv("TEST") == "TEST"
+
+
+def test_set_converts_to_str(secretbox: SecretBox) -> None:
+    """Set a value"""
+    secretbox.set("TEST", 42)  # type: ignore
+    assert secretbox.get("TEST") == "42"
+    assert os.getenv("TEST") == "42"
