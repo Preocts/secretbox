@@ -113,11 +113,16 @@ class SecretBox:
 
     def get(self, key: str, default: str | None = None) -> str:
         """Get a value by key, return default if not found or raise if no default"""
-        self.logger.warning("Deprecated: `.get()` will be removed in v2.7.0")
         if default is None:
             return self._loaded_values[key]
 
         return self._loaded_values.get(key, default)
+
+    def set(self, key: str, value: str) -> None:
+        """Set a value by key. Will be converted to string and pushed to environment."""
+        value = str(value)
+        self._loaded_values[key] = value
+        self._push_to_environment()
 
     def get_int(self, key: str, default: int | None = None) -> int:
         """Convert value by key to int."""

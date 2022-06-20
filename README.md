@@ -147,9 +147,13 @@ if __name__ == "__main__":
 
 **NOTE:** All .get methods pull from the instance state of the class and do not reflect changes to the enviornment post-load.
 
-**.get(key: str, default: str | None = None) -> str** -- *deprecated*
+**.get(key: str, default: str | None = None) -> str**
 
 - Returns the string value of the loaded value by key name. If the key does not exists then `KeyError` will be raised unless a default is given, then that is returned.
+
+**.set(key: str, value: str) -> None**
+
+- Adds the key:value pair to both the secretbox instance and the environment variables
 
 **.get_int(key: str, default: int | None = None) -> int** -- *deprecated*
 
