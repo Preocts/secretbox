@@ -83,7 +83,8 @@ class EnvFileLoader(Loader):
             value = value.strip()
 
             # Strip surrounding ' or " if both present
-            value = self.RE_LTQUOTES.match(value).group(2) or value
+            if m := self.RE_LTQUOTES.match(value):
+                value = m.group(2) or value
 
             self._loaded_values[key] = value
 
