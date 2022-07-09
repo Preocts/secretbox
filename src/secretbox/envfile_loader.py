@@ -81,7 +81,7 @@ class EnvFileLoader(Loader):
 
             key = self.strip_export(key).strip()
             value = value.strip()
-            
+
             # Strip surrounding ' or " if both present
             value = RE_LTQUOTES.match(value).group(2) or value
 
