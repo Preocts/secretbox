@@ -82,11 +82,14 @@ class EnvFileLoader(Loader):
             key = self.strip_export(key).strip()
             value = value.strip()
 
-            # Strip surrounding ' or " if both present
-            if m := self.RE_LTQUOTES.match(value):
-                value = m.group(2) or value
+            value = self.remove_lt_quotes(value)
 
             self._loaded_values[key] = value
+
+    def remove_lt_quotes(self, in_: str) -> str:
+        """Removes matched leading and trailing single / double quotes"""
+        m = self.RE_LTQUOTES.match(in_)
+        return m.group(2) if m and m.group(2) else in_
 
     def strip_export(self, in_: str) -> str:
         """Removes leading 'export ' prefix, case agnostic"""
