@@ -26,8 +26,7 @@ from secretbox.loader import Loader
 class EnvFileLoader(Loader):
     """Load local .env file"""
 
-    LT_DBL_QUOTES = r'^".*"$'
-    LT_SGL_QUOTES = r"^'.*'$"
+    RE_LTQUOTES = re.compile(r"([\"'])(.*)\1$|^(.*)$")
     EXPORT_PREFIX = r"^\s*?export\s"
 
     logger = logging.getLogger(__name__)
@@ -83,20 +82,14 @@ class EnvFileLoader(Loader):
             key = self.strip_export(key).strip()
             value = value.strip()
 
-            if value.startswith('"'):
-                value = self.remove_lt_dbl_quotes(value)
-            elif value.startswith("'"):
-                value = self.remove_lt_sgl_quotes(value)
+            value = self.remove_lt_quotes(value)
 
             self._loaded_values[key] = value
 
-    def remove_lt_dbl_quotes(self, in_: str) -> str:
-        """Removes matched leading and trailing double quotes"""
-        return in_.strip('"') if re.match(self.LT_DBL_QUOTES, in_) else in_
-
-    def remove_lt_sgl_quotes(self, in_: str) -> str:
-        """Removes matched leading and trailing double quotes"""
-        return in_.strip("'") if re.match(self.LT_SGL_QUOTES, in_) else in_
+    def remove_lt_quotes(self, in_: str) -> str:
+        """Removes matched leading and trailing single / double quotes"""
+        m = self.RE_LTQUOTES.match(in_)
+        return m.group(2) if m and m.group(2) else in_
 
     def strip_export(self, in_: str) -> str:
         """Removes leading 'export ' prefix, case agnostic"""
