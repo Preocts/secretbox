@@ -66,6 +66,8 @@ class SecretBox:
             loader.run()
             self._loaded_values.update(loader.values)
 
+        self._push_to_environment()
+
     def load_from(
         self,
         loaders: list[str],
