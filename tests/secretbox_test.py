@@ -27,6 +27,13 @@ def test_load_from_with_unknown(secretbox: SecretBox, mock_env_file: str) -> Non
     assert secretbox.values
 
 
+def test_use_loader_environ_file(secretbox: SecretBox, mock_env_file: str) -> None:
+    with patch.dict(os.environ, {}):
+        secretbox.use_loaders(EnvFileLoader(mock_env_file))
+        for key, value in ENV_FILE_EXPECTED.items():
+            assert os.getenv(key) == value
+
+
 def test_load_order_file_over_environ(secretbox: SecretBox, mock_env_file: str) -> None:
     """Loaded file should override existing environ values"""
     altered_expected = {key: f"{value} ALT" for key, value in ENV_FILE_EXPECTED.items()}
@@ -34,15 +41,7 @@ def test_load_order_file_over_environ(secretbox: SecretBox, mock_env_file: str) 
         secretbox.use_loaders(EnvironLoader(), EnvFileLoader(mock_env_file))
         for key, value in ENV_FILE_EXPECTED.items():
             assert secretbox.get(key) == value, f"Expected: {key}, {value}"
-
-
-def test_load_order_environ_over_file(secretbox: SecretBox, mock_env_file: str) -> None:
-    """Loaded environ should override file values"""
-    altered_expected = {key: f"{value} ALT" for key, value in ENV_FILE_EXPECTED.items()}
-    with patch.dict(os.environ, altered_expected):
-        secretbox.load_from(["envfile", "environ"], filename=mock_env_file)
-        for key, value in ENV_FILE_EXPECTED.items():
-            assert secretbox.get(key) == f"{value} ALT", f"Expected: {key}, {value} ALT"
+            assert os.getenv(key) == value, f"Expected: {key}, {value}"
 
 
 def test_update_loaded_values(secretbox: SecretBox) -> None:
@@ -55,7 +54,7 @@ def test_update_loaded_values(secretbox: SecretBox) -> None:
 
 
 def test_auto_load_flag() -> None:
-    with patch.object(SecretBox, "load_from") as mocked_load_from:
+    with patch.object(SecretBox, "use_loaders") as mocked_load_from:
         SecretBox(auto_load=True)
 
         mocked_load_from.assert_called_once()
