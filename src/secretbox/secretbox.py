@@ -48,7 +48,7 @@ class SecretBox:
         self._loaded_values: dict[str, str] = {}
 
         if auto_load:
-            self.load_from(["environ", "envfile"])
+            self.use_loaders(EnvironLoader(), EnvFileLoader())
 
     @property
     def values(self) -> dict[str, str]:

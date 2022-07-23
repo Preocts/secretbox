@@ -1,5 +1,5 @@
 """Unit tests for .env file loader"""
-import os
+# import os
 from typing import Generator
 
 import pytest
@@ -33,4 +33,5 @@ def test_run_loads_environ(mock_env_file: str, envfile_loader: EnvFileLoader) ->
     envfile_loader._filename = mock_env_file
     envfile_loader.run()
     for key, value in ENV_FILE_EXPECTED.items():
-        assert os.getenv(key) == value, f"{key}, {value}"
+        assert envfile_loader._loaded_values[key] == value, f"{key}, {value}"
+        # assert os.getenv(key) == value, f"{key}, {value}"
