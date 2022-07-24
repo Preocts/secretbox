@@ -1,4 +1,6 @@
 """Unit tests for aws loader"""
+from __future__ import annotations
+
 import logging
 import os
 from typing import Any
@@ -72,7 +74,7 @@ def test_filter_boto_debug(caplog: Any, awsloader: AWSLoader) -> None:
 
 
 def test_filter_boto_debug_no_action(caplog: Any, awsloader: AWSLoader) -> None:
-    logger = logging.getLogger("secrets")
+    logger = logging.getLogger("debug_enabled")
 
     with awsloader.disable_debug_logging():
         logger.debug("OHNO")
@@ -84,7 +86,7 @@ def test_filter_boto_debug_no_action(caplog: Any, awsloader: AWSLoader) -> None:
 
 def test_filter_boto_debug_disabled(caplog: Any, awsloader: AWSLoader) -> None:
     try:
-        logger = logging.getLogger("secrets")
+        logger = logging.getLogger("debug_disabled")
         current_level = logger.root.level
         logger.root.setLevel("DEBUG")
         awsloader.hide_boto_debug = False

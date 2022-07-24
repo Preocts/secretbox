@@ -120,7 +120,7 @@ class SecretBox:
 
         return self._loaded_values.get(key, default)
 
-    def set(self, key: str, value: str) -> None:
+    def set(self, key: str, value: str) -> None:  # noqa: A003
         """Set a value by key. Will be converted to string and pushed to environment."""
         value = str(value)
         self._loaded_values[key] = value
