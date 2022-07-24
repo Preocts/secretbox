@@ -8,7 +8,7 @@ install:
 
 .PHONY: install-dev
 install-dev:
-	python -m pip install --editable .[dev,test]
+	python -m pip install --editable .[dev,test,aws]
 	pre-commit install
 
 .PHONY: install-test
