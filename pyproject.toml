@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "secretbox"
 version = "2.7.0"
-requires-python = ">=3.8"
+requires-python = ">=3.7"
 description = "A library that offers a simple method of loading and accessing environmental variables and `.env` file values."
 readme = "README.md"
 license = { file = "LICENSE" }
