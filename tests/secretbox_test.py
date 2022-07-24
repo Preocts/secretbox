@@ -1,4 +1,6 @@
 """Unit tests against secretbox.py"""
+from __future__ import annotations
+
 import os
 from typing import Any
 from typing import Generator

@@ -1,5 +1,7 @@
 """Unit tests for .env file loader"""
 # import os
+from __future__ import annotations
+
 from typing import Generator
 
 import pytest
