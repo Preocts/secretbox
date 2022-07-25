@@ -80,9 +80,6 @@ specific `.env` file if it exists. Secrets are loaded in the order of loaders,
 replacing any matching keys from the prior loader.
 
 ```python
-from secretbox import AWSSecretLoader
-from secretbox import EnvFileLoader
-from secretbox import EnvironLoader
 from secretbox import SecretBox
 
 secrets = SecretBox()
@@ -91,9 +88,9 @@ secrets = SecretBox()
 def main() -> int:
     """Main function"""
     secrets.use_loaders(
-        EnvironLoader(),
-        AWSSecretLoader("mySecrets", "us-east-1"),
-        EnvFileLoader("sandbox/.override_env"),
+        secrets.EnvironLoader(),
+        secrets.AWSSecretLoader("mySecrets", "us-east-1"),
+        secrets.EnvFileLoader("sandbox/.override_env"),
     )
 
     my_sevice_password = secrets.values.get("SERVICE_PW")

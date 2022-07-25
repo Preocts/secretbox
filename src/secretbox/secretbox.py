@@ -10,17 +10,20 @@ import logging
 import os
 from typing import Any
 
-from secretbox.awsparameterstore_loader import AWSParameterStoreLoader
-from secretbox.awssecret_loader import AWSSecretLoader
-from secretbox.envfile_loader import EnvFileLoader
-from secretbox.environ_loader import EnvironLoader
+from secretbox.awsparameterstore_loader import (
+    AWSParameterStoreLoader as _AWSParameterStoreLoader,
+)
+from secretbox.awssecret_loader import AWSSecretLoader as _AWSSecretLoader
+from secretbox.envfile_loader import EnvFileLoader as _EnvFileLoader
+from secretbox.environ_loader import EnvironLoader as _EnvironLoader
 from secretbox.loader import Loader
 
+# To be removed with 2.8.0
 LOADERS: dict[str, type[Loader]] = {
-    "envfile": EnvFileLoader,
-    "environ": EnvironLoader,
-    "awssecret": AWSSecretLoader,
-    "awsparameterstore": AWSParameterStoreLoader,
+    "envfile": _EnvFileLoader,
+    "environ": _EnvironLoader,
+    "awssecret": _AWSSecretLoader,
+    "awsparameterstore": _AWSParameterStoreLoader,
 }
 
 
@@ -28,6 +31,10 @@ class SecretBox:
     """Loads various environment variables/secrets for use"""
 
     _logger = logging.getLogger(__name__)
+    AWSParameterStoreLoader = _AWSParameterStoreLoader
+    AWSSecretLoader = _AWSSecretLoader
+    EnvFileLoader = _EnvFileLoader
+    EnvironLoader = _EnvironLoader
 
     def __init__(
         self,
@@ -48,7 +55,7 @@ class SecretBox:
         self._loaded_values: dict[str, str] = {}
 
         if auto_load:
-            self.use_loaders(EnvironLoader(), EnvFileLoader())
+            self.use_loaders(self.EnvironLoader(), self.EnvFileLoader())
 
     @property
     def values(self) -> dict[str, str]:
@@ -90,7 +97,7 @@ class SecretBox:
                 to be in the environment variables under `AWS_SSTORE_NAME` and
                 `AWS_REGION_NAME`. `aws_sstore_name` is not the arn.
         """
-        self._logger.warning("Deprecated: `.load_from()` will be removed in v2.7.0")
+        self._logger.warning("Deprecated: `.load_from()` will be removed in v2.8.0")
         for loader_name in loaders:
             self._logger.debug("Loading from interface: `%s`", loader_name)
             interface = LOADERS.get(loader_name)
