@@ -27,7 +27,7 @@ LOADERS: dict[str, type[Loader]] = {
 class SecretBox:
     """Loads various environment variables/secrets for use"""
 
-    logger = logging.getLogger(__name__)
+    _logger = logging.getLogger(__name__)
 
     def __init__(
         self,
@@ -42,8 +42,8 @@ class SecretBox:
             auto_load : If true, environment vars and `.env` file will be loaded
             load_debug : When true, internal logger level is set to DEBUG
         """
-        self.logger.setLevel(level="DEBUG" if debug_flag else "ERROR")
-        self.logger.debug("Debug flag passed.")
+        self._logger.setLevel(level="DEBUG" if debug_flag else "ERROR")
+        self._logger.debug("Debug flag passed.")
 
         self._loaded_values: dict[str, str] = {}
 
@@ -90,16 +90,16 @@ class SecretBox:
                 to be in the environment variables under `AWS_SSTORE_NAME` and
                 `AWS_REGION_NAME`. `aws_sstore_name` is not the arn.
         """
-        self.logger.warning("Deprecated: `.load_from()` will be removed in v2.7.0")
+        self._logger.warning("Deprecated: `.load_from()` will be removed in v2.7.0")
         for loader_name in loaders:
-            self.logger.debug("Loading from interface: `%s`", loader_name)
+            self._logger.debug("Loading from interface: `%s`", loader_name)
             interface = LOADERS.get(loader_name)
             if interface is None:
-                self.logger.error("Loader `%s` unknown, skipping", loader_name)
+                self._logger.error("Loader `%s` unknown, skipping", loader_name)
                 continue
             loader = interface()
             loader._load_values(**kwargs)
-            self.logger.debug("Loaded %d values.", len(loader.values))
+            self._logger.debug("Loaded %d values.", len(loader.values))
             self._update_loaded_values(loader.values)
         self._push_to_environment()
 
@@ -110,7 +110,7 @@ class SecretBox:
     def _push_to_environment(self) -> None:
         """Pushes loaded values to local environment vars, will overwrite existing"""
         for key, value in self._loaded_values.items():
-            self.logger.debug("Push, %s : ***%s", key, value[-(len(value) // 4) :])
+            self._logger.debug("Push, %s : ***%s", key, value[-(len(value) // 4) :])
             os.environ[key] = value
 
     def get(self, key: str, default: str | None = None) -> str:
@@ -128,7 +128,7 @@ class SecretBox:
 
     def get_int(self, key: str, default: int | None = None) -> int:
         """Convert value by key to int."""
-        self.logger.warning("Deprecated: `.get_int()` will be removed in v2.7.0")
+        self._logger.warning("Deprecated: `.get_int()` will be removed in v2.7.0")
         if default is None:
             return int(self.get(key))
 
@@ -142,7 +142,7 @@ class SecretBox:
         default: list[str] | None = None,
     ) -> list[str]:
         """Convert value by key to list seperated by delimiter."""
-        self.logger.warning("Deprecated: `.get_list()` will be removed in v2.7.0")
+        self._logger.warning("Deprecated: `.get_list()` will be removed in v2.7.0")
         if default is None:
             default = []
 
