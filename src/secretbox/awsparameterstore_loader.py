@@ -13,12 +13,12 @@ try:
     import boto3
     from botocore.exceptions import ClientError
 except ImportError:
-    boto3 = None
+    boto3 = None  # type: ignore
 
 try:
     from mypy_boto3_ssm.client import SSMClient
 except ImportError:
-    SSMClient = None
+    SSMClient = None  # type: ignore
 
 
 class AWSParameterStoreLoader(AWSLoader):
