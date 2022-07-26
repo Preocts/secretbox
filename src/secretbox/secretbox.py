@@ -132,29 +132,3 @@ class SecretBox:
         value = str(value)
         self._loaded_values[key] = value
         self._push_to_environment()
-
-    def get_int(self, key: str, default: int | None = None) -> int:
-        """Convert value by key to int."""
-        self._logger.warning("Deprecated: `.get_int()` will be removed in v2.7.0")
-        if default is None:
-            return int(self.get(key))
-
-        value = self.get(key, "")
-        return int(value) if value else default
-
-    def get_list(
-        self,
-        key: str,
-        delimiter: str = ",",
-        default: list[str] | None = None,
-    ) -> list[str]:
-        """Convert value by key to list seperated by delimiter."""
-        self._logger.warning("Deprecated: `.get_list()` will be removed in v2.7.0")
-        if default is None:
-            default = []
-
-        if not default:
-            return self.get(key).split(delimiter)
-
-        value = self.get(key, "")
-        return value.split(delimiter) if value else default
