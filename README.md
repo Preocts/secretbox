@@ -80,9 +80,6 @@ specific `.env` file if it exists. Secrets are loaded in the order of loaders,
 replacing any matching keys from the prior loader.
 
 ```python
-from secretbox import AWSSecretLoader
-from secretbox import EnvFileLoader
-from secretbox import EnvironLoader
 from secretbox import SecretBox
 
 secrets = SecretBox()
@@ -91,9 +88,9 @@ secrets = SecretBox()
 def main() -> int:
     """Main function"""
     secrets.use_loaders(
-        EnvironLoader(),
-        AWSSecretLoader("mySecrets", "us-east-1"),
-        EnvFileLoader("sandbox/.override_env"),
+        secrets.EnvironLoader(),
+        secrets.AWSSecretLoader("mySecrets", "us-east-1"),
+        secrets.EnvFileLoader("sandbox/.override_env"),
     )
 
     my_sevice_password = secrets.values.get("SERVICE_PW")
@@ -131,8 +128,6 @@ if __name__ == "__main__":
 ```
 
 ---
-
-
 
 ### SecretBox arguments:
 
@@ -173,43 +168,6 @@ reflect changes to the enviornment post-load.
 
 - Adds the key:value pair to both the secretbox instance and the environment
   variables
-
-**.get_int(key: str, default: int | None = None) -> int** -- *deprecated*
-
-- Returns the int value of the loaded value by key name. Raise `ValueError` if
-  the found key cannot convert to `int`. Raise `KeyError` if the key is not
-  found and no default is given.
-
-**.get_list(key: str, delimiter: str = ",", default: list[str] | None = None) ->
-List[str]:** -- *deprecated*
-
-- Returns a list of the loaded value by key name, seperated at defined
-  delimiter. No check is made if delimiter exists in value. `default` is
-  returned if key is not found otherwise a `KeyError` is raised.
-
-**.load_from(loaders: list[str], \*\*kwargs: Any) -> None** -- *deprecated*
-
-- Runs load_values from each of the listed loadered in the order they appear
-- Loader options:
-  - **environ**
-    - Loads the current environmental variables into secretbox.
-  - **envfile**
-    - Loads .env file. Optional `filename` kwarg can override the default load
-      of the current working directory `.env` file.
-  - **awssecret**
-    - Loads secrets from an AWS secret manager. Requires `aws_sstore_name` and
-      `aws_region_name` keywords to be provided or for those values to be in the
-      environment variables under `AWS_SSTORE_NAME` and `AWS_REGION_NAME`.
-      `aws_sstore_name` is the name of the store, not the arn.
-  - **awsparameterstore**
-    - Loads secrets from an AWS Parameter Store (SSM/ASM). Requires
-      `aws_sstore_name` and `aws_region_name` keywords to be provided or for
-      those values to be in the environment variables under `AWS_SSTORE_NAME`
-      and `AWS_REGION_NAME`. `aws_sstore_name` is the name or prefix of the
-      parameters to retrieve.
-- **kwargs**
-  - All keyword arguments are passed into the loaders when they are called. Each
-    loader details which extra keyword arguments it uses or requires above.
 
 ---
 

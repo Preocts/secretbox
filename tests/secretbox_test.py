@@ -73,41 +73,6 @@ def test_get_default_missing_key(secretbox: SecretBox) -> None:
     assert secretbox.get("BYWHATCHANCEWOULDTHISSEXIST", "Hello") == "Hello"
 
 
-def test_get_as_valid_int(secretbox: SecretBox) -> None:
-    """Helper to return ints"""
-    with patch.dict(os.environ, {"TEST_INT": "42"}):
-        secretbox.load_from(["environ"])
-        assert secretbox.get_int("TEST_INT") == 42
-        assert secretbox.get_int("TEST_INT", 0) == 42
-
-
-def test_get_as_invalid_int(secretbox: SecretBox) -> None:
-    """Helper to return ints should raise on assumption that value is an int"""
-    with patch.dict(os.environ, {"TEST_INT": "Forty-two"}):
-        secretbox.load_from(["environ"])
-        with pytest.raises(ValueError):
-            secretbox.get_int("TEST_INT", -1)
-
-
-def test_get_default_int(secretbox: SecretBox) -> None:
-    """Return the default if provided instead of raising"""
-    assert secretbox.get_int("NOTTHERE", 10) == 10
-
-
-def test_get_as_list(secretbox: SecretBox) -> None:
-    """Helper to return a list based on given delimiter"""
-    with patch.dict(os.environ, {"TEST_STR": "rooBlank", "TEST_LIST": "1 | 2|3"}):
-        secretbox.load_from(["environ"])
-        assert secretbox.get_list("TEST_LIST") == ["1 | 2|3"]
-        assert secretbox.get_list("TEST_STR", "|") == ["rooBlank"]
-        assert secretbox.get_list("TEST_LIST", "|") == ["1 ", " 2", "3"]
-
-
-def test_get_as_list_default(secretbox: SecretBox) -> None:
-    """Return the default if provided instead of raising"""
-    assert secretbox.get_list("NOTTHERE", ",", ["1", "2", "3"]) == ["1", "2", "3"]
-
-
 def test_load_debug_flag(caplog: Any) -> None:
     """Ensure logging is silentish"""
     _ = SecretBox()
