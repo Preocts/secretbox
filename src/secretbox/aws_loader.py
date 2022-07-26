@@ -15,7 +15,7 @@ from typing import Generator
 try:
     from botocore.awsrequest import HeadersDict
 except ImportError:
-    HeadersDict = dict
+    HeadersDict = dict  # type: ignore
 
 from secretbox.loader import Loader
 
