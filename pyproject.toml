@@ -118,7 +118,6 @@ commands =
     coverage report --fail-under 95 --skip-covered --skip-empty -m
 
 [testenv:mypy]
-skip_install = true
 deps =
     .[aws]
     mypy
