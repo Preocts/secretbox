@@ -52,6 +52,9 @@ documentation = "https://github.com/Preocts/secretbox/README.md"
 repository = "https://github.com/Preocts/secretbox"
 # changelog = ""
 
+[tool.setuptools.package-data]
+"secretbox" = ["py.typed"]
+
 [tool.setuptools.packages.find]
 where = ["src"]  # ["."] by default
 include = ["*"]  # ["*"] by default
