@@ -52,25 +52,25 @@ def test_populate_region_store_names_kw(awsloader: AWSLoader) -> None:
 
 
 def test_filter_boto_debug(caplog: Any, awsloader: AWSLoader) -> None:
+    prior_root_level = logging.getLogger().level
+    logging.getLogger().setLevel("DEBUG")
+
     try:
         logger = logging.getLogger("secrets")
-        logger.setLevel("DEBUG")
-        error_logger = logging.getLogger("errors")
-        error_logger.setLevel("ERROR")
-        current_level = logger.root.level
-        # logger.root.setLevel("DEBUG")
 
+        logging.getLogger().debug("Baseline Start")
         with awsloader.disable_debug_logging():
             logger.debug("OHNO")
             logger.info("ALLGOOD")
+        logging.getLogger().debug("Baseline End")
 
     finally:
-        logger.root.level = current_level
+        logging.getLogger().setLevel(prior_root_level)
 
+    assert "Baseline Start" in caplog.text
+    assert "Baseline End" in caplog.text
     assert "OHNO" not in caplog.text
     assert "ALLGOOD" in caplog.text
-    assert logger.level == logging.DEBUG
-    assert error_logger.level == logging.ERROR
 
 
 def test_filter_boto_debug_no_action(caplog: Any, awsloader: AWSLoader) -> None:
