@@ -41,6 +41,10 @@ _Optional AWS support_
 $ pip install secretbox[aws]
 ```
 
+*The optional aws package includes boto3. If you are using secretbox on AWS
+objects that already have boto3 install, such as lambda, this remains an
+optional package for your deploy.*
+
 ---
 
 # Documentation:

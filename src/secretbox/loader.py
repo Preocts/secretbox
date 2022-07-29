@@ -16,7 +16,7 @@ class Loader(ABC):
 
     @abstractmethod
     def run(self) -> bool:
-        """Call .load_values and inject values to environ."""
+        """Load values from target source."""
         raise NotImplementedError()
 
     @abstractmethod
