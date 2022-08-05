@@ -1,0 +1,131 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "secretbox"
+version = "2.7.0"
+requires-python = ">=3.7"
+description = "A library that offers a simple method of loading and accessing environmental variables and `.env` file values."
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [
+    { email = "preocts@preocts.com", name = "Preocts" }
+]
+maintainers = []
+keywords = []
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: Implementation :: CPython"
+]
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pre-commit",
+    "black",
+    "mypy",
+    "flake8",
+    "flake8-builtins",
+]
+test = [
+    "pytest",
+    "pytest-randomly",
+    "coverage",
+    "tox"
+]
+aws = [
+    "boto3>=1.18.56",
+    "boto3-stubs[secretsmanager]>=1.18.55",
+    "boto3-stubs[ssm]>=1.18.55"
+]
+
+[project.urls]
+homepage = "https://github.com/Preocts/secretbox"
+documentation = "https://github.com/Preocts/secretbox/README.md"
+repository = "https://github.com/Preocts/secretbox"
+# changelog = ""
+
+[tool.setuptools.package-data]
+"secretbox" = ["py.typed"]
+
+[tool.setuptools.packages.find]
+where = ["src"]  # ["."] by default
+include = ["*"]  # ["*"] by default
+exclude = ["tests"]  # empty by default
+namespaces = true  # true by default
+
+[tool.mypy]
+check_untyped_defs = true
+disallow_any_generics = true
+disallow_incomplete_defs = true
+disallow_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_incomplete_defs = false
+disallow_untyped_defs = false
+
+[tool.coverage.run]
+branch = true
+source = [ "tests" ]
+source_pkgs = [ "secretbox" ]
+
+[tool.coverage.report]
+exclude_lines =[
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:"
+]
+ignore_errors = true
+
+[tool.coverage.html]
+directory = "coverage_html_report"
+
+[tool.coverage.xml]
+output = "coverage.xml"
+
+# This is ignored by flake8, here in case they decide to add it in the future
+[tool.flake8]
+ignore = "W503,E203"
+max-line-length = 88
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+envlist = py38,py39,py310,py311,mypy,pre-commit
+skip_missing_interpreters = true
+isolated_build = True
+
+[testenv]
+deps = .[test]
+commands =
+    coverage erase
+    coverage run --parallel-mode -m pytest {posargs:tests}
+    python -m pip install .[aws]
+    coverage run --parallel-mode -m pytest {posargs:tests}
+    coverage combine
+    coverage xml
+    coverage report --fail-under 95 --skip-covered --skip-empty -m
+
+[testenv:mypy]
+deps =
+    .[aws]
+    mypy
+commands =
+    mypy -p secretbox
+
+[testenv:pre-commit]
+skip_install = true
+deps = pre-commit
+commands = pre-commit run --all-files --show-diff-on-failure
+"""

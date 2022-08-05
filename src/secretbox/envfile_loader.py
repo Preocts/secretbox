@@ -64,7 +64,7 @@ class EnvFileLoader(Loader):
         filename = self._filename or filename or ".env"
         self.logger.debug("Reading vars from '%s'", filename)
         try:
-            with open(filename, "r", encoding="utf-8") as input_file:
+            with open(filename, encoding="utf-8") as input_file:
                 self.parse_env_file(input_file.read())
         except FileNotFoundError:
             return False

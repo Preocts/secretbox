@@ -15,7 +15,7 @@ from typing import Generator
 try:
     from botocore.awsrequest import HeadersDict
 except ImportError:
-    HeadersDict = dict
+    HeadersDict = dict  # type: ignore
 
 from secretbox.loader import Loader
 
@@ -84,16 +84,13 @@ class AWSLoader(Loader):
     @contextmanager
     def disable_debug_logging(self) -> Generator[None, None, None]:
         """Context manager to enforce level 20 (INFO) logging minimum at root logger."""
-        restore_data: list[tuple[logging.Logger, int]] = []
+        # This should prevent boto and botocore loggers from outputting
+        # client secrets in plaintext if debug logging is on.
+        prior_root_level = logging.getLogger().level
 
-        # Step through all loggers, force INFO level or higher
         if self.hide_boto_debug:
             self.logger.info("Forcing all loggers to > DEBUG level.")
-            for log_obj in logging.root.manager.loggerDict:
-                logger = logging.getLogger(log_obj)
-                if logger.level < logging.INFO:
-                    restore_data.append((logger, logger.level))
-                    logger.level = logging.INFO
+            logging.getLogger().setLevel(logging.INFO)
 
         try:
             yield None
@@ -101,5 +98,4 @@ class AWSLoader(Loader):
         finally:
             if self.hide_boto_debug:
                 self.logger.info("Restoring previous loggers settings.")
-            for logger, level in restore_data:
-                logger.level = level
+                logging.getLogger().setLevel(prior_root_level)

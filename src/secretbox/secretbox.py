@@ -10,24 +10,31 @@ import logging
 import os
 from typing import Any
 
-from secretbox.awsparameterstore_loader import AWSParameterStoreLoader
-from secretbox.awssecret_loader import AWSSecretLoader
-from secretbox.envfile_loader import EnvFileLoader
-from secretbox.environ_loader import EnvironLoader
+from secretbox.awsparameterstore_loader import (
+    AWSParameterStoreLoader as _AWSParameterStoreLoader,
+)
+from secretbox.awssecret_loader import AWSSecretLoader as _AWSSecretLoader
+from secretbox.envfile_loader import EnvFileLoader as _EnvFileLoader
+from secretbox.environ_loader import EnvironLoader as _EnvironLoader
 from secretbox.loader import Loader
 
+# To be removed with 2.8.0
 LOADERS: dict[str, type[Loader]] = {
-    "envfile": EnvFileLoader,
-    "environ": EnvironLoader,
-    "awssecret": AWSSecretLoader,
-    "awsparameterstore": AWSParameterStoreLoader,
+    "envfile": _EnvFileLoader,
+    "environ": _EnvironLoader,
+    "awssecret": _AWSSecretLoader,
+    "awsparameterstore": _AWSParameterStoreLoader,
 }
 
 
 class SecretBox:
     """Loads various environment variables/secrets for use"""
 
-    logger = logging.getLogger(__name__)
+    _logger = logging.getLogger(__name__)
+    AWSParameterStoreLoader = _AWSParameterStoreLoader
+    AWSSecretLoader = _AWSSecretLoader
+    EnvFileLoader = _EnvFileLoader
+    EnvironLoader = _EnvironLoader
 
     def __init__(
         self,
@@ -42,13 +49,13 @@ class SecretBox:
             auto_load : If true, environment vars and `.env` file will be loaded
             load_debug : When true, internal logger level is set to DEBUG
         """
-        self.logger.setLevel(level="DEBUG" if debug_flag else "ERROR")
-        self.logger.debug("Debug flag passed.")
+        self._logger.setLevel(level="DEBUG" if debug_flag else "ERROR")
+        self._logger.debug("Debug flag passed.")
 
         self._loaded_values: dict[str, str] = {}
 
         if auto_load:
-            self.use_loaders(EnvironLoader(), EnvFileLoader())
+            self.use_loaders(self.EnvironLoader(), self.EnvFileLoader())
 
     @property
     def values(self) -> dict[str, str]:
@@ -90,16 +97,16 @@ class SecretBox:
                 to be in the environment variables under `AWS_SSTORE_NAME` and
                 `AWS_REGION_NAME`. `aws_sstore_name` is not the arn.
         """
-        self.logger.warning("Deprecated: `.load_from()` will be removed in v2.7.0")
+        self._logger.warning("Deprecated: `.load_from()` will be removed in v2.8.0")
         for loader_name in loaders:
-            self.logger.debug("Loading from interface: `%s`", loader_name)
+            self._logger.debug("Loading from interface: `%s`", loader_name)
             interface = LOADERS.get(loader_name)
             if interface is None:
-                self.logger.error("Loader `%s` unknown, skipping", loader_name)
+                self._logger.error("Loader `%s` unknown, skipping", loader_name)
                 continue
             loader = interface()
             loader._load_values(**kwargs)
-            self.logger.debug("Loaded %d values.", len(loader.values))
+            self._logger.debug("Loaded %d values.", len(loader.values))
             self._update_loaded_values(loader.values)
         self._push_to_environment()
 
@@ -110,7 +117,7 @@ class SecretBox:
     def _push_to_environment(self) -> None:
         """Pushes loaded values to local environment vars, will overwrite existing"""
         for key, value in self._loaded_values.items():
-            self.logger.debug("Push, %s : ***%s", key, value[-(len(value) // 4) :])
+            self._logger.debug("Push, %s : ***%s", key, value[-(len(value) // 4) :])
             os.environ[key] = value
 
     def get(self, key: str, default: str | None = None) -> str:
@@ -120,34 +127,8 @@ class SecretBox:
 
         return self._loaded_values.get(key, default)
 
-    def set(self, key: str, value: str) -> None:
+    def set(self, key: str, value: str) -> None:  # noqa: A003
         """Set a value by key. Will be converted to string and pushed to environment."""
         value = str(value)
         self._loaded_values[key] = value
         self._push_to_environment()
-
-    def get_int(self, key: str, default: int | None = None) -> int:
-        """Convert value by key to int."""
-        self.logger.warning("Deprecated: `.get_int()` will be removed in v2.7.0")
-        if default is None:
-            return int(self.get(key))
-
-        value = self.get(key, "")
-        return int(value) if value else default
-
-    def get_list(
-        self,
-        key: str,
-        delimiter: str = ",",
-        default: list[str] | None = None,
-    ) -> list[str]:
-        """Convert value by key to list seperated by delimiter."""
-        self.logger.warning("Deprecated: `.get_list()` will be removed in v2.7.0")
-        if default is None:
-            default = []
-
-        if not default:
-            return self.get(key).split(delimiter)
-
-        value = self.get(key, "")
-        return value.split(delimiter) if value else default

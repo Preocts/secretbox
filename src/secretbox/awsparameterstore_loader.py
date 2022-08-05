@@ -13,12 +13,12 @@ try:
     import boto3
     from botocore.exceptions import ClientError
 except ImportError:
-    boto3 = None
+    boto3 = None  # type: ignore
 
 try:
     from mypy_boto3_ssm.client import SSMClient
 except ImportError:
-    SSMClient = None
+    SSMClient = None  # type: ignore
 
 
 class AWSParameterStoreLoader(AWSLoader):
@@ -105,31 +105,31 @@ class AWSParameterStoreLoader(AWSLoader):
             "WithDecryption": True,
         }
 
-        # loop through next page tokens, page size caps at 10
-        while True:
+        # ensure that boto3 doesn't write sensitive payload to the logger
+        with self.disable_debug_logging():
+            # loop through next page tokens, page size caps at 10
+            while True:
 
-            try:
-                # ensure that boto3 doesn't write sensitive payload to the logger
-                with self.disable_debug_logging():
+                try:
                     resp = aws_client.get_parameters_by_path(**args)
 
-            except ClientError as err:
-                self.log_aws_error(err)
-                return False
+                except ClientError as err:
+                    self.log_aws_error(err)
+                    return False
 
-            # Process results, break if finished
-            for param in resp["Parameters"] or []:
-                # remove the prefix
-                # we want /path/to/DB_PASSWORD to populate os.env.DB_PASSWORD
-                key = param["Name"].split("/")[-1] if do_split else param["Name"]
-                self._loaded_values[key] = param["Value"]
+                # Process results, break if finished
+                for param in resp["Parameters"] or []:
+                    # remove the prefix
+                    # we want /path/to/DB_PASSWORD to populate os.env.DB_PASSWORD
+                    key = param["Name"].split("/")[-1] if do_split else param["Name"]
+                    self._loaded_values[key] = param["Value"]
 
-            args["NextToken"] = resp.get("NextToken")
+                args["NextToken"] = resp.get("NextToken")
 
-            if not args["NextToken"]:
-                break
+                if not args["NextToken"]:
+                    break
 
-            self.logger.debug("fetching next page: %s", args["NextToken"])
+                self.logger.debug("fetching next page: %s", args["NextToken"])
 
         self.logger.info(
             "loaded %d parameters matching %s",

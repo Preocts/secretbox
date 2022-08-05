@@ -6,9 +6,14 @@
 [![Python Tests](https://github.com/Preocts/secretbox/actions/workflows/python-tests.yml/badge.svg)](https://github.com/Preocts/secretbox/actions/workflows/python-tests.yml)
 [![codecov](https://codecov.io/gh/Preocts/secretbox/branch/main/graph/badge.svg?token=7QFJGMD3JI)](https://codecov.io/gh/Preocts/secretbox)
 
-A library that offers a simple method of loading and accessing environmental variables, `.env` file values, and other sources of secrets. The class stores values to state when load methods are called.
+A library that offers a simple method of loading and accessing environmental
+variables, `.env` file values, and other sources of secrets. The class stores
+values to state when load methods are called.
 
-Loaded values are also injected into the local environ. This is to assist with adjacent libraries that reference `os.environ` values by default. Required values can be kept in a `.env` file instead of managing a script to load them into the environment.
+Loaded values are also injected into the local environ. This is to assist with
+adjacent libraries that reference `os.environ` values by default. Required
+values can be kept in a `.env` file instead of managing a script to load them
+into the environment.
 
 ---
 
@@ -36,13 +41,19 @@ _Optional AWS support_
 $ pip install secretbox[aws]
 ```
 
+*The optional aws package includes boto3. If you are using secretbox on AWS
+objects that already have boto3 install, such as lambda, this remains an
+optional package for your deploy.*
+
 ---
 
 # Documentation:
 
 ## Example use with `auto_load=True`
 
-This loads the system environ and the `.env` from the current working directory into the class state for quick reference. Loaded secrets can be accessed from the `.values` property or from other methods such as `os.getenviron()`.
+This loads the system environ and the `.env` from the current working directory
+into the class state for quick reference. Loaded secrets can be accessed from
+the `.values` property or from other methods such as `os.getenviron()`.
 
 ```python
 from secretbox import SecretBox
@@ -63,14 +74,16 @@ if __name__ == "__main__":
 
 ## Example use with `use_loaders()`
 
-Loaders collect key:value pair secrets from various sources. When you need more than one source loaded, in a particular order, with a single collection of all loaded values then `.use_loaders()` is the solution. Each loader is executed in turn and the results compiled with the `SecretBox` object.
+Loaders collect key:value pair secrets from various sources. When you need more
+than one source loaded, in a particular order, with a single collection of all
+loaded values then `.use_loaders()` is the solution. Each loader is executed in
+turn and the results compiled with the `SecretBox` object.
 
-This loads the system environment variables, an AWS secret store, and then a specific `.env` file if it exists. Secrets are loaded in the order of loaders, replacing any matching keys from the prior loader.
+This loads the system environment variables, an AWS secret store, and then a
+specific `.env` file if it exists. Secrets are loaded in the order of loaders,
+replacing any matching keys from the prior loader.
 
 ```python
-from secretbox import AWSSecretLoader
-from secretbox import EnvFileLoader
-from secretbox import EnvironLoader
 from secretbox import SecretBox
 
 secrets = SecretBox()
@@ -79,9 +92,9 @@ secrets = SecretBox()
 def main() -> int:
     """Main function"""
     secrets.use_loaders(
-        EnvironLoader(),
-        AWSSecretLoader("mySecrets", "us-east-1"),
-        EnvFileLoader("sandbox/.override_env"),
+        secrets.EnvironLoader(),
+        secrets.AWSSecretLoader("mySecrets", "us-east-1"),
+        secrets.EnvFileLoader("sandbox/.override_env"),
     )
 
     my_sevice_password = secrets.values.get("SERVICE_PW")
@@ -97,7 +110,8 @@ if __name__ == "__main__":
 
 ## Example use with stand-alone loader
 
-Loaders can be used as needed. For this example we only need to load an AWS Parameter store.
+Loaders can be used as needed. For this example we only need to load an AWS
+Parameter store.
 
 ```python
 from secretbox import AWSParameterStoreLoader
@@ -119,19 +133,19 @@ if __name__ == "__main__":
 
 ---
 
-
-
 ### SecretBox arguments:
 
 `SecretBox(*, auto_load: bool = False, load_debug: bool = False)`
 
 **auto_load**
 
-- Loads environment variables and then the .env file from current working directory if found.
+- Loads environment variables and then the .env file from current working
+  directory if found.
 
 **load_debug**
 
-- When true, internal logger level is set to DEBUG. Secret values are truncated, however it is not recommended to leave this on for production deployments.
+- When true, internal logger level is set to DEBUG. Secret values are truncated,
+  however it is not recommended to leave this on for production deployments.
 
 ### SecretBox API:
 
@@ -145,44 +159,27 @@ if __name__ == "__main__":
 
 ---
 
-**NOTE:** All .get methods pull from the instance state of the class and do not reflect changes to the enviornment post-load.
+**NOTE:** All .get methods pull from the instance state of the class and do not
+reflect changes to the enviornment post-load.
 
 **.get(key: str, default: str | None = None) -> str**
 
-- Returns the string value of the loaded value by key name. If the key does not exists then `KeyError` will be raised unless a default is given, then that is returned.
+- Returns the string value of the loaded value by key name. If the key does not
+  exists then `KeyError` will be raised unless a default is given, then that is
+  returned.
 
 **.set(key: str, value: str) -> None**
 
-- Adds the key:value pair to both the secretbox instance and the environment variables
-
-**.get_int(key: str, default: int | None = None) -> int** -- *deprecated*
-
-- Returns the int value of the loaded value by key name. Raise `ValueError` if the found key cannot convert to `int`. Raise `KeyError` if the key is not found and no default is given.
-
-**.get_list(key: str, delimiter: str = ",", default: list[str] | None = None) -> List[str]:** -- *deprecated*
-
-- Returns a list of the loaded value by key name, seperated at defined delimiter. No check is made if delimiter exists in value. `default` is returned if key is not found otherwise a `KeyError` is raised.
-
-**.load_from(loaders: list[str], \*\*kwargs: Any) -> None** -- *deprecated*
-
-- Runs load_values from each of the listed loadered in the order they appear
-- Loader options:
-  - **environ**
-    - Loads the current environmental variables into secretbox.
-  - **envfile**
-    - Loads .env file. Optional `filename` kwarg can override the default load of the current working directory `.env` file.
-  - **awssecret**
-    - Loads secrets from an AWS secret manager. Requires `aws_sstore_name` and `aws_region_name` keywords to be provided or for those values to be in the environment variables under `AWS_SSTORE_NAME` and `AWS_REGION_NAME`. `aws_sstore_name` is the name of the store, not the arn.
-  - **awsparameterstore**
-    - Loads secrets from an AWS Parameter Store (SSM/ASM). Requires `aws_sstore_name` and `aws_region_name` keywords to be provided or for those values to be in the environment variables under `AWS_SSTORE_NAME` and `AWS_REGION_NAME`. `aws_sstore_name` is the name or prefix of the parameters to retrieve.
-- **kwargs**
-  - All keyword arguments are passed into the loaders when they are called. Each loader details which extra keyword arguments it uses or requires above.
+- Adds the key:value pair to both the secretbox instance and the environment
+  variables
 
 ---
 
 ### Loaders
 
-All loaders follow the same abstract base class. Calling `.run()` will load secrets from the loader's source. Each loader will have optional parameters definable on instantiation.
+All loaders follow the same abstract base class. Calling `.run()` will load
+secrets from the loader's source. Each loader will have optional parameters
+definable on instantiation.
 
 **EnvironLoader**
 
@@ -210,7 +207,8 @@ Load secrets from an AWS secret manager.
 Load secrets from AWS parameter store.
 
 - Args:
-  - aws_sstore: [str] Name of parameter or path of parameters if endings with `/`
+  - aws_sstore: [str] Name of parameter or path of parameters if endings with
+    `/`
     - Can be provided through environ `AWS_SSTORE_NAME`
   - aws_region: [str] Regional Location of parameter(s)
     - Can be provided through environ `AWS_REGION_NAME` or `AWS_REGION`
@@ -219,21 +217,29 @@ Load secrets from AWS parameter store.
 
 ## A note about logging output
 
-This library restricts any `DEBUG` logging output during the use of a `boto3` client or the methods of that client. This is to prevent the logging of your secrets as well as the bearer tokens used within AWS. You can disable this at the aws loader by adjusting `hide_boto_debug` to be `False`. You will need to define your own instance of the `AWSParameterStore` or `AWSSecretLoader` and adjust their flag before calling `load_values()`.
+This library restricts any `DEBUG` logging output during the use of a `boto3`
+client or the methods of that client. This is to prevent the logging of your
+secrets as well as the bearer tokens used within AWS. You can disable this at
+the aws loader by adjusting `hide_boto_debug` to be `False`. You will need to
+define your own instance of the `AWSParameterStore` or `AWSSecretLoader` and
+adjust their flag before calling `load_values()`.
 
 ---
 
 ## `.env` file format
 
-Current format for the `.env` file supports strings only and is parsed in the following order:
+Current format for the `.env` file supports strings only and is parsed in the
+following order:
 
 - Each seperate line is considered a new possible key/value set
 - Each set is delimted by the first `=` found
 - Leading `export` keyword is removed from key, case agnostic
 - Leading and trailing whitespace are removed
-- Matched leading/trailing single quotes or double quotes will be stripped from values (not keys).
+- Matched leading/trailing single quotes or double quotes will be stripped from
+  values (not keys).
 
-I'm open to suggestions on standards to follow here. This is compiled from "crowd standard" and what is useful at the time.
+I'm open to suggestions on standards to follow here. This is compiled from
+"crowd standard" and what is useful at the time.
 
 This `.env` example:
 
@@ -325,21 +331,18 @@ call the version of the interpreter used to create the `venv`
 
 Install editable library and development requirements:
 
-```bash
+```console
 # Update pip and tools
-python -m pip install --upgrade pip wheel setuptools
+$ python -m pip install --upgrade pip
 
-# Install development requirements
-python -m pip install -r requirements-dev.txt
-
-# Install requirements (if any defined)
-python -m pip install -r requirements.txt
+# Install editable version of library
+$ python -m pip install --editable .[dev]
 ```
 
 Install pre-commit [(see below for details)](#pre-commit):
 
-```bash
-pre-commit install
+```console
+$ pre-commit install
 ```
 
 ---
@@ -348,20 +351,43 @@ pre-commit install
 
 Run pre-commit on all files:
 
-```bash
-pre-commit run --all-files
+```console
+$ pre-commit run --all-files
 ```
 
 Run tests:
 
-```bash
-tox [-r] [-e py3x]
+```console
+$ tox [-r] [-e py3x]
+```
+
+Build dist:
+
+```console
+$ python -m pip install --upgrade build
+
+$ python -m build
 ```
 
 To deactivate (exit) the `venv`:
 
-```bash
-deactivate
+```console
+$ deactivate
+```
+
+---
+
+## Note on flake8:
+
+`flake8` is included in the `requirements-dev.txt` of the project. However it
+disagrees with `black`, the formatter of choice, on max-line-length and two
+general linting errors. `.pre-commit-config.yaml` is already configured to
+ignore these. `flake8` doesn't support `pyproject.toml` so be sure to add the
+following to the editor of choice as needed.
+
+```ini
+--ignore=W503,E203
+--max-line-length=88
 ```
 
 ---
@@ -383,13 +409,14 @@ This repo has a Makefile with some quality of life scripts if the system
 supports `make`.  Please note there are no checks for an active `venv` in the
 Makefile.
 
-| PHONY             | Description                                                        |
-| ----------------- | ------------------------------------------------------------------ |
-| `init`            | Update pip, setuptools, and wheel to newest version                |
-| `install`         | install project                                                    |
-| `install-dev`     | install development requirements and project                       |
-| `build-dist`      | Build source distribution and wheel distribution                   |
-| `clean-artifacts` | Deletes python/mypy artifacts including eggs, cache, and pyc files |
-| `clean-tests`     | Deletes tox, coverage, and pytest artifacts                        |
-| `clean-build`     | Deletes build artifacts                                            |
-| `clean-all`       | Runs all clean scripts                                             |
+| PHONY             | Description                                                           |
+| ----------------- | --------------------------------------------------------------------- |
+| `init`            | Update pip to newest version                                          |
+| `install`         | install the project                                                   |
+| `install-test`    | install test requirements and project as editable install             |
+| `install-dev`     | install development/test requirements and project as editable install |
+| `build-dist`      | Build source distribution and wheel distribution                      |
+| `clean-artifacts` | Deletes python/mypy artifacts, cache, and pyc files                   |
+| `clean-tests`     | Deletes tox, coverage, and pytest artifacts                           |
+| `clean-build`     | Deletes build artifacts                                               |
+| `clean-all`       | Runs all clean scripts                                                |

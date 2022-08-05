@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from .awsparameterstore_loader import AWSParameterStoreLoader
 from .awssecret_loader import AWSSecretLoader
 from .envfile_loader import EnvFileLoader
