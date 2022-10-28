@@ -13,6 +13,7 @@ try:
     import boto3
     from botocore.exceptions import ClientError
     from botocore.exceptions import NoCredentialsError
+    from botocore.exceptions import PartialCredentialsError
 except ImportError:
     boto3 = None  # type: ignore
 
@@ -102,10 +103,7 @@ class AWSSecretLoader(AWSLoader):
             with self.disable_debug_logging():
                 response = aws_client.get_secret_value(SecretId=self.aws_sstore)
 
-        except NoCredentialsError as err:
-            self.logger.error("Missing AWS credentials (%s)", err)
-
-        except ClientError as err:
+        except (NoCredentialsError, ClientError) as err:
             self.log_aws_error(err)
 
         else:
@@ -132,9 +130,13 @@ class AWSSecretLoader(AWSLoader):
             return None
 
         with self.disable_debug_logging():
-            client = boto3.client(
-                service_name="secretsmanager",
-                region_name=self.aws_region,
-            )
+            try:
+                client = boto3.client(
+                    service_name="secretsmanager",
+                    region_name=self.aws_region,
+                )
+            except PartialCredentialsError as err:
+                self.log_aws_error(err)
+                return None
 
         return client
