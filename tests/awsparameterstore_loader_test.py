@@ -229,12 +229,7 @@ def test_client_with_region(loader: AWSParameterStoreLoader) -> None:
 
 
 def test_partial_credentials() -> None:
-    mock_env = {
-        "AWS_ACCESS_KEY_ID": "AKIAIOSFODNN7EXAMPLE",
-        "AWS_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
-        "AWS_DEFAULT_REGION": "us-west-2",
-    }
-    with patch.dict(os.environ, mock_env):
+    with patch.dict(os.environ, {}):
         os.environ.pop("AWS_SECRET_ACCESS_KEY")
         loader = AWSParameterStoreLoader("/some/path", "us-east-1")
         loader.run()
