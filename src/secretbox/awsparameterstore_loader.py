@@ -12,6 +12,8 @@ from secretbox.aws_loader import AWSLoader
 try:
     import boto3
     from botocore.exceptions import ClientError
+    from botocore.exceptions import NoCredentialsError
+    from botocore.exceptions import PartialCredentialsError
 except ImportError:
     boto3 = None  # type: ignore
 
@@ -113,7 +115,7 @@ class AWSParameterStoreLoader(AWSLoader):
                 try:
                     resp = aws_client.get_parameters_by_path(**args)
 
-                except ClientError as err:
+                except (NoCredentialsError, ClientError) as err:
                     self.log_aws_error(err)
                     return False
 
@@ -146,9 +148,13 @@ class AWSParameterStoreLoader(AWSLoader):
             return None
 
         with self.disable_debug_logging():
-            client = boto3.client(
-                service_name="ssm",
-                region_name=self.aws_region,
-            )
+            try:
+                client = boto3.client(
+                    service_name="ssm",
+                    region_name=self.aws_region,
+                )
+            except PartialCredentialsError as err:
+                self.log_aws_error(err)
+                return None
 
         return client

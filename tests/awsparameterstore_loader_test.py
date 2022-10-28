@@ -1,6 +1,7 @@
 """Unit tests for aws parameter store interactions with boto3"""
 from __future__ import annotations
 
+import os
 from typing import Any
 from typing import Generator
 from unittest.mock import patch
@@ -225,3 +226,22 @@ def test_client_error_catch_on_load(broken_loader: AWSParameterStoreLoader) -> N
 def test_client_with_region(loader: AWSParameterStoreLoader) -> None:
     loader.aws_region = TEST_REGION
     assert loader.get_aws_client() is not None
+
+
+def test_partial_credentials() -> None:
+    mock_env = {
+        "AWS_ACCESS_KEY_ID": "AKIAIOSFODNN7EXAMPLE",
+        "AWS_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+        "AWS_DEFAULT_REGION": "us-west-2",
+    }
+    with patch.dict(os.environ, mock_env):
+        os.environ.pop("AWS_SECRET_ACCESS_KEY")
+        loader = AWSParameterStoreLoader("/some/path", "us-east-1")
+        loader.run()
+
+
+@pytest.mark.usefixtures("remove_aws_creds")
+def test_invalid_credentials() -> None:
+    # TODO: Block discovery of aws cred files
+    loader = AWSParameterStoreLoader("/some/path", "us-east-1")
+    loader.run()
