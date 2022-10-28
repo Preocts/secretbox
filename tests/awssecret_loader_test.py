@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 from datetime import datetime
 from typing import Any
 from typing import Generator
@@ -161,3 +162,17 @@ def test_boto3_stubs_not_installed(
                 aws_region_name=TEST_REGION,
             )
             assert awssecret_loader.values
+
+
+def test_partial_credentials() -> None:
+    with patch.dict(os.environ, {}):
+        os.environ.pop("AWS_SECRET_ACCESS_KEY")
+        loader = AWSSecretLoader("somestore", "us-east-1")
+        loader.run()
+
+
+@pytest.mark.usefixtures("remove_aws_creds")
+def test_invalid_credentials() -> None:
+    # TODO: Block discovery of aws cred files
+    loader = AWSSecretLoader("somestore", "us-east-1")
+    loader.run()
