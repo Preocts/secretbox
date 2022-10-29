@@ -410,8 +410,8 @@ with `git` hooks.
 This repo has a Makefile with some quality of life scripts if the system
 supports `make`.  Please note there are no checks for an active `venv` in the
 Makefile.
-| PHONY         | Description                                                                |
 
+| PHONY         | Description                                                                |
 | ------------- | -------------------------------------------------------------------------- |
 | `init`        | Update pip to newest version                                               |
 | `install`     | install the project                                                        |
