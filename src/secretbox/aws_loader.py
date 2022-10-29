@@ -8,9 +8,9 @@ from __future__ import annotations
 
 import logging
 import os
+from collections.abc import Generator
 from contextlib import contextmanager
 from typing import Any
-from typing import Generator
 
 try:
     from botocore.awsrequest import HeadersDict
