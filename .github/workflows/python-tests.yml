@@ -92,7 +92,7 @@ jobs:
           GIST_ID: "${{ secrets.COV_BADGE_GIST }}"
           FILENAME: "${{ github.event.repository.name }}-${{ env.REPO_NAME }}"
         if: "${{ env.BADGE_TOKEN != '' }} && ${{ env.GIST_ID }}"
-        uses: "schneegans/dynamic-badges-action@v1.4.0"
+        uses: "schneegans/dynamic-badges-action@v1.6.0"
         with:
           auth: "${{ env.BADGE_TOKEN }}"
           gistID: "${{ env.GIST_ID }}"
