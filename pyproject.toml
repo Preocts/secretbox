@@ -18,10 +18,6 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: Implementation :: CPython"
 ]
 dependencies = []
@@ -33,6 +29,7 @@ dev = [
     "mypy",
     "flake8",
     "flake8-builtins",
+    "flake8-pep585",
 ]
 test = [
     "pytest",
@@ -55,12 +52,6 @@ repository = "https://github.com/Preocts/secretbox"
 [tool.setuptools.package-data]
 "secretbox" = ["py.typed"]
 
-[tool.setuptools.packages.find]
-where = ["src"]  # ["."] by default
-include = ["*"]  # ["*"] by default
-exclude = ["tests"]  # empty by default
-namespaces = true  # true by default
-
 [tool.mypy]
 check_untyped_defs = true
 disallow_any_generics = true
@@ -77,22 +68,32 @@ disallow_untyped_defs = false
 
 [tool.coverage.run]
 branch = true
-source = [ "tests" ]
-source_pkgs = [ "secretbox" ]
+source = [
+    "tests",
+]
+source_pkgs = [
+    "secretbox",
+]
+
+[tool.coverage.paths]
+source = [
+    "src/",
+    "*/site-packages",
+]
+test = [
+    "tests/",
+    "*/tests",
+]
 
 [tool.coverage.report]
 exclude_lines =[
     "pragma: no cover",
     "raise NotImplementedError",
-    "if __name__ == .__main__.:"
+    "if __name__ == .__main__.:",
+    "\\.\\.\\.",
 ]
 ignore_errors = true
 
-[tool.coverage.html]
-directory = "coverage_html_report"
-
-[tool.coverage.xml]
-output = "coverage.xml"
 
 # This is ignored by flake8, here in case they decide to add it in the future
 [tool.flake8]
@@ -102,20 +103,24 @@ max-line-length = 88
 [tool.tox]
 legacy_tox_ini = """
 [tox]
-envlist = py37,py38,py39,py310,py311,mypy,pre-commit
+envlist = py37,py38,py39,py310,py311,py312,coverage,mypy,pre-commit
 skip_missing_interpreters = true
 isolated_build = True
 
 [testenv]
 deps = .[test]
 commands =
-    coverage erase
     coverage run --parallel-mode -m pytest {posargs:tests}
     python -m pip install .[aws]
     coverage run --parallel-mode -m pytest {posargs:tests}
+
+[testenv:coverage]
+depends = py37,py38,py39,py310,py311
+parallel_show_output = true
+commands =
     coverage combine
-    coverage xml
-    coverage report --fail-under 95 --skip-covered --skip-empty -m
+    coverage report --fail-under 95 --skip-empty -m
+    coverage json
 
 [testenv:mypy]
 deps =
