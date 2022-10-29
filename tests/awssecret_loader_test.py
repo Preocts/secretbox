@@ -3,9 +3,9 @@ from __future__ import annotations
 
 import json
 import os
+from collections.abc import Generator
 from datetime import datetime
 from typing import Any
-from typing import Generator
 from unittest.mock import patch
 
 import pytest

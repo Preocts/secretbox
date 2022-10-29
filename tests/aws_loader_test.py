@@ -3,8 +3,8 @@ from __future__ import annotations
 
 import logging
 import os
+from collections.abc import Generator
 from typing import Any
-from typing import Generator
 from unittest.mock import patch
 
 import pytest

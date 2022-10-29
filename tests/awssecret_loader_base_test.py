@@ -1,8 +1,8 @@
 """Unit tests for aws secrect manager interactions without boto3"""
 from __future__ import annotations
 
+from collections.abc import Generator
 from typing import Any
-from typing import Generator
 from unittest.mock import patch
 
 import pytest

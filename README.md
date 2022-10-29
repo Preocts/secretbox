@@ -1,9 +1,12 @@
-# secretbox
-
+[![Python 3.7 | 3.8 | 3.9 | 3.10 | 3.11](https://img.shields.io/badge/Python-3.7%20%7C%203.8%20%7C%203.9%20%7C%203.10%20%7C%203.11-blue)](https://www.python.org/downloads)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
+
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/Preocts/python-template/main.svg)](https://results.pre-commit.ci/latest/github/Preocts/python-template/main)
 [![Python Tests](https://github.com/Preocts/secretbox/actions/workflows/python-tests.yml/badge.svg)](https://github.com/Preocts/secretbox/actions/workflows/python-tests.yml)
+[![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/Preocts/f26cb21234ff10087c74b977705af024/raw/secretbox-main)](https://nedbatchelder.com/blog/202209/making_a_coverage_badge.html)
+
+# secretbox
 
 A library that offers a simple method of loading and accessing environmental
 variables, `.env` file values, and other sources of secrets. The class stores
@@ -407,15 +410,12 @@ with `git` hooks.
 This repo has a Makefile with some quality of life scripts if the system
 supports `make`.  Please note there are no checks for an active `venv` in the
 Makefile.
+| PHONY         | Description                                                                |
 
-| PHONY             | Description                                                           |
-| ----------------- | --------------------------------------------------------------------- |
-| `init`            | Update pip to newest version                                          |
-| `install`         | install the project                                                   |
-| `install-test`    | install test requirements and project as editable install             |
-| `install-dev`     | install development/test requirements and project as editable install |
-| `build-dist`      | Build source distribution and wheel distribution                      |
-| `clean-artifacts` | Deletes python/mypy artifacts, cache, and pyc files                   |
-| `clean-tests`     | Deletes tox, coverage, and pytest artifacts                           |
-| `clean-build`     | Deletes build artifacts                                               |
-| `clean-all`       | Runs all clean scripts                                                |
+| ------------- | -------------------------------------------------------------------------- |
+| `init`        | Update pip to newest version                                               |
+| `install`     | install the project                                                        |
+| `install-dev` | install development/test requirements and project as editable install      |
+| `upgrade-dev` | update all dependencies, regenerate requirements.txt (disabled by default) |
+| `build-dist`  | Build source distribution and wheel distribution                           |
+| `clean`       | Deletes build, tox, coverage, pytest, mypy, cache, and pyc artifacts       |
