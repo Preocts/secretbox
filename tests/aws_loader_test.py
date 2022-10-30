@@ -9,6 +9,7 @@ from unittest.mock import patch
 
 import pytest
 from secretbox.aws_loader import AWSLoader
+from secretbox.exceptions import LoaderException
 
 
 @pytest.fixture
@@ -16,6 +17,26 @@ def awsloader() -> Generator[AWSLoader, None, None]:
     """Create a fixture to test with"""
     loader = AWSLoader()
     yield loader
+
+
+def test_run_raises_with_flag(awsloader: AWSLoader) -> None:
+    awsloader._capture_exceptions = False
+    with patch.object(awsloader, "_run", side_effect=Exception) as run:
+
+        with pytest.raises(LoaderException):
+            awsloader.run()
+
+    assert run.call_count == 1
+
+
+def test_run_does_not_rause_with_flag(awsloader: AWSLoader) -> None:
+    awsloader._capture_exceptions = True
+    with patch.object(awsloader, "_run", side_effect=Exception) as run:
+
+        result = awsloader.run()
+
+    assert run.call_count == 1
+    assert result is False
 
 
 def test_populate_region_store_names_none(awsloader: AWSLoader) -> None:
