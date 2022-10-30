@@ -10,7 +10,6 @@ from unittest.mock import patch
 import pytest
 from secretbox import awssecret_loader as awssecret_loader_module
 from secretbox.awssecret_loader import AWSSecretLoader
-from secretbox.exceptions import LoaderException
 
 boto3_lib = pytest.importorskip("boto3", reason="boto3")
 mypy_boto3 = pytest.importorskip("mypy_boto3_secretsmanager", reason="mypy_boto3")
@@ -177,20 +176,3 @@ def test_boto3_stubs_not_installed(
                 aws_region_name=TEST_REGION,
             )
             assert awssecret_loader.values
-
-
-@pytest.mark.usefixtures("remove_aws_creds")
-def test_invalid_credentials_raises_exception() -> None:
-    loader = AWSSecretLoader("somestore", "us-east-1", capture_exceptions=False)
-
-    with pytest.raises(LoaderException):
-        loader.run()
-
-
-@pytest.mark.usefixtures("remove_aws_creds")
-def test_invalid_credentials_does_not_raise_exception() -> None:
-    loader = AWSSecretLoader("somestore", "us-east-1", capture_exceptions=True)
-
-    result = loader.run()
-
-    assert result is False

@@ -7,7 +7,6 @@ from unittest.mock import patch
 
 import pytest
 from secretbox.awsparameterstore_loader import AWSParameterStoreLoader
-from secretbox.exceptions import LoaderException
 
 boto3_lib = pytest.importorskip("boto3", reason="boto3")
 mypy_boto3 = pytest.importorskip("mypy_boto3_ssm", reason="mypy_boto3")
@@ -228,28 +227,3 @@ def test_client_error_thrown_on_load(broken_loader: AWSParameterStoreLoader) -> 
 def test_client_with_region(loader: AWSParameterStoreLoader) -> None:
     loader.aws_region = TEST_REGION
     assert loader.get_aws_client() is not None
-
-
-@pytest.mark.usefixtures("remove_aws_creds")
-def test_invalid_credentials_raises_exception() -> None:
-    loader = AWSParameterStoreLoader(
-        aws_sstore_name="/some/path",
-        aws_region_name="us-east-1",
-        capture_exceptions=False,
-    )
-
-    with pytest.raises(LoaderException):
-        loader.run()
-
-
-@pytest.mark.usefixtures("remove_aws_creds")
-def test_invalid_credentials_does_not_raise_exception() -> None:
-    loader = AWSParameterStoreLoader(
-        aws_sstore_name="/some/path",
-        aws_region_name="us-east-1",
-        capture_exceptions=True,
-    )
-
-    result = loader.run()
-
-    assert result is False

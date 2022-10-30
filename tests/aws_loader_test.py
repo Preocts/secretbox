@@ -9,6 +9,7 @@ from unittest.mock import patch
 
 import pytest
 from secretbox.aws_loader import AWSLoader
+from secretbox.exceptions import LoaderException
 
 
 @pytest.fixture
@@ -16,6 +17,26 @@ def awsloader() -> Generator[AWSLoader, None, None]:
     """Create a fixture to test with"""
     loader = AWSLoader()
     yield loader
+
+
+def test_run_raises_with_flag(awsloader: AWSLoader) -> None:
+    awsloader._capture_exceptions = False
+    with patch.object(awsloader, "_run", side_effect=Exception) as run:
+
+        with pytest.raises(LoaderException):
+            awsloader.run()
+
+    assert run.call_count == 1
+
+
+def test_run_does_not_rause_with_flag(awsloader: AWSLoader) -> None:
+    awsloader._capture_exceptions = True
+    with patch.object(awsloader, "_run", side_effect=Exception) as run:
+
+        result = awsloader.run()
+
+    assert run.call_count == 1
+    assert result is False
 
 
 def test_populate_region_store_names_none(awsloader: AWSLoader) -> None:
@@ -108,3 +129,19 @@ def test_log_aws_error_with_nonaws_error(awsloader: AWSLoader, caplog: Any) -> N
     except Exception as err:
         awsloader.log_aws_error(err)
     assert "Manufactored exception" in caplog.text
+
+
+def test_log_aws_error_with_aws_error(awsloader: AWSLoader, caplog: Any) -> None:
+    try:
+        raise Exception("Manufactored exception")
+    except Exception as err:
+        setattr(
+            err,
+            "response",
+            {
+                "Error": {"Code": "313", "Message": "AWS error"},
+                "ResponseMetadata": "Beepbeep",
+            },
+        )
+        awsloader.log_aws_error(err)
+    assert "313 - AWS error (Beepbeep)" in caplog.text
