@@ -1,13 +1,13 @@
 """Unit tests for aws parameter store interactions with boto3"""
 from __future__ import annotations
 
-import os
 from collections.abc import Generator
 from typing import Any
 from unittest.mock import patch
 
 import pytest
 from secretbox.awsparameterstore_loader import AWSParameterStoreLoader
+from secretbox.exceptions import LoaderException
 
 boto3_lib = pytest.importorskip("boto3", reason="boto3")
 mypy_boto3 = pytest.importorskip("mypy_boto3_ssm", reason="mypy_boto3")
@@ -17,6 +17,7 @@ if True:
     import botocore.client
     import botocore.session
     from botocore.client import BaseClient
+    from botocore.exceptions import ClientError
     from botocore.exceptions import StubAssertionError
     from botocore.stub import Stubber
 
@@ -216,11 +217,12 @@ def test_missing_region(loader: AWSParameterStoreLoader, caplog: Any) -> None:
     assert "Invalid SSM client" in caplog.text
 
 
-def test_client_error_catch_on_load(broken_loader: AWSParameterStoreLoader) -> None:
-    assert not broken_loader._load_values(
-        aws_sstore_name=TEST_PATH,
-        aws_region_name=TEST_REGION,
-    )
+def test_client_error_thrown_on_load(broken_loader: AWSParameterStoreLoader) -> None:
+    with pytest.raises(ClientError):
+        assert not broken_loader._load_values(
+            aws_sstore_name=TEST_PATH,
+            aws_region_name=TEST_REGION,
+        )
 
 
 def test_client_with_region(loader: AWSParameterStoreLoader) -> None:
@@ -228,15 +230,26 @@ def test_client_with_region(loader: AWSParameterStoreLoader) -> None:
     assert loader.get_aws_client() is not None
 
 
-def test_partial_credentials() -> None:
-    with patch.dict(os.environ, {}):
-        os.environ.pop("AWS_SECRET_ACCESS_KEY")
-        loader = AWSParameterStoreLoader("/some/path", "us-east-1")
+@pytest.mark.usefixtures("remove_aws_creds")
+def test_invalid_credentials_raises_exception() -> None:
+    loader = AWSParameterStoreLoader(
+        aws_sstore_name="/some/path",
+        aws_region_name="us-east-1",
+        capture_exceptions=False,
+    )
+
+    with pytest.raises(LoaderException):
         loader.run()
 
 
 @pytest.mark.usefixtures("remove_aws_creds")
-def test_invalid_credentials() -> None:
-    # TODO: Block discovery of aws cred files
-    loader = AWSParameterStoreLoader("/some/path", "us-east-1")
-    loader.run()
+def test_invalid_credentials_does_not_raise_exception() -> None:
+    loader = AWSParameterStoreLoader(
+        aws_sstore_name="/some/path",
+        aws_region_name="us-east-1",
+        capture_exceptions=True,
+    )
+
+    result = loader.run()
+
+    assert result is False

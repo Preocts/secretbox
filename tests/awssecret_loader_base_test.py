@@ -25,16 +25,6 @@ def awssecret_loader() -> Generator[AWSSecretLoader, None, None]:
 
 
 @pytest.mark.usefixtures("remove_aws_creds")
-def test_load_aws_no_credentials(awssecret_loader: AWSSecretLoader) -> None:
-    """Cause a NoCredentialsError to be handled"""
-    awssecret_loader._load_values(
-        aws_sstore_name=TEST_STORE,
-        aws_region_name=TEST_REGION,
-    )
-    assert not awssecret_loader._loaded_values
-
-
-@pytest.mark.usefixtures("remove_aws_creds")
 def test_load_aws_no_secret_store_defined(awssecret_loader: AWSSecretLoader) -> None:
     awssecret_loader._load_values(
         aws_sstore_name=None,

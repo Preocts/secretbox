@@ -11,9 +11,6 @@ from secretbox.aws_loader import AWSLoader
 
 try:
     import boto3
-    from botocore.exceptions import ClientError
-    from botocore.exceptions import NoCredentialsError
-    from botocore.exceptions import PartialCredentialsError
 except ImportError:
     boto3 = None  # type: ignore
 
@@ -26,31 +23,12 @@ except ImportError:
 class AWSParameterStoreLoader(AWSLoader):
     """Load secrets from an AWS Parameter Store"""
 
-    def __init__(
-        self,
-        aws_sstore_name: str | None = None,
-        aws_region_name: str | None = None,
-    ) -> None:
-        """
-        Load secrets from AWS parameter store.
-
-        Args:
-            aws_sstore: Name of parameter or path of parameters if endings with `/`
-                Can be provided through environ `AWS_SSTORE_NAME`
-            aws_region: Regional Location of parameter(s)
-                Can be provided through environ `AWS_REGION_NAME` or `AWS_REGION`
-        """
-        self.aws_sstore = aws_sstore_name
-        self.aws_region = aws_region_name
-
-        self._loaded_values: dict[str, str] = {}
-
     @property
     def values(self) -> dict[str, str]:
         """Copy of loaded values"""
         return self._loaded_values.copy()
 
-    def run(self) -> bool:
+    def _run(self) -> bool:
         """Load secrets from given AWS parameter store."""
         has_loaded = self._load_values()
 
@@ -112,12 +90,7 @@ class AWSParameterStoreLoader(AWSLoader):
             # loop through next page tokens, page size caps at 10
             while True:
 
-                try:
-                    resp = aws_client.get_parameters_by_path(**args)
-
-                except (NoCredentialsError, ClientError) as err:
-                    self.log_aws_error(err)
-                    return False
+                resp = aws_client.get_parameters_by_path(**args)
 
                 # Process results, break if finished
                 for param in resp["Parameters"] or []:
@@ -148,13 +121,9 @@ class AWSParameterStoreLoader(AWSLoader):
             return None
 
         with self.disable_debug_logging():
-            try:
-                client = boto3.client(
-                    service_name="ssm",
-                    region_name=self.aws_region,
-                )
-            except PartialCredentialsError as err:
-                self.log_aws_error(err)
-                return None
+            client = boto3.client(
+                service_name="ssm",
+                region_name=self.aws_region,
+            )
 
         return client

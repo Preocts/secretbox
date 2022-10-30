@@ -17,6 +17,7 @@ try:
 except ImportError:
     HeadersDict = dict  # type: ignore
 
+from secretbox.exceptions import LoaderException
 from secretbox.loader import Loader
 
 
@@ -25,9 +26,31 @@ class AWSLoader(Loader):
 
     logger = logging.getLogger(__name__)
 
-    # Override hide_boto_debug to False to allow full debug logging of boto3 libraries
-    # NOTE: This exposes sensitive data and should never be in production
-    hide_boto_debug = True
+    def __init__(
+        self,
+        aws_sstore_name: str | None = None,
+        aws_region_name: str | None = None,
+        *,
+        hide_boto_debug: bool = True,
+        capture_exceptions: bool = True,
+    ) -> None:
+        """
+        Load secrets from AWS parameter store.
+
+        Args:
+            aws_sstore: Name of parameter or path of parameters if endings with `/`
+                Can be provided through environ `AWS_SSTORE_NAME`
+            aws_region: Regional Location of parameter(s)
+                Can be provided through environ `AWS_REGION_NAME` or `AWS_REGION`
+            hide_boto_debug: Hides debug output while using boto libraries
+            capture_exceptions: All inner exceptions are captured, logged, and ignored
+        """
+        self.aws_sstore = aws_sstore_name
+        self.aws_region = aws_region_name
+
+        self._loaded_values: dict[str, str] = {}
+        self._hide_boto_debug = hide_boto_debug
+        self._capture_exceptions = capture_exceptions
 
     def _load_values(self, **kwargs: Any) -> bool:
         """To be overrided in child classes"""
@@ -39,7 +62,28 @@ class AWSLoader(Loader):
         raise NotImplementedError()
 
     def run(self) -> bool:
-        """To be overrided in child classes"""
+        """
+        Load secrets from AWS. Returns success.
+
+        Raises:
+            secretbox.exceptions.LoaderException
+
+            NOTE: Only raises if `capture_exceptions` is False
+        """
+        try:
+            return self._run()
+
+        # We use a blanket Exception catch here on purpose.
+        except Exception as err:
+            self.log_aws_error(err)
+            if not self._capture_exceptions:
+                raise LoaderException(err) from err
+
+        return False
+
+    def _run(self) -> bool:
+        """Internal run called from self.run()."""
+        # NOTE: To be implemented in child classes.
         raise NotImplementedError()
 
     def get_aws_client(self) -> Any:
@@ -88,7 +132,7 @@ class AWSLoader(Loader):
         # client secrets in plaintext if debug logging is on.
         prior_root_level = logging.getLogger().level
 
-        if self.hide_boto_debug:
+        if self._hide_boto_debug:
             self.logger.info("Forcing all loggers to > DEBUG level.")
             logging.getLogger().setLevel(logging.INFO)
 
@@ -96,6 +140,6 @@ class AWSLoader(Loader):
             yield None
 
         finally:
-            if self.hide_boto_debug:
+            if self._hide_boto_debug:
                 self.logger.info("Restoring previous loggers settings.")
                 logging.getLogger().setLevel(prior_root_level)

@@ -17,6 +17,11 @@ adjacent libraries that reference `os.environ` values by default. Required
 values can be kept in a `.env` file instead of managing a script to load them
 into the environment.
 
+**Note**: The default behavior of `secretbox` is to hide exceptions during
+loading. This places the detection of missing values on the caller. This
+behavior can be altered by passing `capture_exceptions=False` to any loader.
+Exceptions will be raised from their source as `LoaderException`.
+
 ---
 
 ### Requirements
@@ -85,6 +90,7 @@ This loads the system environment variables, an AWS secret store, and then a
 specific `.env` file if it exists. Secrets are loaded in the order of loaders,
 replacing any matching keys from the prior loader.
 
+
 ```python
 from secretbox import SecretBox
 
@@ -149,6 +155,9 @@ if __name__ == "__main__":
 - When true, internal logger level is set to DEBUG. Secret values are truncated,
   however it is not recommended to leave this on for production deployments.
 
+
+  *note:* Does not enable debug output for aws loaders.
+
 ### SecretBox API:
 
 **.values**
@@ -204,6 +213,17 @@ Load secrets from an AWS secret manager.
   - aws_region: [str] Regional location of secret store
     - Can be provided through environ `AWS_REGION_NAME` or `AWS_REGION`
 
+- Keyword Args:
+  - hide_boto_debug: [bool, default = `True`]
+    - Hides debug logging output from botocore clients to prevent exposing
+      plain-text secrets
+  - capture_exceptions: [bool, default = `True`]
+    - All internal exceptions are captured, logged, and ignored.
+
+- Raises:
+  - `LoaderException` if `capture_exceptions` is `False`. All exceptions are
+    raised from their source.
+
 **AWSParameterStoreLoader**
 
 Load secrets from AWS parameter store.
@@ -214,6 +234,17 @@ Load secrets from AWS parameter store.
     - Can be provided through environ `AWS_SSTORE_NAME`
   - aws_region: [str] Regional Location of parameter(s)
     - Can be provided through environ `AWS_REGION_NAME` or `AWS_REGION`
+
+- Keyword Args:
+  - hide_boto_debug: [bool, default = `True`]
+    - Hides debug logging output from botocore clients to prevent exposing
+      plain-text secrets
+  - capture_exceptions: [bool, default = `True`]
+    - All internal exceptions are captured, logged, and ignored.
+
+- Raises:
+  - `LoaderException` if `capture_exceptions` is `False`. All exceptions are
+    raised from their source.
 
 ---
 
