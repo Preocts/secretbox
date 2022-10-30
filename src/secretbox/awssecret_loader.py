@@ -11,9 +11,6 @@ from typing import Any
 
 try:
     import boto3
-    from botocore.exceptions import ClientError
-    from botocore.exceptions import NoCredentialsError
-    from botocore.exceptions import PartialCredentialsError
 except ImportError:
     boto3 = None  # type: ignore
 
@@ -81,17 +78,13 @@ class AWSSecretLoader(AWSLoader):
             return False
 
         secrets: dict[str, str] = {}
-        try:
-            # ensure that boto3 doesn't write sensitive payload to the logger
-            with self.disable_debug_logging():
-                response = aws_client.get_secret_value(SecretId=self.aws_sstore)
 
-        except (NoCredentialsError, ClientError) as err:
-            self.log_aws_error(err)
+        # ensure that boto3 doesn't write sensitive payload to the logger
+        with self.disable_debug_logging():
+            response = aws_client.get_secret_value(SecretId=self.aws_sstore)
 
-        else:
-            secrets = self._resolve_response(response)
-            self._loaded_values.update(secrets)
+        secrets = self._resolve_response(response)
+        self._loaded_values.update(secrets)
 
         return bool(secrets)
 
@@ -113,13 +106,8 @@ class AWSSecretLoader(AWSLoader):
             return None
 
         with self.disable_debug_logging():
-            try:
-                client = boto3.client(
-                    service_name="secretsmanager",
-                    region_name=self.aws_region,
-                )
-            except PartialCredentialsError as err:
-                self.log_aws_error(err)
-                return None
-
+            client = boto3.client(
+                service_name="secretsmanager",
+                region_name=self.aws_region,
+            )
         return client

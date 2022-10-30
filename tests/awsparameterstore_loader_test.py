@@ -7,6 +7,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from botocore.exceptions import ClientError
 from secretbox.awsparameterstore_loader import AWSParameterStoreLoader
 
 boto3_lib = pytest.importorskip("boto3", reason="boto3")
@@ -216,11 +217,12 @@ def test_missing_region(loader: AWSParameterStoreLoader, caplog: Any) -> None:
     assert "Invalid SSM client" in caplog.text
 
 
-def test_client_error_catch_on_load(broken_loader: AWSParameterStoreLoader) -> None:
-    assert not broken_loader._load_values(
-        aws_sstore_name=TEST_PATH,
-        aws_region_name=TEST_REGION,
-    )
+def test_client_error_thrown_on_load(broken_loader: AWSParameterStoreLoader) -> None:
+    with pytest.raises(ClientError):
+        assert not broken_loader._load_values(
+            aws_sstore_name=TEST_PATH,
+            aws_region_name=TEST_REGION,
+        )
 
 
 def test_client_with_region(loader: AWSParameterStoreLoader) -> None:

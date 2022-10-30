@@ -9,6 +9,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from botocore.exceptions import ClientError
 from secretbox import awssecret_loader as awssecret_loader_module
 from secretbox.awssecret_loader import AWSSecretLoader
 
@@ -128,10 +129,11 @@ def test_load_aws_secrets_valid_store_and_invalid_store(
 
         # Reset and test invalid response
         awssecret_loader._loaded_values = {}
-        awssecret_loader._load_values(
-            aws_sstore_name=TEST_STORE_INVALID,
-            aws_region_name=TEST_REGION,
-        )
+        with pytest.raises(ClientError):
+            awssecret_loader._load_values(
+                aws_sstore_name=TEST_STORE_INVALID,
+                aws_region_name=TEST_REGION,
+            )
         assert awssecret_loader.values.get(TEST_KEY_NAME) is None
 
 
