@@ -2,16 +2,15 @@
 from __future__ import annotations
 
 import json
-import os
 from collections.abc import Generator
 from datetime import datetime
 from typing import Any
 from unittest.mock import patch
 
 import pytest
-from botocore.exceptions import ClientError
 from secretbox import awssecret_loader as awssecret_loader_module
 from secretbox.awssecret_loader import AWSSecretLoader
+from secretbox.exceptions import LoaderException
 
 boto3_lib = pytest.importorskip("boto3", reason="boto3")
 mypy_boto3 = pytest.importorskip("mypy_boto3_secretsmanager", reason="mypy_boto3")
@@ -21,6 +20,8 @@ if True:
     import botocore.client
     import botocore.session
     from botocore.client import BaseClient
+    from botocore.exceptions import ClientError
+    from botocore.exceptions import NoCredentialsError
     from botocore.stub import Stubber
 
 TEST_KEY_NAME = "TEST_KEY"
@@ -81,6 +82,18 @@ def awssecret_loader() -> Generator[AWSSecretLoader, None, None]:
     loader = AWSSecretLoader()
     assert not loader.values
     yield loader
+
+
+@pytest.mark.usefixtures("remove_aws_creds")
+def test_load_aws_no_credentials(awssecret_loader: AWSSecretLoader) -> None:
+    """Cause a NoCredentialsError to be handled"""
+    # This will raise both exceptions
+    with pytest.raises((NoCredentialsError, ClientError)):
+        awssecret_loader._load_values(
+            aws_sstore_name=TEST_STORE,
+            aws_region_name=TEST_REGION,
+        )
+    assert not awssecret_loader._loaded_values
 
 
 @pytest.mark.parametrize(
@@ -166,15 +179,18 @@ def test_boto3_stubs_not_installed(
             assert awssecret_loader.values
 
 
-def test_partial_credentials() -> None:
-    with patch.dict(os.environ, {}):
-        os.environ.pop("AWS_SECRET_ACCESS_KEY")
-        loader = AWSSecretLoader("somestore", "us-east-1")
+@pytest.mark.usefixtures("remove_aws_creds")
+def test_invalid_credentials_raises_exception() -> None:
+    loader = AWSSecretLoader("somestore", "us-east-1", capture_exceptions=False)
+
+    with pytest.raises(LoaderException):
         loader.run()
 
 
 @pytest.mark.usefixtures("remove_aws_creds")
-def test_invalid_credentials() -> None:
-    # TODO: Block discovery of aws cred files
-    loader = AWSSecretLoader("somestore", "us-east-1")
-    loader.run()
+def test_invalid_credentials_does_not_raise_exception() -> None:
+    loader = AWSSecretLoader("somestore", "us-east-1", capture_exceptions=True)
+
+    result = loader.run()
+
+    assert result is False

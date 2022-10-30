@@ -6,7 +6,6 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
-from botocore.exceptions import NoCredentialsError
 from secretbox import awssecret_loader as awssecret_loader_module
 from secretbox.awssecret_loader import AWSSecretLoader
 
@@ -23,17 +22,6 @@ def awssecret_loader() -> Generator[AWSSecretLoader, None, None]:
     loader = AWSSecretLoader()
     assert not loader._loaded_values
     yield loader
-
-
-@pytest.mark.usefixtures("remove_aws_creds")
-def test_load_aws_no_credentials(awssecret_loader: AWSSecretLoader) -> None:
-    """Cause a NoCredentialsError to be handled"""
-    with pytest.raises(NoCredentialsError):
-        awssecret_loader._load_values(
-            aws_sstore_name=TEST_STORE,
-            aws_region_name=TEST_REGION,
-        )
-    assert not awssecret_loader._loaded_values
 
 
 @pytest.mark.usefixtures("remove_aws_creds")

@@ -89,7 +89,7 @@ def test_filter_boto_debug_disabled(caplog: Any, awsloader: AWSLoader) -> None:
         logger = logging.getLogger("debug_disabled")
         current_level = logger.root.level
         logger.root.setLevel("DEBUG")
-        awsloader.hide_boto_debug = False
+        awsloader._hide_boto_debug = False
 
         with awsloader.disable_debug_logging():
             logger.debug("DEBUG")
