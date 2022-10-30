@@ -17,6 +17,7 @@ try:
 except ImportError:
     HeadersDict = dict  # type: ignore
 
+from secretbox.exceptions import LoaderException
 from secretbox.loader import Loader
 
 
@@ -61,7 +62,28 @@ class AWSLoader(Loader):
         raise NotImplementedError()
 
     def run(self) -> bool:
-        """To be overrided in child classes"""
+        """
+        Load secrets from AWS. Returns success.
+
+        Raises:
+            secretbox.exceptions.LoaderException
+
+            NOTE: Only raises if `capture_exceptions` is False
+        """
+        try:
+            return self._run()
+
+        # We use a blanket Exception catch here on purpose.
+        except Exception as err:
+            self.log_aws_error(err)
+            if not self._capture_exceptions:
+                raise LoaderException(err) from err
+
+        return False
+
+    def _run(self) -> bool:
+        """Internal run called from self.run()."""
+        # NOTE: To be implemented in child classes.
         raise NotImplementedError()
 
     def get_aws_client(self) -> Any:

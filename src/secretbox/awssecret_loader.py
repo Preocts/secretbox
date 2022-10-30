@@ -33,7 +33,7 @@ class AWSSecretLoader(AWSLoader):
         """Copy of loaded values"""
         return self._loaded_values.copy()
 
-    def run(self) -> bool:
+    def _run(self) -> bool:
         """Load all secrets from given AWS secret store."""
         has_loaded = self._load_values()
 

@@ -31,7 +31,7 @@ class AWSParameterStoreLoader(AWSLoader):
         """Copy of loaded values"""
         return self._loaded_values.copy()
 
-    def run(self) -> bool:
+    def _run(self) -> bool:
         """Load secrets from given AWS parameter store."""
         has_loaded = self._load_values()
 
