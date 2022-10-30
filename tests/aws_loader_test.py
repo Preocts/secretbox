@@ -129,3 +129,19 @@ def test_log_aws_error_with_nonaws_error(awsloader: AWSLoader, caplog: Any) -> N
     except Exception as err:
         awsloader.log_aws_error(err)
     assert "Manufactored exception" in caplog.text
+
+
+def test_log_aws_error_with_aws_error(awsloader: AWSLoader, caplog: Any) -> None:
+    try:
+        raise Exception("Manufactored exception")
+    except Exception as err:
+        setattr(
+            err,
+            "response",
+            {
+                "Error": {"Code": "313", "Message": "AWS error"},
+                "ResponseMetadata": "Beepbeep",
+            },
+        )
+        awsloader.log_aws_error(err)
+    assert "313 - AWS error (Beepbeep)" in caplog.text
