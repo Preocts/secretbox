@@ -26,24 +26,7 @@ from secretbox.aws_loader import AWSLoader
 
 
 class AWSSecretLoader(AWSLoader):
-    def __init__(
-        self,
-        aws_sstore_name: str | None = None,
-        aws_region_name: str | None = None,
-    ) -> None:
-        """
-        Load secrets from an AWS secret manager.
-
-        Args:
-            aws_sstore: Name of the secret store (not the arn)
-                Can be provided through environ `AWS_SSTORE_NAME`
-            aws_region: Regional location of secret store
-                Can be provided through environ `AWS_REGION_NAME` or `AWS_REGION`
-        """
-        self.aws_sstore = aws_sstore_name
-        self.aws_region = aws_region_name
-
-        self._loaded_values: dict[str, str] = {}
+    """Load secrets from an AWS Secret Store"""
 
     @property
     def values(self) -> dict[str, str]:

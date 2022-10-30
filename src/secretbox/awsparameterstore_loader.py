@@ -26,25 +26,6 @@ except ImportError:
 class AWSParameterStoreLoader(AWSLoader):
     """Load secrets from an AWS Parameter Store"""
 
-    def __init__(
-        self,
-        aws_sstore_name: str | None = None,
-        aws_region_name: str | None = None,
-    ) -> None:
-        """
-        Load secrets from AWS parameter store.
-
-        Args:
-            aws_sstore: Name of parameter or path of parameters if endings with `/`
-                Can be provided through environ `AWS_SSTORE_NAME`
-            aws_region: Regional Location of parameter(s)
-                Can be provided through environ `AWS_REGION_NAME` or `AWS_REGION`
-        """
-        self.aws_sstore = aws_sstore_name
-        self.aws_region = aws_region_name
-
-        self._loaded_values: dict[str, str] = {}
-
     @property
     def values(self) -> dict[str, str]:
         """Copy of loaded values"""
