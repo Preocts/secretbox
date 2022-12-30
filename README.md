@@ -59,7 +59,7 @@ optional package for your deploy.*
 
 This loads the system environ and the `.env` from the current working directory
 into the class state for quick reference. Loaded secrets can be accessed from
-the `.values` property or from other methods such as `os.getenviron()`.
+the `.get()` method or from other methods such as `os.getenviron()`.
 
 ```python
 from secretbox import SecretBox
@@ -69,7 +69,7 @@ secrets = SecretBox(auto_load=True)
 
 def main() -> int:
     """Main function"""
-    my_sevice_password = secrets.values.get("SERVICE_PW")
+    my_sevice_password = secrets.get("SERVICE_PW")
     # More code
     return 0
 
@@ -104,7 +104,7 @@ def main() -> int:
         secrets.EnvFileLoader("sandbox/.override_env"),
     )
 
-    my_sevice_password = secrets.values.get("SERVICE_PW")
+    my_sevice_password = secrets.get("SERVICE_PW")
     # More code
     return 0
 
@@ -129,7 +129,7 @@ secrets.run()
 
 def main() -> int:
     """Main function"""
-    my_sevice_password = secrets.values.get("SERVICE_PW")
+    my_sevice_password = secrets.get("SERVICE_PW")
     # More code
     return 0
 
