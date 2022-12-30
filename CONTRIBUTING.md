@@ -17,8 +17,7 @@ development of the project!
 
 Create your own fork of this repo that you will make your changes on.
 
-See the [Developer Installation Document](docs/development.md) for installation
-instructions.
+See the [README.md](README.md) for installation instructions.
 
 ## Creating your feature
 

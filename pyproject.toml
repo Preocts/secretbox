@@ -45,9 +45,6 @@ aws = [
 
 [project.urls]
 homepage = "https://github.com/Preocts/secretbox"
-documentation = "https://github.com/Preocts/secretbox/README.md"
-repository = "https://github.com/Preocts/secretbox"
-# changelog = ""
 
 [tool.setuptools.package-data]
 "secretbox" = ["py.typed"]
@@ -92,7 +89,6 @@ exclude_lines =[
     "if __name__ == .__main__.:",
     "\\.\\.\\.",
 ]
-ignore_errors = true
 
 
 # This is ignored by flake8, here in case they decide to add it in the future
@@ -127,7 +123,7 @@ deps =
     .[aws]
     mypy
 commands =
-    mypy -p secretbox
+    mypy -p secretbox --no-incremental
 
 [testenv:pre-commit]
 skip_install = true
