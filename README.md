@@ -4,7 +4,6 @@
 
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/Preocts/python-template/main.svg)](https://results.pre-commit.ci/latest/github/Preocts/python-template/main)
 [![Python Tests](https://github.com/Preocts/secretbox/actions/workflows/python-tests.yml/badge.svg)](https://github.com/Preocts/secretbox/actions/workflows/python-tests.yml)
-[![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/Preocts/f26cb21234ff10087c74b977705af024/raw/secretbox-main)](https://nedbatchelder.com/blog/202209/making_a_coverage_badge.html)
 
 # secretbox
 
@@ -391,7 +390,7 @@ $ pre-commit run --all-files
 Run tests:
 
 ```console
-$ tox [-r] [-e py3x]
+$ tox
 ```
 
 Build dist:
@@ -442,11 +441,10 @@ This repo has a Makefile with some quality of life scripts if the system
 supports `make`.  Please note there are no checks for an active `venv` in the
 Makefile.
 
-| PHONY         | Description                                                                |
-| ------------- | -------------------------------------------------------------------------- |
-| `init`        | Update pip to newest version                                               |
-| `install`     | install the project                                                        |
-| `install-dev` | install development/test requirements and project as editable install      |
-| `upgrade-dev` | update all dependencies, regenerate requirements.txt (disabled by default) |
-| `build-dist`  | Build source distribution and wheel distribution                           |
-| `clean`       | Deletes build, tox, coverage, pytest, mypy, cache, and pyc artifacts       |
+| PHONY         | Description                                                           |
+| ------------- | --------------------------------------------------------------------- |
+| `init`        | Update pip to newest version                                          |
+| `install`     | install the project                                                   |
+| `install-dev` | install development/test requirements and project as editable install |
+| `build-dist`  | Build source distribution and wheel distribution                      |
+| `clean`       | Deletes build, tox, coverage, pytest, mypy, cache, and pyc artifacts  |
