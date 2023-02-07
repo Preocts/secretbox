@@ -131,7 +131,6 @@ def test_load_aws_secrets_valid_store_and_invalid_store(
 ) -> None:
     """Load a secret from mocked AWS secret server"""
     with patch.object(awssecret_loader, "get_aws_client", return_value=mockclient):
-
         # Test valid response
         awssecret_loader._load_values(
             aws_sstore_name=TEST_STORE,
@@ -156,7 +155,6 @@ def test_load_aws_secrets_with_run(
     awssecret_loader.aws_sstore = TEST_STORE
     awssecret_loader.aws_region = TEST_REGION
     with patch.object(awssecret_loader, "get_aws_client", return_value=mockclient):
-
         result = awssecret_loader.run()
 
     assert result is True

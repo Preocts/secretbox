@@ -89,7 +89,6 @@ class AWSParameterStoreLoader(AWSLoader):
         with self.disable_debug_logging():
             # loop through next page tokens, page size caps at 10
             while True:
-
                 resp = aws_client.get_parameters_by_path(**args)
 
                 # Process results, break if finished
