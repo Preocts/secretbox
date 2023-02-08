@@ -22,7 +22,6 @@ def awsloader() -> Generator[AWSLoader, None, None]:
 def test_run_raises_with_flag(awsloader: AWSLoader) -> None:
     awsloader._capture_exceptions = False
     with patch.object(awsloader, "_run", side_effect=Exception) as run:
-
         with pytest.raises(LoaderException):
             awsloader.run()
 
@@ -32,7 +31,6 @@ def test_run_raises_with_flag(awsloader: AWSLoader) -> None:
 def test_run_does_not_rause_with_flag(awsloader: AWSLoader) -> None:
     awsloader._capture_exceptions = True
     with patch.object(awsloader, "_run", side_effect=Exception) as run:
-
         result = awsloader.run()
 
     assert run.call_count == 1
