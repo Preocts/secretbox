@@ -1,4 +1,4 @@
-[![Python 3.7 | 3.8 | 3.9 | 3.10 | 3.11](https://img.shields.io/badge/Python-3.7%20%7C%203.8%20%7C%203.9%20%7C%203.10%20%7C%203.11-blue)](https://www.python.org/downloads)
+[![Python 3.8 | 3.9 | 3.10 | 3.11](https://img.shields.io/badge/Python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11-blue)](https://www.python.org/downloads)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 
@@ -443,8 +443,8 @@ Makefile.
 
 | PHONY         | Description                                                           |
 | ------------- | --------------------------------------------------------------------- |
-| `init`        | Update pip to newest version                                          |
-| `install`     | install the project                                                   |
 | `install-dev` | install development/test requirements and project as editable install |
+| `coverage`    | Run tests with coverage, generate console report                      |
+| `docker-test' | Run coverage and tests in a docker container.                         |
 | `build-dist`  | Build source distribution and wheel distribution                      |
 | `clean`       | Deletes build, tox, coverage, pytest, mypy, cache, and pyc artifacts  |
