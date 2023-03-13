@@ -94,3 +94,12 @@ def test_set_converts_to_str(secretbox: SecretBox) -> None:
     secretbox.set("TEST", 42)  # type: ignore
     assert secretbox.get("TEST") == "42"
     assert os.getenv("TEST") == "42"
+
+
+def test_is_set(secretbox: SecretBox) -> None:
+    env = {"TEST_IS_SET": "TEST"}
+    with patch.dict(os.environ, env):
+        secretbox.use_loaders(EnvironLoader())
+
+        assert secretbox.is_set("TEST_IS_SET") is True
+        assert secretbox.is_set("TEST_IS_NOT_SET") is False

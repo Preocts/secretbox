@@ -132,3 +132,7 @@ class SecretBox:
         value = str(value)
         self._loaded_values[key] = value
         self._push_to_environment()
+
+    def is_set(self, key: str) -> bool:
+        """Returns true if key is set in the loaded values."""
+        return key in self._loaded_values
