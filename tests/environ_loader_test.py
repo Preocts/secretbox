@@ -6,6 +6,7 @@ from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
+
 from secretbox.environ_loader import EnvironLoader
 
 MOCK_ENV = {

@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "secretbox"
 version = "2.7.0"
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 description = "A library that offers a simple method of loading and accessing environmental variables and `.env` file values."
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -89,39 +89,3 @@ exclude_lines =[
     "if __name__ == .__main__.:",
     "\\.\\.\\.",
 ]
-
-
-# This is ignored by flake8, here in case they decide to add it in the future
-[tool.flake8]
-ignore = "W503,E203"
-max-line-length = 88
-
-[tool.tox]
-legacy_tox_ini = """
-[tox]
-envlist = py38,py39,py310,py311,py312,coverage,mypy
-skip_missing_interpreters = true
-isolated_build = True
-
-[testenv]
-deps = .[test]
-commands =
-    coverage run --parallel-mode -m pytest {posargs:tests}
-    python -m pip install .[aws]
-    coverage run --parallel-mode -m pytest {posargs:tests}
-
-[testenv:coverage]
-depends = py38,py39,py310,py311
-parallel_show_output = true
-commands =
-    coverage combine
-    coverage report --fail-under 95 -m
-    coverage json
-
-[testenv:mypy]
-deps =
-    .[aws]
-    mypy
-commands =
-    mypy -p secretbox --no-incremental
-"""

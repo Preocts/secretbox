@@ -5,8 +5,8 @@ from __future__ import annotations
 from collections.abc import Generator
 
 import pytest
-from secretbox.envfile_loader import EnvFileLoader
 
+from secretbox.envfile_loader import EnvFileLoader
 from tests.conftest import ENV_FILE_EXPECTED
 
 
