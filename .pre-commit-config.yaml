@@ -61,6 +61,3 @@ repos:
     rev: v1.4.1
     hooks:
       - id: mypy
-        args:
-          - "--no-warn-unused-ignores"
-          - "--ignore-missing-imports"
