@@ -12,11 +12,6 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from typing import Any
 
-try:
-    from botocore.awsrequest import HeadersDict
-except ImportError:
-    HeadersDict = dict  # type: ignore
-
 from secretbox.exceptions import LoaderException
 from secretbox.loader import Loader
 
