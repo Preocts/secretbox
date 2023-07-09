@@ -5,6 +5,7 @@ from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
+
 from secretbox import awsparameterstore_loader as ssm_loader_module
 from secretbox.awsparameterstore_loader import AWSParameterStoreLoader
 

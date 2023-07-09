@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+
 from secretbox.awsparameterstore_loader import AWSParameterStoreLoader
 
 boto3_lib = pytest.importorskip("boto3", reason="boto3")

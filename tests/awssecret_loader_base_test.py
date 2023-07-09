@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+
 from secretbox import awssecret_loader as awssecret_loader_module
 from secretbox.awssecret_loader import AWSSecretLoader
 

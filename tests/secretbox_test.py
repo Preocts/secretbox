@@ -7,10 +7,10 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+
 from secretbox import EnvFileLoader
 from secretbox import EnvironLoader
 from secretbox import SecretBox
-
 from tests.conftest import ENV_FILE_EXPECTED
 
 
