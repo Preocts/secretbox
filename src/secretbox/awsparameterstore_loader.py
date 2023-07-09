@@ -6,18 +6,21 @@ SCM Repo    : https://github.com/Preocts/secretbox
 from __future__ import annotations
 
 from typing import Any
+from typing import TYPE_CHECKING
 
 from secretbox.aws_loader import AWSLoader
 
 try:
     import boto3
 except ImportError:
-    boto3 = None  # type: ignore
+    if not TYPE_CHECKING:
+        boto3 = None
 
 try:
     from mypy_boto3_ssm.client import SSMClient
 except ImportError:
-    SSMClient = None  # type: ignore
+    if not TYPE_CHECKING:
+        SSMClient = None
 
 
 class AWSParameterStoreLoader(AWSLoader):

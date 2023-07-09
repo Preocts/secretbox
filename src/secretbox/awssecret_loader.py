@@ -8,16 +8,19 @@ from __future__ import annotations
 
 import json
 from typing import Any
+from typing import TYPE_CHECKING
 
 try:
     import boto3
 except ImportError:
-    boto3 = None  # type: ignore
+    if not TYPE_CHECKING:
+        boto3 = None
 
 try:
     from mypy_boto3_secretsmanager.client import SecretsManagerClient
 except ImportError:
-    SecretsManagerClient = None  # type: ignore
+    if not TYPE_CHECKING:
+        SecretsManagerClient = None
 
 from secretbox.aws_loader import AWSLoader
 
