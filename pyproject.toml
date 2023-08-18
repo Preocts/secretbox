@@ -35,7 +35,7 @@ test = [
     "pytest",
     "pytest-randomly",
     "coverage",
-    "tox"
+    "nox"
 ]
 aws = [
     "boto3>=1.18.56",
