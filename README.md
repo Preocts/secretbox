@@ -25,7 +25,7 @@ Exceptions will be raised from their source as `LoaderException`.
 
 ### Requirements
 
-- Python >=3.7
+- Python >=3.8
 
 ### Optional Dependencies
 
@@ -390,7 +390,7 @@ $ pre-commit run --all-files
 Run tests:
 
 ```console
-$ tox
+$ nox
 ```
 
 Build dist:
@@ -447,4 +447,4 @@ Makefile.
 | `coverage`    | Run tests with coverage, generate console report                      |
 | `docker-test' | Run coverage and tests in a docker container.                         |
 | `build-dist`  | Build source distribution and wheel distribution                      |
-| `clean`       | Deletes build, tox, coverage, pytest, mypy, cache, and pyc artifacts  |
+| `clean`       | Deletes build, nox, coverage, pytest, mypy, cache, and pyc artifacts  |
