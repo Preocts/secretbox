@@ -1,5 +1,7 @@
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = [
+    "setuptools",
+]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -10,7 +12,7 @@ description = "A library that offers a simple method of loading and accessing en
 readme = "README.md"
 license = { file = "LICENSE" }
 authors = [
-    { email = "preocts@preocts.com", name = "Preocts" }
+    { email = "preocts@preocts.com", name = "Preocts" },
 ]
 maintainers = []
 keywords = []
@@ -18,7 +20,7 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: Implementation :: CPython"
+    "Programming Language :: Python :: Implementation :: CPython",
 ]
 dependencies = []
 
@@ -35,19 +37,21 @@ test = [
     "pytest",
     "pytest-randomly",
     "coverage",
-    "nox"
+    "nox",
 ]
 aws = [
     "boto3>=1.18.56",
     "boto3-stubs[secretsmanager]>=1.18.55",
-    "boto3-stubs[ssm]>=1.18.55"
+    "boto3-stubs[ssm]>=1.18.55",
 ]
 
 [project.urls]
 homepage = "https://github.com/Preocts/secretbox"
 
 [tool.setuptools.package-data]
-"secretbox" = ["py.typed"]
+"secretbox" = [
+    "py.typed",
+]
 
 [tool.mypy]
 check_untyped_defs = true
