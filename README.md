@@ -318,7 +318,7 @@ contributing to the repo.
 
 ## Prerequisites
 
-### Clone repo:
+### Clone repo
 
 ```bash
 git clone https://github.com/Preocts/secretbox
@@ -343,7 +343,7 @@ the desired version while creating the `venv`. (e.g. `python3` or `python3.8`)
 `python` for command line instructions. This will ensure you are using the
 `venv`'s python and not the system level python.
 
-### Create the `venv`:
+### Create the `venv`
 
 ```console
 python -m venv venv
@@ -372,13 +372,13 @@ deactivate
 
 ## Developer Installation Steps
 
-### Install editable library and development requirements:
+### Install editable library and development requirements
 
 ```console
 $ python -m pip install --editable .[dev,test]
 ```
 
-### Install pre-commit [(see below for details)](#pre-commit):
+### Install pre-commit [(see below for details)](#pre-commit)
 
 ```console
 $ pre-commit install
@@ -388,25 +388,25 @@ $ pre-commit install
 
 ## Pre-commit and nox tools
 
-### Run pre-commit on all files:
+### Run pre-commit on all files
 
 ```console
 pre-commit run --all-files
 ```
 
-### Run tests with coverage (quick):
+### Run tests with coverage (quick)
 
 ```console
 nox -e coverage
 ```
 
-### Run tests (slow):
+### Run tests (slow)
 
 ```console
 nox
 ```
 
-### Build dist:
+### Build dist
 
 ```console
 nox -e build
@@ -423,6 +423,6 @@ any code submitted for review already passes all selected pre-commit checks.
 
 ---
 
-## Error: File "setup.py" not found.
+## Error: File "setup.py" not found
 
 Update `pip` to at least version 22.3.1
