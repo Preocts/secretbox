@@ -432,19 +432,3 @@ This repo is setup with a `.pre-commit-config.yaml` with the expectation that
 any code submitted for review already passes all selected pre-commit checks.
 `pre-commit` is installed with the development requirements and runs seemlessly
 with `git` hooks.
-
----
-
-## Makefile
-
-This repo has a Makefile with some quality of life scripts if the system
-supports `make`.  Please note there are no checks for an active `venv` in the
-Makefile.
-
-| PHONY         | Description                                                           |
-| ------------- | --------------------------------------------------------------------- |
-| `install-dev` | install development/test requirements and project as editable install |
-| `coverage`    | Run tests with coverage, generate console report                      |
-| `docker-test' | Run coverage and tests in a docker container.                         |
-| `build-dist`  | Build source distribution and wheel distribution                      |
-| `clean`       | Deletes build, nox, coverage, pytest, mypy, cache, and pyc artifacts  |
