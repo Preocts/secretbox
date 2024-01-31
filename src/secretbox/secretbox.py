@@ -4,6 +4,7 @@ Loads various environment variables/secrets for use
 Author  : Preocts <Preocts#8196>
 Git Repo: https://github.com/Preocts/secretbox
 """
+
 from __future__ import annotations
 
 import logging

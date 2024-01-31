@@ -1,4 +1,5 @@
 """Global fixtures and statics"""
+
 from __future__ import annotations
 
 import os
@@ -7,7 +8,6 @@ from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
-
 
 AWS_ENV_KEYS = [
     "AWS_ACCESS_KEY",

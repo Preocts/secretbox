@@ -1,4 +1,5 @@
 """Simple test to ensure we read environ"""
+
 from __future__ import annotations
 
 import os

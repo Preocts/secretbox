@@ -14,6 +14,7 @@ I'm open to suggestions on standards to follow here.
 Author  : Preocts <Preocts#8196>
 Git Repo: https://github.com/Preocts/secretbox
 """
+
 from __future__ import annotations
 
 import logging

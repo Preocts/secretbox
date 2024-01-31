@@ -1,4 +1,5 @@
 """Unit tests for aws secrect manager interactions with boto3"""
+
 from __future__ import annotations
 
 import json
