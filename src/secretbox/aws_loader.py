@@ -4,6 +4,7 @@ Super class for AWS secrets manager and parameter store loaders
 Author  : Preocts <preocts#8196>
 Git Repo: https://github.com/Preocts/secretbox
 """
+
 from __future__ import annotations
 
 import logging

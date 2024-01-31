@@ -4,6 +4,7 @@ Load system environ values
 Author  : Preocts <Preocts#8196>
 Git Repo: https://github.com/Preocts/secretbox
 """
+
 from __future__ import annotations
 
 import logging

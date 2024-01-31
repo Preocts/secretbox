@@ -4,11 +4,12 @@ Load secrets from an AWS secret manager
 Author  : Preocts <Preocts#8196>
 Git Repo: https://github.com/Preocts/secretbox
 """
+
 from __future__ import annotations
 
 import json
-from typing import Any
 from typing import TYPE_CHECKING
+from typing import Any
 
 try:
     import boto3

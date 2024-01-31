@@ -3,10 +3,11 @@ Author      : James McKain (@jjmckain)
 Created     : 2021-12-10
 SCM Repo    : https://github.com/Preocts/secretbox
 """
+
 from __future__ import annotations
 
-from typing import Any
 from typing import TYPE_CHECKING
+from typing import Any
 
 from secretbox.aws_loader import AWSLoader
 

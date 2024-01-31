@@ -1,4 +1,5 @@
 """Unit tests for aws loader"""
+
 from __future__ import annotations
 
 import logging

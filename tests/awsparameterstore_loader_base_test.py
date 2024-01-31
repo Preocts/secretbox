@@ -1,4 +1,5 @@
 """Unit tests for aws parameter store interactions without boto3"""
+
 from __future__ import annotations
 
 from collections.abc import Generator
