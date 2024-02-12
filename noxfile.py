@@ -11,17 +11,17 @@ COVERAGE_FAIL_UNDER = 100
 
 # What we allowed to clean (delete)
 CLEANABLE_TARGETS = [
-    "./**/dist",
-    "./**/build",
-    "./**/.nox",
+    "./dist",
+    "./build",
+    "./.nox",
+    "./.coverage",
+    "./.coverage.*",
+    "./coverage.json",
     "./**/.mypy_cache",
     "./**/.pytest_cache",
-    "./**/.coverage",
     "./**/__pycache__",
     "./**/*.pyc",
     "./**/*.pyo",
-    "./**/coverage.json",
-    "./**/.coverage.*",
 ]
 
 # Define the default sessions run when `nox` is called on the CLI
