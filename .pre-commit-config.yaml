@@ -4,7 +4,7 @@ ci:
 repos:
   # Batch of helpful formatters and patterns
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: "v4.6.0"
+    rev: "v5.0.0"
     hooks:
       - id: check-json
       - id: check-toml
@@ -29,13 +29,13 @@ repos:
 
   # Format code. No, I don't like everything black does either.
   - repo: https://github.com/psf/black-pre-commit-mirror
-    rev: 24.4.2
+    rev: 24.10.0
     hooks:
       - id: black
 
   # Flake8 for linting, line-length adjusted to match Black default
   - repo: https://github.com/PyCQA/flake8
-    rev: 7.1.0
+    rev: 7.1.1
     hooks:
       - id: flake8
         additional_dependencies:
@@ -44,6 +44,6 @@ repos:
 
   # Type enforcement for Python
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.10.1
+    rev: v1.11.2
     hooks:
       - id: mypy
