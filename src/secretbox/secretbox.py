@@ -46,3 +46,31 @@ class SecretBox:
             raise TypeError(msg)
 
         self._loaded_values[key] = value
+
+    def get(self, key: str, default: str | None = None) -> str:
+        """
+        Get a value from the SecretBox. If default is provided and the value is not found, return the default instead.
+
+        Args:
+            key: Key index to lookup
+            default: A default return value. If provided, must be a string
+
+        Raises:
+            ValueError: If default is provided but not as a string
+            KeyError: If the key is not present and the default value is None
+        """
+        if default is not None and not isinstance(default, str):
+            msg = f"Default value must be provided as a str. Given {type(default).__name__} instead."
+            raise ValueError(msg)
+
+        try:
+            value = self._loaded_values[key]
+
+        except KeyError as err:
+            if default is not None:
+                value = default
+
+            else:
+                raise err
+
+        return value
