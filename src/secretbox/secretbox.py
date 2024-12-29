@@ -74,3 +74,42 @@ class SecretBox:
                 raise err
 
         return value
+
+    def get_int(self, key: str, default: int | None = None) -> int:
+        """
+        Get a value from SecretBox, converting it to an int.
+
+        If default is provided and the value is not found, return the default instead.
+
+        Args:
+            key: Key index to lookup
+            default: A default return value. If provided, must be an int
+
+        Raises:
+            ValueError: If the discovered value cannot be converted to an int
+            TypeError: If default is provided but is not an int
+            KeyError: If the key is not present and the default value is None
+        """
+        if default is not None and not isinstance(default, int):
+            msg = f"Default value must be provided as a int. Given {type(default).__name__} instead."
+            raise TypeError(msg)
+
+        try:
+            # TODO
+            # There is the question of what to do with floats here. If the value is a
+            # float it will successfully be converted to an int. However, that changes
+            # the value. We should likely raise an exception in this case.
+            value = int(self._loaded_values[key])
+
+        except KeyError as err:
+            if default is not None:
+                value = default
+
+            else:
+                raise err
+
+        except ValueError as err:
+            msg = f"The value paired with key '{key}` could not be converted to an int."
+            raise ValueError(msg) from err
+
+        return value
