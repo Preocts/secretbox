@@ -77,13 +77,6 @@ def coverage(session: nox.Session) -> None:
 
 
 @nox.session(python=False)
-def docker(session: nox.Session) -> None:
-    """Run tests in a docker container. Requires docker damon running."""
-    session.run("docker", "build", "-t", "pydocker-test", ".")
-    session.run("docker", "run", "-it", "--rm", "pydocker-test")
-
-
-@nox.session(python=False)
 def clean(_: nox.Session) -> None:
     """Clean cache, .pyc, .pyo, and test/build artifact files from project."""
     count = 0
