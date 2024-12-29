@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-import os
-from unittest.mock import patch
-
 import pytest
 
 from secretbox import SecretBox
@@ -15,8 +12,10 @@ def simple_box() -> SecretBox:
         "foo": "bar",
         "biz": "baz",
     }
-    with patch.dict(os.environ, simple_values, clear=True):
-        sb = SecretBox(load_environ=True)
+    sb = SecretBox()
+
+    for key, value in simple_values.items():
+        sb[key] = value
 
     return sb
 
@@ -31,19 +30,6 @@ def test_loaded_value_property_is_copy(simple_box: SecretBox) -> None:
     assert first_values != second_values
 
 
-def test_init_loads_environment_variables() -> None:
-    # Test that we load the existing environment variables and nothing
-    # else at the time of initialization.
-
-    expected_values = {"FOO": "bar"}
-
-    with patch.dict(os.environ, expected_values, clear=True):
-        sb = SecretBox(load_environ=True)
-    loaded_values = sb.loaded_values
-
-    assert loaded_values == expected_values
-
-
 def test_init_is_empty_when_created() -> None:
     # Creating a SecretBox instance should yield an empty box
     sb = SecretBox()
@@ -55,7 +41,7 @@ def test_init_is_empty_when_created() -> None:
 
 def test_get_item_returns_expected(simple_box: SecretBox) -> None:
     # SecretBox should behave like a dictionary when needed
-    expected_key = "FOO"
+    expected_key = "foo"
     expected_value = "bar"
 
     value = simple_box[expected_key]
@@ -65,7 +51,7 @@ def test_get_item_returns_expected(simple_box: SecretBox) -> None:
 
 def test_get_item_is_case_sensitive(simple_box: SecretBox) -> None:
     # Always raise a KeyError if the key is not found
-    invalid_key = "foo"
+    invalid_key = "FOO"
 
     with pytest.raises(KeyError):
         simple_box[invalid_key]
@@ -78,14 +64,14 @@ def test_set_item_accepts_valid_values(simple_box: SecretBox) -> None:
 
     simple_box["foo"] = expected_value
 
-    updated_value = simple_box["FOO"]
+    updated_value = simple_box["foo"]
     assert updated_value == expected_value
 
 
 def test_set_item_raises_with_invalid_value(simple_box: SecretBox) -> None:
     # SecretBox should only accept strings as values
     with pytest.raises(TypeError):
-        simple_box["foo"] = 1  # type: ignore
+        simple_box["FOO"] = 1  # type: ignore
 
 
 def test_set_item_raises_with_invalid_key(simple_box: SecretBox) -> None:
