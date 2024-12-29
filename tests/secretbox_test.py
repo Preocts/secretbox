@@ -107,9 +107,9 @@ def test_get_raises_keyerror_when_key_not_exists(simple_box: SecretBox) -> None:
         simple_box.get("cardinal")
 
 
-def test_get_raises_valueerror_default_is_not_string(simple_box: SecretBox) -> None:
+def test_get_raises_typeerror_default_is_not_string(simple_box: SecretBox) -> None:
     # Type guarding the default value to ensure .get() always returns a string
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         simple_box.get("answer", 42)  # type: ignore
 
 
