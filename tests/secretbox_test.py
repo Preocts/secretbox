@@ -78,3 +78,35 @@ def test_set_item_raises_with_invalid_key(simple_box: SecretBox) -> None:
     # SecretBox should only accept strings as keys
     with pytest.raises(TypeError):
         simple_box[1] = "flapjack"  # type: ignore
+
+
+def test_get_returns_expected_value(simple_box: SecretBox) -> None:
+    # .get("foo") should work the same as ["foo"] when the key exists
+    expected_value = "bar"
+
+    value = simple_box.get("foo")
+
+    assert value == expected_value
+
+
+def test_get_returns_default_when_key_not_exists(simple_box: SecretBox) -> None:
+    # Like .get() on dictionaries, return the default if provided when the key
+    # doens't exist
+    expected_value = "flapjack"
+
+    value = simple_box.get("cardinal", expected_value)
+
+    assert value == expected_value
+
+
+def test_get_raises_keyerror_when_key_not_exists(simple_box: SecretBox) -> None:
+    # Unlike dictionaries, if the default value is not provided None will not
+    # be returned. Secretbox enforces a string return value.
+    with pytest.raises(KeyError):
+        simple_box.get("cardinal")
+
+
+def test_get_raises_valueerror_default_is_not_string(simple_box: SecretBox) -> None:
+    # Type guarding the default value to ensure .get() always returns a string
+    with pytest.raises(ValueError):
+        simple_box.get("answer", 42)  # type: ignore
