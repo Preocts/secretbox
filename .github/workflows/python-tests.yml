@@ -1,14 +1,15 @@
 name: "python tests and coverage"
 # Uses:
-# https://github.com/actions/setup-python
-# https://github.com/actions/checkout
-# https://github.com/actions/download-artifact
-# https://github.com/actions/upload-artifact
+# https://github.com/actions/setup-python : 0b93645e9fea7318ecaed2b359559ac225c90a2b
+# https://github.com/actions/checkout : 11bd71901bbe5b1630ceea73d27597364c9af683
+# https://github.com/actions/download-artifact : fa0a91b85d4f404e444e00e005971372dc801d16
+# https://github.com/actions/upload-artifact : 6f51ac03b9356f520e9adb1b1b7802705f340c2b
 
 on:
   pull_request:
     branches:
       - "main"
+      - "staging-*"
   push:
     branches:
       - "main"
@@ -25,18 +26,18 @@ jobs:
           - "windows-latest"
           - "ubuntu-latest"
         python-version:
-          - "3.8"
           - "3.9"
           - "3.10"
           - "3.11"
           - "3.12"
+          - "3.13"
 
     steps:
       - name: "Repo checkout"
-        uses: "actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9"
+        uses: "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683"
 
       - name: "Set up Python ${{ matrix.python-version }}"
-        uses: "actions/setup-python@61a6322f88396a6271a6ee3565807d608ecaddd1"
+        uses: "actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b"
         with:
           python-version: "${{ matrix.python-version }}"
           allow-prereleases: true
@@ -50,11 +51,12 @@ jobs:
           nox --session tests_with_coverage-${{ matrix.python-version }}
 
       - name: "Save coverage artifact"
-        uses: "actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce"
+        uses: "actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b"
         with:
-          name: "coverage-artifact"
+          name: "coverage-artifact-${{ matrix.os}}-${{ matrix.python-version}}"
           path: ".coverage.*"
           retention-days: 1
+          include-hidden-files: true
 
   coverage-compile:
     name: "coverage compile"
@@ -62,21 +64,22 @@ jobs:
     runs-on: "ubuntu-latest"
     steps:
       - name: "Repo checkout"
-        uses: "actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9"
+        uses: "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683"
 
       - name: "Set up Python"
-        uses: "actions/setup-python@61a6322f88396a6271a6ee3565807d608ecaddd1"
+        uses: "actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b"
         with:
-          python-version: "3.10"
+          python-version: "3.12"
 
       - name: "Install nox"
         run: |
           python -m pip install --upgrade pip nox
 
       - name: "Download coverage artifacts"
-        uses: "actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a"
+        uses: "actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16"
         with:
-          name: coverage-artifact
+          pattern: "coverage-artifact-*"
+          merge-multiple: true
 
       - name: "Compile coverage data, print report"
         run: |
@@ -90,12 +93,12 @@ jobs:
     runs-on: "ubuntu-latest"
     steps:
       - name: "Repo checkout"
-        uses: "actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9"
+        uses: "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683"
 
       - name: "Set up Python"
-        uses: "actions/setup-python@61a6322f88396a6271a6ee3565807d608ecaddd1"
+        uses: "actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b"
         with:
-          python-version: "3.10"
+          python-version: "3.12"
 
       - name: "Install nox"
         run: |
@@ -104,12 +107,3 @@ jobs:
       - name: "Enforce strict type annotations with mypy"
         run: |
           nox --session mypy_check
-
-  ci-success:
-    name: "CI steps all completed successfully"
-    needs: ["coverage-compile", "mypy-check"]
-    runs-on: "ubuntu-latest"
-    steps:
-      - name: "Success"
-        run: |
-          echo "If you are seeing this, the CI run was successful."
