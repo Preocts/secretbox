@@ -11,6 +11,7 @@ def simple_box() -> SecretBox:
     simple_values = {
         "foo": "bar",
         "biz": "baz",
+        "answer": "42",
     }
     sb = SecretBox()
 
@@ -110,3 +111,41 @@ def test_get_raises_valueerror_default_is_not_string(simple_box: SecretBox) -> N
     # Type guarding the default value to ensure .get() always returns a string
     with pytest.raises(ValueError):
         simple_box.get("answer", 42)  # type: ignore
+
+
+def test_get_int_returns_expected_value(simple_box: SecretBox) -> None:
+    # .get_int() translates a value to an int
+    expected_value = 42
+
+    value = simple_box.get_int("answer")
+
+    assert value == expected_value
+
+
+def test_get_int_returns_default_when_key_not_exists(simple_box: SecretBox) -> None:
+    # Like .get() on dictionaries, return the default if provided when the key
+    # doens't exist
+    expected_value = 69
+
+    value = simple_box.get_int("nice", expected_value)
+
+    assert value == expected_value
+
+
+def test_get_int_raises_keyerror_when_key_not_exists(simple_box: SecretBox) -> None:
+    # Unlike dictionaries, if the default value is not provided None will not
+    # be returned. Secretbox enforces a string return value.
+    with pytest.raises(KeyError):
+        simple_box.get_int("cardinal")
+
+
+def test_get_int_raises_typeerror_default_is_not_int(simple_box: SecretBox) -> None:
+    # Type guarding the default value to ensure .get() always returns a string
+    with pytest.raises(TypeError):
+        simple_box.get_int("answer", "42")  # type: ignore
+
+
+def test_get_int_raises_valueerror_on_convert_error(simple_box: SecretBox) -> None:
+    # If the value cannot be converted to an int, raise ValueError
+    with pytest.raises(ValueError):
+        simple_box.get_int("foo")
