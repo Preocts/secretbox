@@ -1,106 +1,94 @@
-"""Unit tests against secretbox.py"""
-
 from __future__ import annotations
 
 import os
-from collections.abc import Generator
-from typing import Any
 from unittest.mock import patch
 
 import pytest
 
-from secretbox import EnvFileLoader
-from secretbox import EnvironLoader
 from secretbox import SecretBox
-from tests.conftest import ENV_FILE_EXPECTED
 
 
 @pytest.fixture
-def secretbox() -> Generator[SecretBox, None, None]:
-    """Default instance of LoadEnv"""
-    secrets = SecretBox()
-    assert not secrets.values
-    yield secrets
+def simple_box() -> SecretBox:
+    # Create a SecretBox with a simple value loaded for testing
+    simple_values = {
+        "foo": "bar",
+        "biz": "baz",
+    }
+    with patch.dict(os.environ, simple_values, clear=True):
+        sb = SecretBox(load_environ=True)
+
+    return sb
 
 
-def test_load_from_with_unknown(secretbox: SecretBox, mock_env_file: str) -> None:
-    """Load secrets, throw an unknown loader in to ensure clean fall-through"""
-    assert not secretbox.values
-    secretbox.load_from(["envfile", "unknown"], filename=mock_env_file)
-    assert secretbox.values
+def test_loaded_value_property_is_copy(simple_box: SecretBox) -> None:
+    # Ensure the property is not returning a reference to the internal dict
+    first_values = simple_box.loaded_values
+    first_values["foo"] = "baz"
+
+    second_values = simple_box.loaded_values
+
+    assert first_values != second_values
 
 
-def test_use_loader_environ_file(secretbox: SecretBox, mock_env_file: str) -> None:
-    with patch.dict(os.environ, {}):
-        secretbox.use_loaders(EnvFileLoader(mock_env_file))
-        for key, value in ENV_FILE_EXPECTED.items():
-            assert os.getenv(key) == value
+def test_init_loads_environment_variables() -> None:
+    # Test that we load the existing environment variables and nothing
+    # else at the time of initialization.
+
+    expected_values = {"FOO": "bar"}
+
+    with patch.dict(os.environ, expected_values, clear=True):
+        sb = SecretBox(load_environ=True)
+    loaded_values = sb.loaded_values
+
+    assert loaded_values == expected_values
 
 
-def test_load_order_file_over_environ(secretbox: SecretBox, mock_env_file: str) -> None:
-    """Loaded file should override existing environ values"""
-    altered_expected = {key: f"{value} ALT" for key, value in ENV_FILE_EXPECTED.items()}
-    with patch.dict(os.environ, altered_expected):
-        secretbox.use_loaders(EnvironLoader(), EnvFileLoader(mock_env_file))
-        for key, value in ENV_FILE_EXPECTED.items():
-            assert secretbox.get(key) == value, f"Expected: {key}, {value}"
-            assert os.getenv(key) == value, f"Expected: {key}, {value}"
+def test_init_is_empty_when_created() -> None:
+    # Creating a SecretBox instance should yield an empty box
+    sb = SecretBox()
+
+    loaded_values = sb.loaded_values
+
+    assert loaded_values == {}
 
 
-def test_update_loaded_values(secretbox: SecretBox) -> None:
-    """Ensure we are updating state correctly"""
-    secretbox._update_loaded_values({"TEST": "TEST01"})
-    assert secretbox.get("TEST") == "TEST01"
+def test_get_item_returns_expected(simple_box: SecretBox) -> None:
+    # SecretBox should behave like a dictionary when needed
+    expected_key = "FOO"
+    expected_value = "bar"
 
-    secretbox._update_loaded_values({"TEST": "TEST02"})
-    assert secretbox.get("TEST") == "TEST02"
+    value = simple_box[expected_key]
 
-
-def test_auto_load_flag() -> None:
-    with patch.object(SecretBox, "use_loaders") as mocked_load_from:
-        SecretBox(auto_load=True)
-
-        mocked_load_from.assert_called_once()
+    assert value == expected_value
 
 
-def test_get_missing_key_is_empty(secretbox: SecretBox) -> None:
-    """Missing key? Check behind the milk"""
+def test_get_item_is_case_sensitive(simple_box: SecretBox) -> None:
+    # Always raise a KeyError if the key is not found
+    invalid_key = "foo"
+
     with pytest.raises(KeyError):
-        secretbox.get("BYWHATCHANCEWOULDTHISSEXIST")
+        simple_box[invalid_key]
 
 
-def test_get_default_missing_key(secretbox: SecretBox) -> None:
-    """Missing key? Return the provided default instead"""
-    assert secretbox.get("BYWHATCHANCEWOULDTHISSEXIST", "Hello") == "Hello"
+def test_set_item_accepts_valid_values(simple_box: SecretBox) -> None:
+    # SecretBox should behave like a dictionary when needed
+    # Keys should be normalized to upper-case
+    expected_value = "flapjack"
+
+    simple_box["foo"] = expected_value
+
+    updated_value = simple_box["FOO"]
+    assert updated_value == expected_value
 
 
-def test_load_debug_flag(caplog: Any) -> None:
-    """Ensure logging is silentish"""
-    _ = SecretBox()
-    assert "Debug flag passed." not in caplog.text
-
-    _ = SecretBox(debug_flag=True)
-    assert "Debug flag passed." in caplog.text
+def test_set_item_raises_with_invalid_value(simple_box: SecretBox) -> None:
+    # SecretBox should only accept strings as values
+    with pytest.raises(TypeError):
+        simple_box["foo"] = 1  # type: ignore
 
 
-def test_set(secretbox: SecretBox) -> None:
-    """Set a value"""
-    secretbox.set("TEST", "TEST")
-    assert secretbox.get("TEST") == "TEST"
-    assert os.getenv("TEST") == "TEST"
-
-
-def test_set_converts_to_str(secretbox: SecretBox) -> None:
-    """Set a value"""
-    secretbox.set("TEST", 42)  # type: ignore
-    assert secretbox.get("TEST") == "42"
-    assert os.getenv("TEST") == "42"
-
-
-def test_is_set(secretbox: SecretBox) -> None:
-    env = {"TEST_IS_SET": "TEST"}
-    with patch.dict(os.environ, env):
-        secretbox.use_loaders(EnvironLoader())
-
-        assert secretbox.is_set("TEST_IS_SET") is True
-        assert secretbox.is_set("TEST_IS_NOT_SET") is False
+def test_set_item_raises_with_invalid_key(simple_box: SecretBox) -> None:
+    # SecretBox should only accept strings as keys
+    with pytest.raises(TypeError):
+        simple_box[1] = "flapjack"  # type: ignore
