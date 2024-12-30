@@ -92,10 +92,6 @@ class SecretBox:
         self._validate_type(default, int, "default")
 
         try:
-            # TODO
-            # There is the question of what to do with floats here. If the value is a
-            # float it will successfully be converted to an int. However, that changes
-            # the value. We should likely raise an exception in this case.
             value = int(self._loaded_values[key])
 
         except KeyError as err:
@@ -106,7 +102,7 @@ class SecretBox:
                 raise err
 
         except ValueError as err:
-            msg = f"The value paired with key '{key}` could not be converted to an int."
+            msg = f"The value of '{key}` could not be converted to an int."
             raise ValueError(msg) from err
 
         return value
