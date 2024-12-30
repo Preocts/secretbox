@@ -12,6 +12,7 @@ def simple_box() -> SecretBox:
         "foo": "bar",
         "biz": "baz",
         "answer": "42",
+        "funny_number": "69.420",
     }
     sb = SecretBox()
 
@@ -149,3 +150,9 @@ def test_get_int_raises_valueerror_on_convert_error(simple_box: SecretBox) -> No
     # If the value cannot be converted to an int, raise ValueError
     with pytest.raises(ValueError):
         simple_box.get_int("foo")
+
+
+def test_get_int_fails_when_value_is_float(simple_box: SecretBox) -> None:
+    # We do not want type coercion to happen
+    with pytest.raises(ValueError):
+        simple_box.get_int("funny_number")
