@@ -41,9 +41,8 @@ class SecretBox:
         Raises:
             ValueError: If the key or value are not a string
         """
-        if not isinstance(key, str) or not isinstance(value, str):
-            msg = f"Keys and values of a Secretbox object must be of type str. You provided: {type(key).__name__}:{type(value).__name__}"
-            raise TypeError(msg)
+        self._validate_type(key, str, "key")
+        self._validate_type(value, str, "value")
 
         self._loaded_values[key] = value
 
@@ -61,9 +60,7 @@ class SecretBox:
             TypeError: If default is provided but not as a string
             KeyError: If the key is not present and the default value is None
         """
-        if default is not None and not isinstance(default, str):
-            msg = f"Default value must be provided as a str. Given {type(default).__name__} instead."
-            raise TypeError(msg)
+        self._validate_type(default, str, "default")
 
         try:
             value = self._loaded_values[key]
@@ -92,9 +89,7 @@ class SecretBox:
             TypeError: If default is provided but is not an int
             KeyError: If the key is not present and the default value is None
         """
-        if default is not None and not isinstance(default, int):
-            msg = f"Default value must be provided as a int. Given {type(default).__name__} instead."
-            raise TypeError(msg)
+        self._validate_type(default, int, "default")
 
         try:
             # TODO
@@ -115,3 +110,27 @@ class SecretBox:
             raise ValueError(msg) from err
 
         return value
+
+    @staticmethod
+    def _validate_type(obj: object | None, _type: type, label: str) -> None:
+        """
+        Validate that the given obj is an instance of the given type.
+
+        This check is skipped if obj is None.
+
+        Args:
+            obj: Any object
+            _type: Any single type to check for isinstance()
+            label: Name of object, used for raised exception
+
+        Returns:
+            None
+
+        Raises:
+            TypeError: When obj is not an instance of _type
+        """
+        if obj is not None and not isinstance(obj, _type):
+            msg = f"Expected a {_type.__name__} for '{label}', given {type(obj).__name__}."
+            raise TypeError(msg)
+
+        return None
