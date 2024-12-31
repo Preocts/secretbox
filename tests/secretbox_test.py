@@ -156,3 +156,47 @@ def test_get_int_fails_when_value_is_float(simple_box: SecretBox) -> None:
     # We do not want type coercion to happen
     with pytest.raises(ValueError):
         simple_box.get_int("funny_number")
+
+
+def test_get_float_returns_expected_value(simple_box: SecretBox) -> None:
+    # .get_float() translates a value to an float
+    expected_value = 69.420
+
+    value = simple_box.get_float("funny_number")
+
+    assert value == expected_value
+
+
+def test_get_float_returns_default_when_key_not_exists(simple_box: SecretBox) -> None:
+    # Like .get() on dictionaries, return the default if provided when the key
+    # doens't exist
+    expected_value = 867.5309
+
+    value = simple_box.get_float("nice", expected_value)
+
+    assert value == expected_value
+
+
+def test_get_float_raises_keyerror_when_key_not_exists(simple_box: SecretBox) -> None:
+    # Unlike dictionaries, if the default value is not provided None will not
+    # be returned. Secretbox enforces a string return value.
+    with pytest.raises(KeyError):
+        simple_box.get_float("cardinal")
+
+
+def test_get_float_raises_typeerror_default_is_not_float(simple_box: SecretBox) -> None:
+    # Type guarding the default value to ensure .get() always returns a float
+    with pytest.raises(TypeError):
+        simple_box.get_float("answer", "42")  # type: ignore
+
+
+def test_get_float_raises_valueerror_on_convert_error(simple_box: SecretBox) -> None:
+    # If the value cannot be converted to an float, raise ValueError
+    with pytest.raises(ValueError):
+        simple_box.get_float("foo")
+
+
+def test_get_float_fails_when_value_is_ing(simple_box: SecretBox) -> None:
+    # We do not want type coercion to happen
+    with pytest.raises(ValueError):
+        simple_box.get_float("answer")

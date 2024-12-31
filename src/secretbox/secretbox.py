@@ -107,6 +107,49 @@ class SecretBox:
 
         return value
 
+    def get_float(self, key: str, default: float | None = None) -> float:
+        """
+        Get a value from SecretBox, converting it to an float.
+
+        If default is provided and the value is not found, return the default instead.
+
+        Args:
+            key: Key index to lookup
+            default: A default return value. If provided, must be a float
+
+        Raises:
+            ValueError: If the discovered value is not a float
+            TypeError: If default is provided but is not a float
+            KeyError: If the key is not present and the default value is None
+        """
+        self._validate_type(default, float, "default")
+
+        try:
+            str_value = self._loaded_values[key]
+
+            try:
+                int(str_value)
+            except ValueError:
+                pass
+            else:
+                msg = f"The value of '{key}' is an int."
+                raise ValueError()
+
+            value = float(str_value)
+
+        except KeyError as err:
+            if default is not None:
+                value = default
+
+            else:
+                raise err
+
+        except ValueError as err:
+            msg = f"The value of '{key}` is not a float."
+            raise ValueError(msg) from err
+
+        return value
+
     @staticmethod
     def _validate_type(obj: object | None, _type: type, label: str) -> None:
         """
