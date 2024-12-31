@@ -127,12 +127,7 @@ class SecretBox:
         try:
             str_value = self._loaded_values[key]
 
-            try:
-                int(str_value)
-            except ValueError:
-                pass
-            else:
-                msg = f"The value of '{key}' is an int."
+            if str_value.isdigit():
                 raise ValueError()
 
             value = float(str_value)
@@ -144,9 +139,9 @@ class SecretBox:
             else:
                 raise err
 
-        except ValueError as err:
+        except ValueError:
             msg = f"The value of '{key}` is not a float."
-            raise ValueError(msg) from err
+            raise ValueError(msg) from None
 
         return value
 
