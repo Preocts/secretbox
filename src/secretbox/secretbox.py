@@ -109,7 +109,7 @@ class SecretBox:
         """
         Get a value from the SecretBox.
 
-        If default is provided and the value is not found, return the default instead.
+        If default is provided and the key is not found, return the default instead.
 
         Args:
             key: Key index to lookup
@@ -132,7 +132,7 @@ class SecretBox:
         """
         Get a value from SecretBox, converting it to an int.
 
-        If default is provided and the value is not found, return the default instead.
+        If default is provided and the key is not found, return the default instead.
 
         Args:
             key: Key index to lookup
@@ -156,7 +156,7 @@ class SecretBox:
         """
         Get a value from SecretBox, converting it to an float.
 
-        If default is provided and the value is not found, return the default instead.
+        If default is provided and the key is not found, return the default instead.
 
         Args:
             key: Key index to lookup
@@ -189,7 +189,7 @@ class SecretBox:
 
         Valid boolean values are "true", "false", "1", "0" (case insensitive)
 
-        If default is provided and the value is not found, return the default instead.
+        If default is provided and the key is not found, return the default instead.
 
         Args:
             key: Key index to lookup
