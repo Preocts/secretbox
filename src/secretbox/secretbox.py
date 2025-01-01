@@ -6,9 +6,9 @@ from collections.abc import Generator
 _BOOLEAN_CONVERTION = {
     "true": True,
     "1": True,
+    True: True,
     "false": False,
     "0": False,
-    True: True,
     False: False,
 }
 
