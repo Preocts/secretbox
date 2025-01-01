@@ -13,6 +13,7 @@ def simple_box() -> SecretBox:
         "biz": "baz",
         "answer": "42",
         "funny_number": "69.420",
+        "ballin": "1",
     }
     sb = SecretBox()
 
@@ -200,3 +201,41 @@ def test_get_float_fails_when_value_is_ing(simple_box: SecretBox) -> None:
     # We do not want type coercion to happen
     with pytest.raises(ValueError):
         simple_box.get_float("answer")
+
+
+def test_get_bool_returns_expected_value(simple_box: SecretBox) -> None:
+    # .get_bool() translates a value to an bool
+    expected_value = True
+
+    value = simple_box.get_bool("ballin")
+
+    assert value is expected_value
+
+
+def test_get_bool_returns_default_when_key_not_exists(simple_box: SecretBox) -> None:
+    # Like .get() on dictionaries, return the default if provided when the key
+    # doens't exist
+    expected_value = False
+
+    value = simple_box.get_bool("nice", expected_value)
+
+    assert value is expected_value
+
+
+def test_get_bool_raises_keyerror_when_key_not_exists(simple_box: SecretBox) -> None:
+    # Unlike dictionaries, if the default value is not provided None will not
+    # be returned. Secretbox enforces a string return value.
+    with pytest.raises(KeyError):
+        simple_box.get_bool("cardinal")
+
+
+def test_get_bool_raises_typeerror_default_is_not_bool(simple_box: SecretBox) -> None:
+    # Type guarding the default value to ensure .get() always returns a bool
+    with pytest.raises(TypeError):
+        simple_box.get_bool("ballin", "true")  # type: ignore
+
+
+def test_get_bool_raises_valueerror_on_convert_error(simple_box: SecretBox) -> None:
+    # If the value cannot be converted to an bool, raise ValueError
+    with pytest.raises(ValueError):
+        simple_box.get_bool("foo")

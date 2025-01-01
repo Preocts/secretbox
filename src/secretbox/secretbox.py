@@ -1,5 +1,12 @@
 from __future__ import annotations
 
+_BOOLEAN_CONVERTION = {
+    "true": True,
+    "1": True,
+    "false": False,
+    "0": False,
+}
+
 
 class SecretBox:
     """A key-value store optionally loaded from the local environment and other sources."""
@@ -141,6 +148,44 @@ class SecretBox:
 
         except ValueError:
             msg = f"The value of '{key}` is not a float."
+            raise ValueError(msg) from None
+
+        return value
+
+    def get_bool(self, key: str, default: bool | None = None) -> bool:
+        """
+        Get a value from SecretBox, converting it to an bool.
+
+        Valid boolean values are "true", "false", "1", "0" (case insensitive)
+
+        If default is provided and the value is not found, return the default instead.
+
+        Args:
+            key: Key index to lookup
+            default: A default return value. If provided, must be an bool
+
+        Raises:
+            ValueError: If the discovered value cannot be converted to an bool
+            TypeError: If default is provided but is not an bool
+            KeyError: If the key is not present and the default value is None
+        """
+        self._validate_type(default, bool, "default")
+
+        try:
+            value = _BOOLEAN_CONVERTION.get(self._loaded_values[key].lower())
+
+            if not value:
+                raise ValueError()
+
+        except KeyError as err:
+            if default is not None:
+                value = default
+
+            else:
+                raise err
+
+        except ValueError:
+            msg = f"The value of '{key}` could not be converted to an bool."
             raise ValueError(msg) from None
 
         return value
