@@ -83,74 +83,103 @@ def test_set_item_raises_with_invalid_key(simple_box: SecretBox) -> None:
         simple_box[1] = "flapjack"  # type: ignore
 
 
-def test_get_returns_expected_value(simple_box: SecretBox) -> None:
+@pytest.mark.parametrize(
+    "method, key, expected",
+    (
+        ("get", "foo", "bar"),
+        ("get_int", "answer", 42),
+        ("get_float", "funny_number", 69.420),
+        ("get_bool", "ballin", True),
+    ),
+)
+def test_get_methods_return_expected_value(
+    method: str,
+    key: str,
+    expected: str | int | float | bool,
+    simple_box: SecretBox,
+) -> None:
+    # Paramaterized to test all get methods
     # .get("foo") should work the same as ["foo"] when the key exists
-    expected_value = "bar"
+    value = getattr(simple_box, method)(key)
 
-    value = simple_box.get("foo")
-
-    assert value == expected_value
+    assert value == expected
 
 
-def test_get_returns_default_when_key_not_exists(simple_box: SecretBox) -> None:
-    # Like .get() on dictionaries, return the default if provided when the key
-    # doens't exist
-    expected_value = "flapjack"
+@pytest.mark.parametrize(
+    "method, expected",
+    (
+        ("get", "goblins"),
+        ("get_int", 37337),
+        ("get_float", 3.14),
+        ("get_bool", False),
+    ),
+)
+def test_get_methods_return_default_when_key_not_exists(
+    method: str,
+    expected: str,
+    simple_box: SecretBox,
+) -> None:
+    # Like .get() on dictionaries, return the default if provided
+    # when the key doens't exist.
+    value = getattr(simple_box, method)("missing_key", expected)
 
-    value = simple_box.get("cardinal", expected_value)
-
-    assert value == expected_value
+    assert value == expected
 
 
-def test_get_raises_keyerror_when_key_not_exists(simple_box: SecretBox) -> None:
+@pytest.mark.parametrize(
+    "method",
+    (
+        ("get"),
+        ("get_int"),
+        ("get_float"),
+        ("get_bool"),
+    ),
+)
+def test_get_methods_raise_keyerror_when_key_not_exists(
+    method: str,
+    simple_box: SecretBox,
+) -> None:
     # Unlike dictionaries, if the default value is not provided None will not
     # be returned. Secretbox enforces a string return value.
     with pytest.raises(KeyError):
-        simple_box.get("cardinal")
+        getattr(simple_box, method)("missing_key")
 
 
-def test_get_raises_typeerror_default_is_not_string(simple_box: SecretBox) -> None:
-    # Type guarding the default value to ensure .get() always returns a string
+@pytest.mark.parametrize(
+    "method, default",
+    (
+        ("get", 42),
+        ("get_int", 3.13),
+        ("get_float", 0),
+        ("get_bool", "true"),
+    ),
+)
+def test_get_methods_raise_typeerror_on_invalid_default(
+    method: str,
+    default: str,
+    simple_box: SecretBox,
+) -> None:
+    # Type guarding the default value to ensure .get() always returns correct type
     with pytest.raises(TypeError):
-        simple_box.get("answer", 42)  # type: ignore
+        getattr(simple_box, method)("foo", default)
 
 
-def test_get_int_returns_expected_value(simple_box: SecretBox) -> None:
-    # .get_int() translates a value to an int
-    expected_value = 42
-
-    value = simple_box.get_int("answer")
-
-    assert value == expected_value
-
-
-def test_get_int_returns_default_when_key_not_exists(simple_box: SecretBox) -> None:
-    # Like .get() on dictionaries, return the default if provided when the key
-    # doens't exist
-    expected_value = 69
-
-    value = simple_box.get_int("nice", expected_value)
-
-    assert value == expected_value
-
-
-def test_get_int_raises_keyerror_when_key_not_exists(simple_box: SecretBox) -> None:
-    # Unlike dictionaries, if the default value is not provided None will not
-    # be returned. Secretbox enforces a string return value.
-    with pytest.raises(KeyError):
-        simple_box.get_int("cardinal")
-
-
-def test_get_int_raises_typeerror_default_is_not_int(simple_box: SecretBox) -> None:
-    # Type guarding the default value to ensure .get() always returns a string
-    with pytest.raises(TypeError):
-        simple_box.get_int("answer", "42")  # type: ignore
-
-
-def test_get_int_raises_valueerror_on_convert_error(simple_box: SecretBox) -> None:
-    # If the value cannot be converted to an int, raise ValueError
+@pytest.mark.parametrize(
+    "method, key",
+    (
+        ("get_int", "foo"),
+        ("get_float", "foo"),
+        ("get_bool", "foo"),
+    ),
+)
+def test_get_methods_raise_valueerror_on_convert_error(
+    method: str,
+    key: str,
+    simple_box: SecretBox,
+) -> None:
+    # If the value cannot be converted to the requested type, raise ValueError
     with pytest.raises(ValueError):
-        simple_box.get_int("foo")
+        getattr(simple_box, method)(key)
 
 
 def test_get_int_fails_when_value_is_float(simple_box: SecretBox) -> None:
@@ -159,83 +188,7 @@ def test_get_int_fails_when_value_is_float(simple_box: SecretBox) -> None:
         simple_box.get_int("funny_number")
 
 
-def test_get_float_returns_expected_value(simple_box: SecretBox) -> None:
-    # .get_float() translates a value to an float
-    expected_value = 69.420
-
-    value = simple_box.get_float("funny_number")
-
-    assert value == expected_value
-
-
-def test_get_float_returns_default_when_key_not_exists(simple_box: SecretBox) -> None:
-    # Like .get() on dictionaries, return the default if provided when the key
-    # doens't exist
-    expected_value = 867.5309
-
-    value = simple_box.get_float("nice", expected_value)
-
-    assert value == expected_value
-
-
-def test_get_float_raises_keyerror_when_key_not_exists(simple_box: SecretBox) -> None:
-    # Unlike dictionaries, if the default value is not provided None will not
-    # be returned. Secretbox enforces a string return value.
-    with pytest.raises(KeyError):
-        simple_box.get_float("cardinal")
-
-
-def test_get_float_raises_typeerror_default_is_not_float(simple_box: SecretBox) -> None:
-    # Type guarding the default value to ensure .get() always returns a float
-    with pytest.raises(TypeError):
-        simple_box.get_float("answer", "42")  # type: ignore
-
-
-def test_get_float_raises_valueerror_on_convert_error(simple_box: SecretBox) -> None:
-    # If the value cannot be converted to an float, raise ValueError
-    with pytest.raises(ValueError):
-        simple_box.get_float("foo")
-
-
 def test_get_float_fails_when_value_is_ing(simple_box: SecretBox) -> None:
     # We do not want type coercion to happen
     with pytest.raises(ValueError):
         simple_box.get_float("answer")
-
-
-def test_get_bool_returns_expected_value(simple_box: SecretBox) -> None:
-    # .get_bool() translates a value to an bool
-    expected_value = True
-
-    value = simple_box.get_bool("ballin")
-
-    assert value is expected_value
-
-
-def test_get_bool_returns_default_when_key_not_exists(simple_box: SecretBox) -> None:
-    # Like .get() on dictionaries, return the default if provided when the key
-    # doens't exist
-    expected_value = False
-
-    value = simple_box.get_bool("nice", expected_value)
-
-    assert value is expected_value
-
-
-def test_get_bool_raises_keyerror_when_key_not_exists(simple_box: SecretBox) -> None:
-    # Unlike dictionaries, if the default value is not provided None will not
-    # be returned. Secretbox enforces a string return value.
-    with pytest.raises(KeyError):
-        simple_box.get_bool("cardinal")
-
-
-def test_get_bool_raises_typeerror_default_is_not_bool(simple_box: SecretBox) -> None:
-    # Type guarding the default value to ensure .get() always returns a bool
-    with pytest.raises(TypeError):
-        simple_box.get_bool("ballin", "true")  # type: ignore
-
-
-def test_get_bool_raises_valueerror_on_convert_error(simple_box: SecretBox) -> None:
-    # If the value cannot be converted to an bool, raise ValueError
-    with pytest.raises(ValueError):
-        simple_box.get_bool("foo")
