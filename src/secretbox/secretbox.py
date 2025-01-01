@@ -1,11 +1,43 @@
 from __future__ import annotations
 
+import contextlib
+from collections.abc import Generator
+
 _BOOLEAN_CONVERTION = {
     "true": True,
     "1": True,
     "false": False,
     "0": False,
+    True: True,
+    False: False,
 }
+
+
+@contextlib.contextmanager
+def _handle_exception(_type: type) -> Generator[None, None, None]:
+    """
+    Handle KeyError and ValueError as expected while getting values from loaded_values.
+
+    Args:
+        _type: The expected final type of the value being fetched
+
+    Returns:
+        None
+
+    Raises:
+        TypeError: If default is provided but is not an bool
+        KeyError: If the key is not present and the default value is None
+    """
+    try:
+        yield None
+
+    except KeyError as err:
+        msg = f"Requested key '{err}' does not exist and no default was provided."
+        raise KeyError(msg) from None
+
+    except ValueError:
+        msg = f"Failed to convert value to a '{_type.__name__}'"
+        raise ValueError(msg) from None
 
 
 class SecretBox:
@@ -53,6 +85,7 @@ class SecretBox:
 
         self._loaded_values[key] = value
 
+    @_handle_exception(str)
     def get(self, key: str, default: str | None = None) -> str:
         """
         Get a value from the SecretBox.
@@ -69,18 +102,13 @@ class SecretBox:
         """
         self._validate_type(default, str, "default")
 
-        try:
-            value = self._loaded_values[key]
-
-        except KeyError as err:
-            if default is not None:
-                value = default
-
-            else:
-                raise err
+        value = self._loaded_values.get(key, default)
+        if value is None:
+            raise KeyError(key)
 
         return value
 
+    @_handle_exception(int)
     def get_int(self, key: str, default: int | None = None) -> int:
         """
         Get a value from SecretBox, converting it to an int.
@@ -98,22 +126,13 @@ class SecretBox:
         """
         self._validate_type(default, int, "default")
 
-        try:
-            value = int(self._loaded_values[key])
+        value = self._loaded_values.get(key, default)
+        if value is None:
+            raise KeyError(key)
 
-        except KeyError as err:
-            if default is not None:
-                value = default
+        return int(value)
 
-            else:
-                raise err
-
-        except ValueError as err:
-            msg = f"The value of '{key}` could not be converted to an int."
-            raise ValueError(msg) from err
-
-        return value
-
+    @_handle_exception(float)
     def get_float(self, key: str, default: float | None = None) -> float:
         """
         Get a value from SecretBox, converting it to an float.
@@ -131,27 +150,20 @@ class SecretBox:
         """
         self._validate_type(default, float, "default")
 
-        try:
-            str_value = self._loaded_values[key]
+        fetch_value = self._loaded_values.get(key)
 
-            if str_value.isdigit():
-                raise ValueError()
+        if fetch_value is None and default is not None:
+            return default
 
-            value = float(str_value)
+        elif fetch_value is None:
+            raise KeyError(key)
 
-        except KeyError as err:
-            if default is not None:
-                value = default
+        elif fetch_value.isdigit():
+            raise ValueError()
 
-            else:
-                raise err
+        return float(fetch_value)
 
-        except ValueError:
-            msg = f"The value of '{key}` is not a float."
-            raise ValueError(msg) from None
-
-        return value
-
+    @_handle_exception(bool)
     def get_bool(self, key: str, default: bool | None = None) -> bool:
         """
         Get a value from SecretBox, converting it to an bool.
@@ -171,22 +183,13 @@ class SecretBox:
         """
         self._validate_type(default, bool, "default")
 
-        try:
-            value = _BOOLEAN_CONVERTION.get(self._loaded_values[key].lower())
+        _value = self._loaded_values.get(key, default)
+        if _value is None:
+            raise KeyError(key)
 
-            if not value:
-                raise ValueError()
-
-        except KeyError as err:
-            if default is not None:
-                value = default
-
-            else:
-                raise err
-
-        except ValueError:
-            msg = f"The value of '{key}` could not be converted to an bool."
-            raise ValueError(msg) from None
+        value = _BOOLEAN_CONVERTION.get(_value)
+        if value is None:
+            raise ValueError()
 
         return value
 
