@@ -40,6 +40,25 @@ def _handle_exception(_type: type) -> Generator[None, None, None]:
         raise ValueError(msg) from None
 
 
+def _validate_default_type(obj: object | None, _type: type) -> None:
+    """
+    Validate that the given obj is an instance of the given type. This check is skipped if obj is None.
+
+    Args:
+        obj: Any object
+        _type: Any single type to check for isinstance()
+
+    Returns:
+        None
+
+    Raises:
+        TypeError: When obj is not an instance of _type
+    """
+    if obj is not None and not isinstance(obj, _type):
+        msg = f"Expected a {_type.__name__} for 'default', given {type(obj).__name__}."
+        raise TypeError(msg)
+
+
 class SecretBox:
     """A key-value store optionally loaded from the local environment and other sources."""
 
@@ -80,8 +99,8 @@ class SecretBox:
         Raises:
             ValueError: If the key or value are not a string
         """
-        self._validate_type(key, str, "key")
-        self._validate_type(value, str, "value")
+        _validate_default_type(key, str)
+        _validate_default_type(value, str)
 
         self._loaded_values[key] = value
 
@@ -100,7 +119,7 @@ class SecretBox:
             TypeError: If default is provided but not as a string
             KeyError: If the key is not present and the default value is None
         """
-        self._validate_type(default, str, "default")
+        _validate_default_type(default, str)
 
         value = self._loaded_values.get(key, default)
         if value is None:
@@ -124,7 +143,7 @@ class SecretBox:
             TypeError: If default is provided but is not an int
             KeyError: If the key is not present and the default value is None
         """
-        self._validate_type(default, int, "default")
+        _validate_default_type(default, int)
 
         value = self._loaded_values.get(key, default)
         if value is None:
@@ -148,7 +167,7 @@ class SecretBox:
             TypeError: If default is provided but is not a float
             KeyError: If the key is not present and the default value is None
         """
-        self._validate_type(default, float, "default")
+        _validate_default_type(default, float)
 
         fetch_value = self._loaded_values.get(key)
 
@@ -181,7 +200,7 @@ class SecretBox:
             TypeError: If default is provided but is not an bool
             KeyError: If the key is not present and the default value is None
         """
-        self._validate_type(default, bool, "default")
+        _validate_default_type(default, bool)
 
         _value = self._loaded_values.get(key, default)
         if _value is None:
@@ -192,27 +211,3 @@ class SecretBox:
             raise ValueError()
 
         return value
-
-    @staticmethod
-    def _validate_type(obj: object | None, _type: type, label: str) -> None:
-        """
-        Validate that the given obj is an instance of the given type.
-
-        This check is skipped if obj is None.
-
-        Args:
-            obj: Any object
-            _type: Any single type to check for isinstance()
-            label: Name of object, used for raised exception
-
-        Returns:
-            None
-
-        Raises:
-            TypeError: When obj is not an instance of _type
-        """
-        if obj is not None and not isinstance(obj, _type):
-            msg = f"Expected a {_type.__name__} for '{label}', given {type(obj).__name__}."
-            raise TypeError(msg)
-
-        return None
