@@ -15,13 +15,13 @@ try:
     import boto3
 except ImportError:
     if not TYPE_CHECKING:
-        boto3 = None
+        boto3 = None  # pragma: no cover
 
 try:
     from mypy_boto3_secretsmanager.client import SecretsManagerClient
 except ImportError:
     if not TYPE_CHECKING:
-        SecretsManagerClient = None
+        SecretsManagerClient = None  # pragma: no cover
 
 from secretbox.aws_loader import AWSLoader
 
