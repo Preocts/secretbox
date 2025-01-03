@@ -8,6 +8,8 @@ if TYPE_CHECKING:
     from typing import Protocol
 
     class Loader(Protocol):
+        @property
+        def name(self) -> str: ...
         def run(self) -> dict[str, str]: ...
 
 
@@ -70,8 +72,15 @@ def _validate_default_type(obj: object | None, _type: type) -> None:
 class SecretBox:
     """A key-value store optionally loaded from the local environment and other sources."""
 
-    def __init__(self) -> None:
-        """Create an empty SecretBox."""
+    def __init__(self, *, raise_on_overwrite: bool = True) -> None:
+        """
+        Create an empty SecretBox.
+
+        Keyword Args:
+            raise_on_overwrite: If True a KeyError will be raised when an existing key
+            is overwritten by an assignment or load() action.
+        """
+        self._strict = raise_on_overwrite
         self._loaded_values: dict[str, str] = {}
 
     @property
@@ -106,7 +115,12 @@ class SecretBox:
 
         Raises:
             ValueError: If the key or value are not a string
+            KeyError: If key already exists and raise_on_overwrite is True
         """
+        if key in self._loaded_values:
+            msg = f"Key '{key}' already exists."
+            raise KeyError(msg)
+
         _validate_default_type(key, str)
         _validate_default_type(value, str)
 
@@ -120,6 +134,13 @@ class SecretBox:
             loader: The loader classes to use. More than one can be provided.
         """
         for _loader in loader:
+            if self._strict:
+                results = _loader.run()
+                conflicts = [key for key in results if key in self._loaded_values]
+                if conflicts:
+                    msg = f"Key '{conflicts[0]}' already exists. Offending loader: '{_loader.name}'"
+                    raise KeyError(msg)
+
             self._loaded_values.update(_loader.run())
 
     @_handle_exception(str)

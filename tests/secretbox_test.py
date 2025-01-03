@@ -6,6 +6,8 @@ from secretbox import SecretBox
 
 
 class MockLoader:
+    name = "MockLoader"
+
     def __init__(self, mock_values: dict[str, str]) -> None:
         self._values = mock_values
 
@@ -73,9 +75,9 @@ def test_set_item_accepts_valid_values(simple_box: SecretBox) -> None:
     # Keys should be normalized to upper-case
     expected_value = "flapjack"
 
-    simple_box["foo"] = expected_value
+    simple_box["redbird"] = expected_value
 
-    updated_value = simple_box["foo"]
+    updated_value = simple_box["redbird"]
     assert updated_value == expected_value
 
 
@@ -91,8 +93,24 @@ def test_set_item_raises_with_invalid_key(simple_box: SecretBox) -> None:
         simple_box[1] = "flapjack"  # type: ignore
 
 
-def test_load_with_multiple_loaders(simple_box: SecretBox) -> None:
+def test_set_item_raises_key_error_on_overwrite(simple_box: SecretBox) -> None:
+    # Raises a key error if the key being set already exists
+    with pytest.raises(KeyError):
+        simple_box["foo"] = "baz"
+
+
+def test_load_with_multiple_loaders_strict_raises(simple_box: SecretBox) -> None:
+    # In strict mode (default) conflicting keys should raise
+    loader_one = MockLoader({"luz": "human"})
+    loader_two = MockLoader({"luz": "good witch"})
+
+    with pytest.raises(KeyError):
+        simple_box.load(loader_one, loader_two)
+
+
+def test_load_with_multiple_loaders_not_strict() -> None:
     # Multiple loaders should overwrite the loaded values of the prior
+    simple_box = SecretBox(raise_on_overwrite=False)
     loader_one = MockLoader({"luz": "human", "owl": "lady"})
     loader_two = MockLoader({"luz": "good witch", "boiling": "sea"})
 
