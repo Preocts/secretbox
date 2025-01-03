@@ -15,13 +15,13 @@ try:
     import boto3
 except ImportError:
     if not TYPE_CHECKING:
-        boto3 = None
+        boto3 = None  # pragma: no cover
 
 try:
     from mypy_boto3_ssm.client import SSMClient
 except ImportError:
     if not TYPE_CHECKING:
-        SSMClient = None
+        SSMClient = None  # pragma: no cover
 
 
 class AWSParameterStoreLoader(AWSLoader):
