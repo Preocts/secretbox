@@ -5,6 +5,14 @@ import pytest
 from secretbox import SecretBox
 
 
+class MockLoader:
+    def __init__(self, mock_values: dict[str, str]) -> None:
+        self._values = mock_values
+
+    def run(self) -> dict[str, str]:
+        return self._values
+
+
 @pytest.fixture
 def simple_box() -> SecretBox:
     # Create a SecretBox with a simple value loaded for testing
@@ -81,6 +89,19 @@ def test_set_item_raises_with_invalid_key(simple_box: SecretBox) -> None:
     # SecretBox should only accept strings as keys
     with pytest.raises(TypeError):
         simple_box[1] = "flapjack"  # type: ignore
+
+
+def test_load_with_multiple_loaders(simple_box: SecretBox) -> None:
+    # Multiple loaders should overwrite the loaded values of the prior
+    loader_one = MockLoader({"luz": "human", "owl": "lady"})
+    loader_two = MockLoader({"luz": "good witch", "boiling": "sea"})
+
+    simple_box.load(loader_one, loader_two)
+    values = simple_box.loaded_values
+
+    assert values["luz"] == "good witch"
+    assert values["owl"] == "lady"
+    assert values["boiling"] == "sea"
 
 
 @pytest.mark.parametrize(

@@ -2,6 +2,14 @@ from __future__ import annotations
 
 import contextlib
 from collections.abc import Generator
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import Protocol
+
+    class Loader(Protocol):
+        def run(self) -> dict[str, str]: ...
+
 
 _BOOLEAN_CONVERTION = {
     "true": True,
@@ -103,6 +111,16 @@ class SecretBox:
         _validate_default_type(value, str)
 
         self._loaded_values[key] = value
+
+    def load(self, *loader: Loader) -> None:
+        """
+        Use a loader to update the loaded values. Loaders are used in the order provided.
+
+        Args:
+            loader: The loader classes to use. More than one can be provided.
+        """
+        for _loader in loader:
+            self._loaded_values.update(_loader.run())
 
     @_handle_exception(str)
     def get(self, key: str, default: str | None = None) -> str:
