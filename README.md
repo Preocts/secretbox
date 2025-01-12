@@ -5,6 +5,10 @@
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/Preocts/python-template/main.svg)](https://results.pre-commit.ci/latest/github/Preocts/python-template/main)
 [![Python Tests](https://github.com/Preocts/secretbox/actions/workflows/python-tests.yml/badge.svg)](https://github.com/Preocts/secretbox/actions/workflows/python-tests.yml)
 
+# ARCHIVED 2024.01.11
+
+This project has been archived as of 2024.01.11.
+
 # secretbox
 
 A library that offers a simple method of loading and accessing environmental
